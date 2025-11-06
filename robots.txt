@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://www.pmma138.com/sitemap.xml
+Sitemap: https://www.yuetenghk.dpdns.org/sitemap.xml
 
