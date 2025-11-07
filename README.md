@@ -38,11 +38,11 @@
 
 ### 4. 配置联系表单（无需注册）
 
-当前已集成 **FormSubmit**，已将表单直接投递到邮箱：`746412525@qq.com`。
+当前已集成 **FormSubmit**，已将表单直接投递到邮箱：`display01@displayinchina.com`。
 
 如需修改收件邮箱：
 1. 打开 `contact.html`
-2. 将 `<form action="https://formsubmit.co/746412525@qq.com" method="POST">` 中的邮箱替换为你的目标邮箱
+2. 将 `<form action="https://formsubmit.co/display01@displayinchina.com" method="POST">` 中的邮箱替换为你的目标邮箱
 3. 保存并提交后自动部署
 
 FormSubmit 文档：`https://formsubmit.co/`
@@ -50,5 +50,5 @@ FormSubmit 文档：`https://formsubmit.co/`
 ## 联系方式
 
 - 电话：19525653434
-- 邮箱：746412525@qq.com
+- 邮箱：display01@displayinchina.com
 

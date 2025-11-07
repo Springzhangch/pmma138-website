@@ -15,18 +15,165 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#111;background:#fff;line-height:1.6}
     .wrap{max-width:1060px;margin:0 auto;padding:0 22px}
-    /* Top nav - minimal */
-    header{background:#000;color:#fff}
-    nav{display:flex;gap:18px;align-items:center;justify-content:center;padding:12px 0;flex-wrap:wrap}
-    nav a{color:#d2d2d7;text-decoration:none;font-size:14px}
-    nav a:hover{color:#fff}
-    /* Hero - Apple style: big type, dark, lots of whitespace */
-    .hero{padding:112px 0 96px;text-align:center;color:#fff;position:relative;background:linear-gradient( to bottom, rgba(0,0,0,.45), rgba(0,0,0,.55) ), url('/hero.jpg') center/cover no-repeat}
-    .hero .wrap{position:relative;z-index:1}
-    .hero h1{margin:0 0 14px;font-size:44px;font-weight:700;letter-spacing:-.02em}
-    .hero p{margin:0 auto;max-width:760px;line-height:1.7;color:#d2d2d7;font-size:18px}
-    .btn{display:inline-block;margin-top:22px;padding:12px 18px;border-radius:980px;background:#1473e6;color:#fff;font-weight:600;border:0}
-    .btn:hover{opacity:.9}
+    /* Hero section with background image */
+    .hero-container {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)), url('/assets/hero.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      min-height: 600px;
+      position: relative;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Navigation */
+    .hero-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .nav-logo {
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      color: #fff;
+    }
+    
+    .nav-right {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .nav-right a {
+      text-decoration: none;
+      color: #fff;
+      font-size: 14px;
+      transition: opacity 0.3s ease;
+    }
+    
+    .nav-right a:hover {
+      opacity: 0.8;
+    }
+    
+    /* Hero content */
+    .hero-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 20px;
+      position: relative;
+      z-index: 5;
+    }
+    
+    .hero-content h1 {
+      margin: 0 0 16px;
+      font-size: 48px;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+    
+    .hero-content p {
+      margin: 0 0 30px;
+      font-size: 16px;
+      max-width: 600px;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+    
+    /* Buttons */
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background-color: #1e88e5;
+      color: #fff;
+      border: 1px solid #1e88e5;
+    }
+    
+    .btn-primary:hover {
+      background-color: #1976d2;
+    }
+    
+    .btn-secondary {
+      background-color: transparent;
+      color: #fff;
+      border: 1px solid #fff;
+    }
+    
+    .btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Scroll down indicator */
+    .scroll-down {
+      position: absolute;
+      bottom: 40px;
+      color: #fff;
+      animation: bounce 2s infinite;
+      cursor: pointer;
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .hero-nav {
+        padding: 20px;
+      }
+      
+      .nav-right {
+        gap: 16px;
+      }
+      
+      .hero-content h1 {
+        font-size: 36px;
+      }
+      
+      .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .btn-primary,
+      .btn-secondary {
+        width: 200px;
+        text-align: center;
+      }
+    }
     /* Sections - airy cards on light background */
     .sec{padding:56px 0}
     h2{margin:0 0 20px;font-size:28px;color:#111;letter-spacing:-.01em}
@@ -35,86 +182,1003 @@
     .card strong{display:block;margin-bottom:8px;font-size:18px;color:#111}
     .kvs{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
     .kv{padding:8px 12px;border:1px solid #e5e5ea;border-radius:999px;background:#fff;font-size:14px}
+    /* Custom Process Style */
+    .custom-process {
+      padding: 80px 0;
+      background-color: #ffffff;
+    }
+    
+    .custom-process h2 {
+      text-align: center;
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .custom-process .process-subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 60px;
+    }
+    
+    .process-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .process-left,
+    .process-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+    
+    .process-center {
+      position: relative;
+      margin: 0 40px;
+    }
+    
+    .process-line {
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      bottom: 20px;
+      width: 2px;
+      background-color: #e0e0e0;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    
+    .process-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #fff;
+      border: 2px solid #1e88e5;
+      color: #1e88e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin: 0 auto 50px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .process-dot:last-child {
+      margin-bottom: 0;
+    }
+    
+    .process-item {
+      background-color: #fff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: relative;
+      min-height: 140px;
+    }
+    
+    .process-left .process-item {
+      margin-right: 20px;
+    }
+    
+    .process-right .process-item {
+      margin-left: 20px;
+    }
+    
+    .process-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #1e88e5;
+    }
+    
+    .process-item h3 {
+      font-size: 18px;
+      color: #333;
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+    
+    .process-item p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin: 0;
+    }
+    
+    .process-action {
+      text-align: center;
+      margin-top: 60px;
+    }
+    
+    .process-btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background-color: #1e88e5;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+    }
+    
+    .process-btn:hover {
+      background-color: #1976d2;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .process-container {
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .process-center {
+        order: -1;
+        margin: 0 auto;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 300px;
+      }
+      
+      .process-line {
+        width: 100%;
+        height: 2px;
+        top: 20px;
+        bottom: auto;
+      }
+      
+      .process-dot {
+        margin: 0;
+      }
+      
+      .process-left,
+      .process-right {
+        gap: 20px;
+      }
+      
+      .process-item {
+        margin: 0 !important;
+      }
+    }
     footer{border-top:1px solid #eee;padding:28px 0;color:#6e6e73;text-align:center;background:#fff}
-    @media (max-width:640px){.hero h1{font-size:34px}.hero p{font-size:16px}.sec{padding:40px 0}}
+    @media (max-width:640px){.hero h1{font-size:34px}.hero p{font-size:16px}.sec{padding:40px 0}.process-steps{gap:24px}.process-step{flex:0 1 140px}}
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <nav>
-        <a href="/">首页</a>
-        <a href="/products.html">产品与能力</a>
-        <a href="/about.html">关于我们</a>
-        <a href="/contact.html">联系我们</a>
+  <header style="position: relative;">
+    <div class="hero-container">
+      <nav class="hero-nav">
+        <div class="nav-left">
+          <a href="/" class="nav-logo">香港粤丰</a>
+        </div>
+        <div class="nav-right">
+          <a href="/">首页</a>
+          <a href="/products.html">产品与能力</a>
+          <a href="/about.html">关于我们</a>
+          <a href="/contact.html">联系我们</a>
+        </div>
       </nav>
-      <div class="hero">
+      
+      <div class="hero-content">
         <h1>香港粤丰展示用品有限公司</h1>
         <p>专注亚克力（有机玻璃）展示用品与零售陈列解决方案。覆盖化妆品、珠宝、钟表、3C数码、家居与礼品等行业，提供打样、小批量到规模化生产的一站式服务。</p>
-        <a class="btn" href="/contact.html">获取报价与打样</a>
+        <div class="hero-buttons">
+          <a href="/products.html" class="btn-primary">查看产品</a>
+          <a href="/contact.html" class="btn-secondary">联系我们</a>
+        </div>
+        <div class="scroll-down">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
+          </svg>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="sec">
-      <h2>核心产品类别</h2>
-      <div class="grid">
-        <div class="card">
-          <strong>化妆品展示架</strong>
-          台面/柜台陈列、品牌形象道具、拆装结构与快装设计，满足零售终端展示需求。
+    <section class="sec" style="text-align: center;">
+      <h2>我们的产品</h2>
+      <p style="color: #86868b; margin-bottom: 40px;">高品质亚克力产品，为您的需求提供完美解决方案</p>
+      
+      <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; margin-top: 24px; max-width: 1200px; margin-left: auto; margin-right: auto;">
+        <!-- 产品1 -->
+        <div class="product-card" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;">
+        <style>
+        .product-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, #1e88e5, #42a5f5);
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform 0.8s ease;
+        }
+        
+        .product-card:hover {
+          transform: translateY(-5px) scale(1.01);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .product-card:hover::before {
+          transform: scaleX(1);
+        }
+        
+        .product-card:hover .product-img img {
+          transform: scale(1.05);
+        }
+        
+        .product-img img {
+          transition: transform 0.8s ease;
+        }
+        </style>
+          <div class="product-img" style="height: 200px; overflow: hidden; background-color: #f5f5f7;">
+            <img src="/assets/shouyeyklzj.png" alt="亚克力展示架" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="product-content" style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+            <h3 style="margin: 0 0 10px; font-size: 18px; color: #111;">亚克力展示架</h3>
+            <p style="color: #6e6e73; font-size: 14px; line-height: 1.5; margin-bottom: 15px;">晶莹剔透的亚克力材质，为您的产品提供绝佳的展示体验。适用于各行业零售终端展示需求。</p>
+            <div class="product-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">高透明</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">可定制</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">多用途</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">易于清洁</span>
+            </div>
+            <div style="margin-top: auto;">
+              <a href="/products.html" style="display: block; text-align: center; padding: 10px; border: 1px solid #e5e5ea; border-radius: 8px; text-decoration: none; color: #111; font-size: 14px;">了解更多</a>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <strong>珠宝与钟表展架</strong>
-          高透明度与抛光工艺，细节打磨与稳定结构，突出产品质感与品牌形象。
+        
+        <!-- 产品2 -->
+        <div class="product-card" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%;">
+          <div class="product-img" style="height: 200px; overflow: hidden; background-color: #f5f5f7;">
+            <img src="/assets/shouyejiaju.png" alt="亚克力家居装饰" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="product-content" style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+            <h3 style="margin: 0 0 10px; font-size: 18px; color: #111;">亚克力家居装饰</h3>
+            <p style="color: #6e6e73; font-size: 14px; line-height: 1.5; margin-bottom: 15px;">现代简约风格的亚克力家居饰品，为您的家居环境增添独特的时尚气息和科技感。</p>
+            <div class="product-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">现代设计</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">多种颜色</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">安全性高</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">质量轻</span>
+            </div>
+            <div style="margin-top: auto;">
+              <a href="/products.html" style="display: block; text-align: center; padding: 10px; border: 1px solid #e5e5ea; border-radius: 8px; text-decoration: none; color: #111; font-size: 14px;">了解更多</a>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <strong>零售陈列与宣传</strong>
-          POP展示、资料架、价签座、台卡、标识牌等日常陈列道具。
+        
+        <!-- 产品3 -->
+        <div class="product-card" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%;">
+          <div class="product-img" style="height: 200px; overflow: hidden; background-color: #f5f5f7;">
+            <img src="/assets/shouyebiaopai.png" alt="亚克力标识牌" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="product-content" style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+            <h3 style="margin: 0 0 10px; font-size: 18px; color: #111;">亚克力标识牌</h3>
+            <p style="color: #6e6e73; font-size: 14px; line-height: 1.5; margin-bottom: 15px;">专业定制亚克力标识，为您的企业打造清晰、持久的视觉识别系统。</p>
+            <div class="product-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">清晰度高</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">防紫外线</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">多种形状</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">安装简便</span>
+            </div>
+            <div style="margin-top: auto;">
+              <a href="/products.html" style="display: block; text-align: center; padding: 10px; border: 1px solid #e5e5ea; border-radius: 8px; text-decoration: none; color: #111; font-size: 14px;">了解更多</a>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <strong>家居与办公用品</strong>
-          相框、收纳盒、台历架、办公收纳与定制礼品，兼顾实用与美观。
+        
+        <!-- 产品4 -->
+        <div class="product-card" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%;">
+          <div class="product-img" style="height: 200px; overflow: hidden; background-color: #f5f5f7;">
+            <img src="/assets/shouyehezi.png" alt="亚克力展示盒" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          <div class="product-content" style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+            <h3 style="margin: 0 0 10px; font-size: 18px; color: #111;">亚克力展示盒</h3>
+            <p style="color: #6e6e73; font-size: 14px; line-height: 1.5; margin-bottom: 15px;">精致的亚克力展示盒，为您的珍贵物品提供完美的保护与展示解决方案。</p>
+            <div class="product-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">防尘防潮</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">高透明</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">密封性好</span>
+              <span style="padding: 4px 10px; background-color: #f5f5f7; border-radius: 16px; font-size: 12px; color: #6e6e73;">材质坚固</span>
+            </div>
+            <div style="margin-top: auto;">
+              <a href="/products.html" style="display: block; text-align: center; padding: 10px; border: 1px solid #e5e5ea; border-radius: 8px; text-decoration: none; color: #111; font-size: 14px;">了解更多</a>
+            </div>
+          </div>
         </div>
-        <div class="card">
-          <strong>木制/复合结构</strong>
-          亚克力与木材/金属/灯光结合的复合展具，满足多场景应用需求。
+      </div>
+      
+      <div style="margin-top: 40px;">
+        <!-- 产品链接已移除 -->
+      </div>
+    </section>
+    
+    <!-- 关于我们板块 -->
+    <section class="about-us">
+      <div class="wrap">
+        <div class="section-header">
+          <span class="section-tag">关于我们</span>
+          <h2 class="section-title">香港粤丰</h2>
+          <p class="about-subtitle">专业的亚克力产品定制企业，拥有丰富的行业经验和先进的生产设备</p>
         </div>
-        <div class="card">
-          <strong>激光雕刻与热压</strong>
-          个性化雕刻、丝印UV、热弯热压与无缝处理，实现定制化设计。
+        
+        <div class="about-content">
+          <!-- 公司简介与图片区域 -->
+          <div class="company-overview">
+            <div class="overview-text">
+              <h3 class="section-subtitle">公司简介</h3>
+              <p>香港粤丰成立于2005年，是一家专注于高品质亚克力产品定制的企业。我们拥有先进的生产设备和专业的技术团队，致力于为客户提供从设计到生产的一站式服务。</p>
+              <p>多年来，我们一直秉承"客户第一，质量至上"的经营理念，为众多国内外客户提供优质的亚克力产品和服务。我们的产品广泛应用于零售展示、展览展示、商业空间、礼品定制等领域。</p>
+              <div class="about-action">
+                <a href="/about.html" class="btn-primary">了解更多</a>
+              </div>
+            </div>
+            <div class="overview-image">
+              <img src="assets/aboutus.png" alt="香港粤丰生产车间" class="about-image">
+              <div class="image-accent"></div>
+            </div>
+          </div>
+          
+          <!-- 数据统计区域 -->
+          <div class="about-stats">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="stat-number">2000</div>
+              <div class="stat-label">成立年份</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="20" x2="12" y2="10"></line>
+                  <line x1="18" y1="20" x2="18" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+              </div>
+              <div class="stat-number">1.1亿</div>
+              <div class="stat-label">年产值</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <div class="stat-number">98%</div>
+              <div class="stat-label">客户满意度</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="stat-number">300+</div>
+              <div class="stat-label">专业技术人员</div>
+            </div>
+          </div>
+          
+          <!-- 优势区域 -->
+          <div class="about-advantages">
+            <h3 class="section-subtitle">我们的优势</h3>
+            <div class="advantages-grid">
+              <div class="advantage-card">
+                <div class="advantage-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                  </svg>
+                </div>
+                <div class="advantage-content">
+                  <h4>先进生产设备</h4>
+                  <p>采用先进的生产设备，确保产品制作精准，表面光滑明亮。</p>
+                </div>
+              </div>
+              <div class="advantage-card">
+                <div class="advantage-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                    <path d="M2 2l7.586 7.586"></path>
+                    <circle cx="11" cy="11" r="2"></circle>
+                  </svg>
+                </div>
+                <div class="advantage-content">
+                  <h4>专业设计团队</h4>
+                  <p>拥有经验丰富的设计团队，能够根据客户需求提供专业的设计方案。</p>
+                </div>
+              </div>
+              <div class="advantage-card">
+                <div class="advantage-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  </svg>
+                </div>
+                <div class="advantage-content">
+                  <h4>严格质量控制</h4>
+                  <p>完善的质量检测流程，确保每件产品都符合严格的质量标准。</p>
+                </div>
+              </div>
+              <div class="advantage-card">
+                <div class="advantage-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="advantage-content">
+                  <h4>快速响应服务</h4>
+                  <p>7*24小时快速响应服务，提供一对一的专属客户服务和技术支持。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <style>
+    /* 关于我们板块样式 */
+    .about-us {
+      padding: 100px 0;
+      background-color: #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .wrap {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* 标题样式 */
+    .section-header {
+      text-align: center;
+      margin-bottom: 80px;
+    }
+    
+    .section-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      color: #1565c0;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    
+    .section-title {
+      font-size: 40px;
+      color: #1a202c;
+      margin-bottom: 16px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1a202c 0%, #4a5568 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .about-subtitle {
+      color: #718096;
+      font-size: 18px;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    
+    /* 公司简介区域 */
+    .company-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      align-items: center;
+      margin-bottom: 100px;
+    }
+    
+    .overview-image {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .about-image {
+      width: 100%;
+      max-width: 550px;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      transition: transform 0.7s ease;
+    }
+    
+    .about-image:hover {
+      transform: scale(1.02);
+    }
+    
+    .image-accent {
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1e88e5 0%, #2196f3 100%);
+      z-index: -1;
+      transition: all 0.7s ease;
+    }
+    
+    .overview-image:hover .image-accent {
+      bottom: -25px;
+      right: -25px;
+    }
+    
+    .overview-text {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .section-subtitle {
+      font-size: 28px;
+      color: #2d3748;
+      font-weight: 600;
+      margin: 0;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .section-subtitle::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(90deg, #1e88e5 0%, #42a5f5 100%);
+      border-radius: 2px;
+    }
+    
+    .overview-text p {
+      color: #4a5568;
+      line-height: 1.8;
+      font-size: 16px;
+      margin: 0;
+    }
+    
+    /* 按钮样式 */
+    .about-action {
+      margin-top: 10px;
+    }
+    
+    .btn-primary {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #1e88e5 0%, #42a5f5 100%);
+      color: white;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.8s;
+      z-index: -1;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1976d2 0%, #3993e6 100%);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 20px rgba(30, 136, 229, 0.4);
+    }
+    
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+    
+    /* 数据统计区域 */
+    .about-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+      margin-bottom: 100px;
+    }
+    
+    .stat-item {
+      background: white;
+      padding: 30px 25px;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #1e88e5 0%, #42a5f5 100%);
+    }
+    
+    .stat-item::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #1e88e5, #42a5f5);
+      transition: width 0.5s ease;
+    }
+    
+    .stat-item:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+    
+    .stat-item:hover::before {
+      width: 100%;
+    }
+    
+    .stat-item:hover .stat-icon {
+      transform: scale(1.1) rotate(5deg);
+    }
+    
+    .stat-icon {
+      transition: transform 0.5s ease;
+    }
+    
+    .stat-icon {
+      margin-bottom: 15px;
+      color: #1e88e5;
+    }
+    
+    .stat-number {
+      font-size: 36px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+    
+    .stat-label {
+      color: #718096;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    
+    /* 优势区域 */
+    .about-advantages {
+      margin-bottom: 50px;
+    }
+    
+    .about-advantages .section-subtitle {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .about-advantages .section-subtitle::after {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .advantages-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 25px;
+    }
+    
+    .advantage-card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .advantage-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(30, 136, 229, 0.03), transparent 70%);
+      transform: translateY(100%);
+      transition: transform 0.5s ease;
+    }
+    
+    .advantage-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+    
+    .advantage-card:hover::after {
+      transform: translateY(0);
+    }
+    
+    .advantage-card:hover .advantage-icon {
+      transform: translateY(-5px) scale(1.1);
+    }
+    
+    .advantage-icon {
+      transition: transform 0.5s ease;
+    }
+    
+    .advantage-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e88e5;
+      flex-shrink: 0;
+      transition: all 0.5s ease;
+    }
+    
+    .advantage-card:hover .advantage-icon {
+      background: linear-gradient(135deg, #1e88e5 0%, #42a5f5 100%);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .advantage-content h4 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      color: #2d3748;
+      font-weight: 600;
+    }
+    
+    .advantage-content p {
+      margin: 0;
+      color: #718096;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 1200px) {
+      .advantages-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+      }
+      
+      .advantage-card {
+        min-height: auto;
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .company-overview {
+        grid-template-columns: 1fr;
+        gap: 60px;
+      }
+      
+      .about-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+      }
+      
+      .section-title {
+        font-size: 36px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .about-us {
+        padding: 80px 0;
+      }
+      
+      .section-header {
+        margin-bottom: 60px;
+      }
+      
+      .company-overview {
+        margin-bottom: 80px;
+      }
+      
+      .about-stats {
+        margin-bottom: 80px;
+      }
+      
+      .section-title {
+        font-size: 32px;
+      }
+      
+      .section-subtitle {
+        font-size: 24px;
+      }
+      
+      .advantages-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .about-stats {
+        grid-template-columns: 1fr;
+      }
+      
+      .btn-primary {
+        padding: 12px 24px;
+        font-size: 15px;
+      }
+      
+      .section-title {
+        font-size: 28px;
+      }
+    }
+    </style>
+
+
+
+    <section class="custom-process">
+      <div class="wrap">
+        <h2>定制流程</h2>
+        <p class="process-subtitle">简单六步，打造专属于您的亚克力产品</p>
+        
+        <div class="process-container">
+          <!-- 左侧步骤 -->
+          <div class="process-left">
+            <!-- 步骤1 -->
+            <div class="process-item">
+              <div class="process-icon">💬</div>
+              <h3>需求咨询</h3>
+              <p>与我们的专业团队沟通您的具体需求，包括产品类型、尺寸、材质和设计要求。</p>
+            </div>
+            
+            <!-- 步骤3 -->
+            <div class="process-item">
+              <div class="process-icon">💰</div>
+              <h3>报价确认</h3>
+              <p>根据最终确认的设计方案，我们将提供详细的报价和生产周期。</p>
+            </div>
+            
+            <!-- 步骤5 -->
+            <div class="process-item">
+              <div class="process-icon">✅</div>
+              <h3>质量检验</h3>
+              <p>每件产品都经过严格的质量检验，确保符合我们的高标准要求。</p>
+            </div>
+          </div>
+          
+          <!-- 中间连接线 -->
+          <div class="process-center">
+            <div class="process-line"></div>
+            <div class="process-dot dot-1"><span>1</span></div>
+            <div class="process-dot dot-2"><span>2</span></div>
+            <div class="process-dot dot-3"><span>3</span></div>
+            <div class="process-dot dot-4"><span>4</span></div>
+            <div class="process-dot dot-5"><span>5</span></div>
+            <div class="process-dot dot-6"><span>6</span></div>
+          </div>
+          
+          <!-- 右侧步骤 -->
+          <div class="process-right">
+            <!-- 步骤2 -->
+            <div class="process-item">
+              <div class="process-icon">📐</div>
+              <h3>设计方案</h3>
+              <p>我们的设计师将根据您的需求提供专业的设计方案和3D效果图，直至您满意。</p>
+            </div>
+            
+            <!-- 步骤4 -->
+            <div class="process-item">
+              <div class="process-icon">🏭</div>
+              <h3>生产制作</h3>
+              <p>采用先进的生产设备和工艺，严格按照设计要求进行生产制作。</p>
+            </div>
+            
+            <!-- 步骤6 -->
+            <div class="process-item">
+              <div class="process-icon">📦</div>
+              <h3>包装发货</h3>
+              <p>采用专业的包装材料，确保产品安全送达您的指定地点。</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="process-action">
+          <a href="/contact.html" class="process-btn">开始您的定制</a>
         </div>
       </div>
     </section>
 
-    <section class="sec">
-      <h2>为什么选择我们</h2>
-      <div class="kvs">
-        <div class="kv">多年行业经验与批量交付能力</div>
-        <div class="kv">透明度高、抛光好、做工细致</div>
-        <div class="kv">支持来样/来图定制开发</div>
-        <div class="kv">打样快速，交期可控</div>
-        <div class="kv">严格质检与安全包装</div>
-        <div class="kv">出口经验与英文沟通</div>
-      </div>
-    </section>
 
-    <section class="sec">
-      <h2>服务行业</h2>
-      <p>美妆个护｜珠宝钟表｜3C数码｜家居礼品｜酒店餐饮｜商超零售</p>
-    </section>
-
-    <section class="sec">
-      <h2>联系我们</h2>
-      <p><strong>电话：</strong>19525653434</p>
-      <p><strong>邮箱：</strong><a href="mailto:746412525@qq.com">746412525@qq.com</a></p>
-      <p><a href="/contact.html" class="btn">前往联系页面填写需求表单</a></p>
-    </section>
   </main>
 
-  <footer>
+  <footer style="background-color: #0a3a6d; color: #fff; padding: 30px 0;">
     <div class="wrap">
-      <small>© 2025 香港粤丰展示用品有限公司 · <a href="/privacy.html">隐私政策</a></small>
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; max-width: 1000px; margin: 0 auto;">
+        <!-- 公司信息 -->
+        <div style="flex: 1; min-width: 250px; margin-bottom: 20px;">
+          <h3 style="color: #f1c40f; margin-top: 0;">香港粤丰</h3>
+          <p style="line-height: 1.6; font-size: 14px;">专业亚克力/有机玻璃展示专家，为客户提供<br>专业灵活的代加工服务。</p>
+        </div>
+        
+        <!-- 快速链接 -->
+        <div style="flex: 1; min-width: 200px; margin-bottom: 20px;">
+          <h3 style="color: #f1c40f; margin-top: 0;">快速链接</h3>
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px;">
+            <li style="margin-bottom: 8px;"><a href="/" style="color: #fff; text-decoration: none;">首页</a></li>
+            <li style="margin-bottom: 8px;"><a href="/about.html" style="color: #fff; text-decoration: none;">关于我们</a></li>
+            <li style="margin-bottom: 8px;"><a href="/products.html" style="color: #fff; text-decoration: none;">产品中心</a></li>
+            <li style="margin-bottom: 8px;"><a href="/contact.html" style="color: #fff; text-decoration: none;">联系我们</a></li>
+            <li><a href="/privacy.html" style="color: #fff; text-decoration: none;">隐私政策</a></li>
+          </ul>
+        </div>
+        
+        <!-- 联系我们 -->
+        <div style="flex: 1; min-width: 200px; margin-bottom: 20px;">
+          <h3 style="color: #f1c40f; margin-top: 0;">联系我们</h3>
+          <p style="line-height: 1.6; font-size: 14px;">
+            电话：+852 XXX XXXXXX<br>
+            邮箱：display01@displayinchina.com<br>
+            地址：香港九龙观塘工业28区XX大厦XX楼
+          </p>
+        </div>
+      </div>
+      
+      <!-- 版权信息 -->
+      <div style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px; font-size: 12px;">
+        © 2025 香港粤丰展示用品有限公司 版权所有
+      </div>
     </div>
   </footer>
 </body>
