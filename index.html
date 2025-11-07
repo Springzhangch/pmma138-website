@@ -102,12 +102,15 @@
     .btn-primary,
     .btn-secondary {
       display: inline-block;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border-radius: 4px;
       text-decoration: none;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 500;
       transition: all 0.3s ease;
+      text-align: center;
+      line-height: 1.5;
+      vertical-align: middle;
     }
     
     .btn-primary {
@@ -398,26 +401,9 @@
         <!-- 产品1 -->
         <div class="product-card" style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;">
         <style>
-        .product-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #1e88e5, #42a5f5);
-          transform: scaleX(0);
-          transform-origin: left;
-          transition: transform 0.8s ease;
-        }
-        
         .product-card:hover {
           transform: translateY(-5px) scale(1.01);
           box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-        }
-        
-        .product-card:hover::before {
-          transform: scaleX(1);
         }
         
         .product-card:hover .product-img img {
