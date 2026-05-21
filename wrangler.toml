@@ -1,3 +1,6 @@
-pages_build_output_dir = ".vercel/output/static"
-compatibility_date = "2026-05-21"
+# 必须的项目名称，和你 Cloudflare Pages 项目名一致
+name = "pmma138-website"
+# 兼容日期，用一个合理的日期即可，不要用未来日期
+compatibility_date = "2024-05-20"
+# 开启 Node.js 兼容模式，解决你之前的报错
 compatibility_flags = ["nodejs_compat"]
