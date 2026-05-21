@@ -9,9 +9,9 @@ export default function ContactPage() {
   return (
     <main className="bg-[#f5f5f7] pt-12">
       <section className="mx-auto max-w-5xl px-5 py-20 md:px-8 md:py-28">
-        <div className="mx-auto max-w-5xl text-center">
+        <div className="mx-auto max-w-7xl text-center">
           <p className="text-sm font-semibold text-[#0071e3]">CONTACT</p>
-          <h1 className="mt-4 text-5xl font-semibold tracking-tight text-neutral-950 md:text-6xl lg:text-7xl">告诉我们你的项目需求。</h1>
+          <h1 className="mt-4 text-5xl font-semibold leading-[1.08] tracking-tight text-neutral-950 md:whitespace-nowrap md:text-6xl lg:text-[68px]">告诉我们你的项目需求。</h1>
           <p className="mt-5 text-lg leading-8 text-neutral-600">
             如需打样或批量定制，建议注明用途、尺寸、数量、交期、预算和参考图片。我们会在工作时间内尽快回复。
           </p>
