@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粤丰成本计算表v2.1</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f8f9fa;
+            position: relative;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            position: relative;
+            z-index: 10;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9f5fe;
+        }
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+        input[readonly] {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+        input.over-limit {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .unit {
+            color: #6c757d;
+            font-style: italic;
+            margin-left: 5px;
+        }
+        .section-title {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: bold;
+        }
+        .summary-row {
+            background-color: #ffecb3;
+            font-weight: bold;
+        }
+        .formula-note {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .hidden-formula {
+            display: none;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .cost-summary {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 10;
+        }
+        .cost-summary h2 {
+            color: #1976d2;
+            margin-top: 0;
+            border-bottom: 1px solid #bbdefb;
+            padding-bottom: 10px;
+            position: relative;
+            z-index: 10;
+        }
+        .process-selection {
+            background-color: #e8f4fd;
+        }
+        .process-selection td {
+            padding: 8px 15px;
+        }
+        .process-checkbox {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        .process-item {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .hidden-process {
+            display: none !important;
+        }
+        .watermark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.05;
+        }
+        .watermark-content {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            white-space: nowrap;
+            letter-spacing: 5px;
+            user-select: none;
+        }
+        @media (max-width: 768px) {
+            .watermark-content {
+                font-size: 16px;
+                letter-spacing: 3px;
+            }
+        }
+        /* 新增材料成本区域样式 */
+        .material-cost-section {
+            margin-bottom: 30px;
+        }
+        .material-cost-table {
+            margin-bottom: 20px;
+        }
+        .add-btn {
+            background-color: #007bff;
+            margin-bottom: 10px;
+        }
+        .add-btn:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            padding: 8px 15px;
+            font-size: 14px;
+            /* 修改：删除按钮文字横向排列 */
+            white-space: nowrap;
+            text-align: center;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .total-material-cost-row {
+            background-color: #d1ecf1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">
+        <div class="watermark-content">粤丰展示</div>
+    </div>
+
+    <div class="container">
+        <h1>粤丰成本计算表v2.1</h1>
+        
+        <!-- 新增：材料成本区域 -->
+        <div class="material-cost-section">
+            <table class="material-cost-table">
+                <tr class="section-title">
+                    <th colspan="7">材料成本明细</th>
+                </tr>
+                <!-- 板材成本行 -->
+                <tr>
+                    <td colspan="2"><strong>板材成本</strong></td>
+                    <td>数量（套）</td>
+                    <td>单价（元/套）</td>
+                    <td>总价（元）</td>
+                    <td colspan="2">备注</td>
+                </tr>
+                <tr>
+                    <td colspan="2">板材</td>
+                    <td><input type="number" id="board_quantity" placeholder="自动同步生产数量" min="0" step="0.01" readonly></td>
+                    <td><input type="number" id="board_price" placeholder="请填写单价" min="0" step="0.01"></td>
+                    <td><input type="number" id="board_total" readonly></td>
+                    <td colspan="2">板材数量自动同步生产数量，总价自动计算</td>
+                </tr>
+                <!-- 配件成本表头 -->
+                <tr>
+                    <th colspan="7" style="background-color: #17a2b8;">配件成本（可新增/删除）</th>
+                </tr>
+                <tr>
+                    <th>序号</th>
+                    <th>配件类型</th>
+                    <th>数量（同步生产数量/套）</th>
+                    <th>单价（元/套）</th>
+                    <th>总价（元）</th>
+                    <th>操作</th>
+                    <th>备注</th>
+                </tr>
+                <tbody id="accessory_list">
+                    <!-- 初始默认一行配件 -->
+                    <tr class="accessory-row">
+                        <td>1</td>
+                        <td>
+                            <select class="accessory-type">
+                                <option value="包装">包装</option>
+                                <option value="磁铁">磁铁</option>
+                                <option value="塑胶件">塑胶件</option>
+                                <option value="五金件">五金件</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="accessory-quantity" placeholder="自动同步生产数量" min="0" step="0.01" readonly></td>
+                        <td><input type="number" class="accessory-price" placeholder="请填写单价（元/套）" min="0" step="0.01"></td>
+                        <td><input type="number" class="accessory-total" readonly></td>
+                        <!-- 修改1：删除按钮仅保留"删除"文字，调整样式横向排列 -->
+                        <td><button class="delete-btn">删除</button></td>
+                        <!-- 修改2：默认备注根据配件类型动态显示，其他类型时使用输入框 -->
+                        <td class="accessory-note-cell">
+                            <span class="accessory-note">为单个产品的包装，包含纸箱、保丽龙、塑料袋等。</span>
+                            <input type="text" class="accessory-note-input" placeholder="（自行备注配件种类）" style="display: none; width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                        </td>
+                    </tr>
+                </tbody>
+                <!-- 配件合计行 -->
+                <tr class="total-material-cost-row">
+                    <td colspan="3">材料成本单价总计（板材+所有配件）</td>
+                    <td colspan="2"><input type="number" id="total_material_detail_cost" readonly></td>
+                    <td colspan="2">自动计算板材单价+所有配件单价之和</td>
+                </tr>
+            </table>
+            <button id="add_accessory_btn" class="add-btn">新增配件</button>
+        </div>
+        
+        <!-- 原有基础信息设置表 -->
+        <table id="basic-info-table">
+            <tr class="section-title">
+                <th colspan="4">一、基础信息设置</th>
+            </tr>
+            <tr>
+                <th>项目</th>
+                <th>数值</th>
+                <th>单位</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>材料成本（元/套）</td>
+                <td><input type="number" id="material_cost" placeholder="自动同步材料单价总计" min="0" step="0.01" readonly></td>
+                <td class="unit">元/套</td>
+                <td>自动同步上方材料单价总计</td>
+            </tr>
+            <tr>
+                <td>生产数量</td>
+                <td><input type="number" id="production_quantity" placeholder="请填写数量" min="1" step="1"></td>
+                <td class="unit">套</td>
+                <td>计划生产的总数量</td>
+            </tr>
+            <tr>
+                <td>交期时间</td>
+                <td><input type="number" id="delivery_time" placeholder="请填写数量" min="1" step="1"></td>
+                <td class="unit">天</td>
+                <td>要求完成生产的总天数</td>
+            </tr>
+            <tr>
+                <td>小时单价</td>
+                <td><input type="number" id="hourly_rate" value="30" min="0" step="0.01" readonly></td>
+                <td class="unit">元/小时</td>
+                <td>默认设置，无需修改</td>
+            </tr>
+        </table>
+        
+        <!-- 原有工序产能分析表 -->
+        <table id="process-capacity-table">
+            <tr class="section-title">
+                <th colspan="6">二、各工序产能需求分析</th>
+            </tr>
+            <tr class="process-selection">
+                <td colspan="6">
+                    <strong>选择需要计算的工序：</strong>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_cutting" class="process-checkbox" checked>
+                        <label for="chk_cutting">开料</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_diamond_planing" class="process-checkbox" checked>
+                        <label for="chk_diamond_planing">钻石刨</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_3d_carving" class="process-checkbox">
+                        <label for="chk_3d_carving">精雕</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_water_carving" class="process-checkbox">
+                        <label for="chk_water_carving">丝印</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_drilling" class="process-checkbox">
+                        <label for="chk_drilling">打孔</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_trimming" class="process-checkbox">
+                        <label for="chk_trimming">修边</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_magnet" class="process-checkbox">
+                        <label for="chk_magnet">磁铁</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_laser" class="process-checkbox" checked>
+                        <label for="chk_laser">激光</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_peeling" class="process-checkbox" checked>
+                        <label for="chk_peeling">撕膜</label>
+                    </div>
+
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_hot_bending" class="process-checkbox">
+                        <label for="chk_hot_bending">折弯</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_cold_bending" class="process-checkbox">
+                        <label for="chk_cold_bending">UV打印</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_assembly" class="process-checkbox" checked>
+                        <label for="chk_assembly">组装</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_cleaning" class="process-checkbox" checked>
+                        <label for="chk_cleaning">清洁</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_packaging" class="process-checkbox" checked>
+                        <label for="chk_packaging">包装</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_other1" class="process-checkbox">
+                        <label for="chk_other1">其他1</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_other2" class="process-checkbox">
+                        <label for="chk_other2">其他2</label>
+                    </div>
+                    <div class="process-item">
+                        <input type="checkbox" id="chk_other3" class="process-checkbox">
+                        <label for="chk_other3">其他3</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th>工序名称</th>
+                <th>时产能（套/小时）</th>
+                <th>该项总产能（安排人工/套/小时）</th>
+                <th>所需人工（人）</th>
+                <th>所需时间（小时）</th>
+                <th>备注</th>
+            </tr>
+            <tr id="row_cutting" class="process-row">
+                <td>开料</td>
+                <td><input type="number" id="capacity_cutting" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_cutting" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_cutting" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_cutting" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_diamond_planing" class="process-row">
+                <td>钻石刨</td>
+                <td><input type="number" id="capacity_diamond_planing" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_diamond_planing" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_diamond_planing" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_diamond_planing" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_3d_carving" class="process-row">
+                <td>精雕</td>
+                <td><input type="number" id="capacity_3d_carving" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_3d_carving" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_3d_carving" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_3d_carving" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_water_carving" class="process-row">
+                <td>丝印</td>
+                <td><input type="number" id="capacity_water_carving" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_water_carving" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_water_carving" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_water_carving" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_drilling" class="process-row">
+                <td>打孔</td>
+                <td><input type="number" id="capacity_drilling" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_drilling" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_drilling" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_drilling" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_trimming" class="process-row">
+                <td>修边</td>
+                <td><input type="number" id="capacity_trimming" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_trimming" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_trimming" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_trimming" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_magnet" class="process-row">
+                <td>磁铁</td>
+                <td><input type="number" id="capacity_magnet" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_magnet" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_magnet" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_magnet" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_laser" class="process-row">
+                <td>激光</td>
+                <td><input type="number" id="capacity_laser" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_laser" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_laser" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_laser" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_peeling" class="process-row">
+                <td>撕膜</td>
+                <td><input type="number" id="capacity_peeling" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_peeling" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_peeling" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_peeling" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+
+            <tr id="row_hot_bending" class="process-row">
+                <td>折弯</td>
+                <td><input type="number" id="capacity_hot_bending" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_hot_bending" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_hot_bending" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_hot_bending" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_cold_bending" class="process-row">
+                <td>UV打印</td>
+                <td><input type="number" id="capacity_cold_bending" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_cold_bending" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_cold_bending" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_cold_bending" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_other1" class="process-row hidden-process">
+                <td>
+                    <input type="text" id="other1_process_name" placeholder="请输入工序名称" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                </td>
+                <td><input type="number" id="capacity_other1" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_other1" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_other1" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_other1" readonly></td>
+                <td>
+                    <div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div>
+                </td>
+            </tr>
+            <tr id="row_other2" class="process-row hidden-process">
+                <td>
+                    <input type="text" id="other2_process_name" placeholder="请输入工序名称" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                </td>
+                <td><input type="number" id="capacity_other2" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_other2" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_other2" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_other2" readonly></td>
+                <td>
+                    <div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div>
+                </td>
+            </tr>
+            <tr id="row_other3" class="process-row hidden-process">
+                <td>
+                    <input type="text" id="other3_process_name" placeholder="请输入工序名称" style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                </td>
+                <td><input type="number" id="capacity_other3" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_other3" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_other3" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_other3" readonly></td>
+                <td>
+                    <div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div>
+                </td>
+            </tr>
+            <tr id="row_assembly" class="process-row">
+                <td>组装</td>
+                <td><input type="number" id="capacity_assembly" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_assembly" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_assembly" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_assembly" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_cleaning" class="process-row">
+                <td>清洁</td>
+                <td><input type="number" id="capacity_cleaning" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_cleaning" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_cleaning" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_cleaning" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr id="row_packaging" class="process-row">
+                <td>包装</td>
+                <td><input type="number" id="capacity_packaging" placeholder="请填写时产能（套/小时）" min="0.01" step="0.01"></td>
+                <td><input type="number" id="total_capacity_packaging" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="workers_packaging" placeholder="请填写人工数，如不填写则默认为1人" min="1" step="1"></td>
+                <td><input type="number" id="hours_packaging" readonly></td>
+                <td><div class="formula-note hidden-formula">该项总产能=时产能；所需人工=达到该时产能所需人数；所需时间=生产数量/时产能</div></td>
+            </tr>
+            <tr class="summary-row">
+                <td>合计</td>
+                <td>-</td>
+                <td><input type="number" id="total_capacity_sum" readonly class="total-capacity-input"></td>
+                <td><input type="number" id="total_workers" readonly class="summary-value"></td>
+                <td><input type="number" id="total_hours" readonly class="summary-value"></td>
+                <td>已选工序所需人工和时间总和</td>
+            </tr>
+        </table>
+        
+        <!-- 原有成本汇总表 -->
+        <div class="cost-summary">
+            <h2>三、成本汇总分析</h2>
+            <table id="cost-summary-table">
+                <tr>
+                    <th>成本项目</th>
+                    <th>计算方式</th>
+                    <th>金额（元）</th>
+                    <th>占比（%）</th>
+                </tr>
+                <tr>
+                    <td>材料总成本</td>
+                    <td>生产数量 × 材料成本</td>
+                    <td><input type="number" id="total_material_cost" readonly></td>
+                    <td><input type="number" id="material_cost_ratio" readonly></td>
+                </tr>
+                <tr>
+                    <td>人工总成本</td>
+                    <td>总工时 × 小时单价</td>
+                    <td><input type="number" id="total_labor_cost" readonly></td>
+                    <td><input type="number" id="labor_cost_ratio" readonly></td>
+                </tr>
+                <tr class="summary-row">
+                    <td>项目总成本</td>
+                    <td>材料总成本 + 人工总成本</td>
+                    <td><input type="number" id="total_project_cost" readonly></td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>单位成本（元/套）</td>
+                    <td>项目总成本 ÷ 生产数量</td>
+                    <td><input type="number" id="unit_cost" readonly></td>
+                    <td>-</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="btn-container">
+            <button id="calculate-btn">计算所有数据</button>
+            <button id="reset-btn">重置为默认值</button>
+            <button id="show-formulas-btn">显示计算公式</button>
+            <button id="hide-formulas-btn" style="display:none;">隐藏计算公式</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========== 新增：材料成本相关元素 ==========
+            const boardQuantity = document.getElementById('board_quantity');
+            const boardPrice = document.getElementById('board_price');
+            const boardTotal = document.getElementById('board_total');
+            const accessoryList = document.getElementById('accessory_list');
+            const addAccessoryBtn = document.getElementById('add_accessory_btn');
+            const totalMaterialDetailCost = document.getElementById('total_material_detail_cost');
+            const materialCost = document.getElementById('material_cost'); // 原有材料成本输入框
+            const productionQuantity = document.getElementById('production_quantity'); // 生产数量
+            
+            // ========== 新增：材料成本计算逻辑 ==========
+            // 同步生产数量到板材和配件数量
+            function syncProductionQuantity() {
+                const prodQty = parseFloat(productionQuantity.value) || 0;
+                // 同步到板材数量
+                boardQuantity.value = prodQty;
+                // 同步到所有配件数量
+                document.querySelectorAll('.accessory-quantity').forEach(input => {
+                    input.value = prodQty;
+                });
+                // 重新计算所有总价
+                calculateAllAccessoryTotals();
+                calculateTotalMaterialCost();
+            }
+            
+            // 计算单条配件总价
+            function calculateAccessoryTotal(row) {
+                const quantity = parseFloat(row.querySelector('.accessory-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.accessory-price').value) || 0;
+                const totalInput = row.querySelector('.accessory-total');
+                totalInput.value = (quantity * price).toFixed(2);
+            }
+            
+            // 计算所有配件总价
+            function calculateAllAccessoryTotals() {
+                document.querySelectorAll('.accessory-row').forEach(row => {
+                    calculateAccessoryTotal(row);
+                });
+            }
+            
+            // 计算所有材料成本总计（板材单价+所有配件单价）
+            function calculateTotalMaterialCost() {
+                // 计算板材总价
+                const boardQty = parseFloat(boardQuantity.value) || 0;
+                const boardPr = parseFloat(boardPrice.value) || 0;
+                const boardTot = boardQty * boardPr;
+                boardTotal.value = boardTot.toFixed(2);
+                
+                // 计算板材单价 + 所有配件单价之和
+                let totalUnitPrice = boardPr; // 板材单价
+                document.querySelectorAll('.accessory-price').forEach(input => {
+                    totalUnitPrice += parseFloat(input.value) || 0;
+                });
+                
+                // 更新材料单价总计
+                totalMaterialDetailCost.value = totalUnitPrice.toFixed(2);
+                
+                // 同步到原有基础信息的材料成本输入框（元/套）
+                materialCost.value = totalUnitPrice.toFixed(2);
+            }
+            
+            // 新增：根据配件类型更新备注
+            function updateAccessoryNote(row) {
+                const typeSelect = row.querySelector('.accessory-type');
+                const noteCell = row.querySelector('.accessory-note-cell');
+                const noteSpan = row.querySelector('.accessory-note');
+                const noteInput = row.querySelector('.accessory-note-input');
+                const type = typeSelect.value;
+                
+                if (type === '其他') {
+                    // 显示输入框，隐藏文本
+                    noteSpan.style.display = 'none';
+                    noteInput.style.display = 'block';
+                } else {
+                    // 显示文本，隐藏输入框
+                    noteInput.style.display = 'none';
+                    noteSpan.style.display = 'block';
+                    
+                    switch(type) {
+                        case '包装':
+                            noteSpan.textContent = '为单个产品的包装，包含纸箱、保丽龙、塑料袋等。';
+                            break;
+                        case '磁铁':
+                            noteSpan.textContent = '单套产品所需的磁铁总数，单价需填写单套产品所需磁铁的总价。';
+                            break;
+                        case '塑胶件':
+                            noteSpan.textContent = '配件数量自动同步生产数量，总价=数量×单价';
+                            break;
+                        case '五金件':
+                            noteSpan.textContent = '配件数量自动同步生产数量，总价=数量×单价';
+                            break;
+                        default:
+                            noteSpan.textContent = '配件数量自动同步生产数量，总价=数量×单价';
+                    }
+                }
+            }
+            
+            // 新增配件行
+            function addAccessoryRow() {
+                const rows = document.querySelectorAll('.accessory-row');
+                const newIndex = rows.length + 1;
+                const prodQty = parseFloat(productionQuantity.value) || 0;
+                
+                const newRow = document.createElement('tr');
+                newRow.className = 'accessory-row';
+                newRow.innerHTML = `
+                    <td>${newIndex}</td>
+                    <td>
+                        <select class="accessory-type">
+                            <option value="包装">包装</option>
+                            <option value="磁铁">磁铁</option>
+                            <option value="塑胶件">塑胶件</option>
+                            <option value="五金件">五金件</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="accessory-quantity" value="${prodQty}" placeholder="自动同步生产数量" min="0" step="0.01" readonly></td>
+                    <td><input type="number" class="accessory-price" placeholder="请填写单价（元/套）" min="0" step="0.01"></td>
+                    <td><input type="number" class="accessory-total" readonly></td>
+                    <!-- 修改1：删除按钮仅保留"删除"文字 -->
+                    <td><button class="delete-btn">删除</button></td>
+                    <!-- 修改2：新增accessory-note-cell，包含文本和输入框 -->
+                    <td class="accessory-note-cell">
+                        <span class="accessory-note">为单个产品的包装，包含纸箱、保丽龙、塑料袋等。</span>
+                        <input type="text" class="accessory-note-input" placeholder="（自行备注配件种类）" style="display: none; width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    </td>
+                `;
+                
+                // 添加到列表
+                accessoryList.appendChild(newRow);
+                
+                // 绑定事件
+                bindAccessoryEvents(newRow);
+                
+                // 重新排序序号
+                reorderAccessoryRows();
+                
+                // 计算新行的总价
+                calculateAccessoryTotal(newRow);
+                
+                // 更新新行备注
+                updateAccessoryNote(newRow);
+                
+                // 重新计算总成本
+                calculateTotalMaterialCost();
+            }
+            
+            // 删除配件行
+            function deleteAccessoryRow(row) {
+                if (document.querySelectorAll('.accessory-row').length <= 1) {
+                    alert('至少保留一条配件记录！');
+                    return;
+                }
+                row.remove();
+                reorderAccessoryRows();
+                calculateTotalMaterialCost();
+            }
+            
+            // 重新排序配件行序号
+            function reorderAccessoryRows() {
+                document.querySelectorAll('.accessory-row').forEach((row, index) => {
+                    row.querySelector('td:first-child').textContent = index + 1;
+                });
+            }
+            
+            // 绑定配件行事件
+            function bindAccessoryEvents(row) {
+                // 单价变化时计算总价
+                row.querySelector('.accessory-price').addEventListener('input', function() {
+                    calculateAccessoryTotal(row);
+                    calculateTotalMaterialCost();
+                });
+                
+                // 删除按钮事件
+                row.querySelector('.delete-btn').addEventListener('click', function() {
+                    deleteAccessoryRow(row);
+                });
+                
+                // 修改：配件类型变化时更新备注
+                row.querySelector('.accessory-type').addEventListener('change', function() {
+                    updateAccessoryNote(row);
+                    calculateTotalMaterialCost();
+                });
+            }
+            
+            // ========== 绑定材料成本相关事件 ==========
+            // 初始绑定已有配件行事件
+            document.querySelectorAll('.accessory-row').forEach(row => {
+                bindAccessoryEvents(row);
+                // 初始化备注显示
+                updateAccessoryNote(row);
+            });
+            
+            // 新增配件按钮事件
+            addAccessoryBtn.addEventListener('click', addAccessoryRow);
+            
+            // 板材单价变化事件
+            boardPrice.addEventListener('input', calculateTotalMaterialCost);
+            
+            // 生产数量变化时同步到板材和配件数量
+            productionQuantity.addEventListener('input', syncProductionQuantity);
+            
+            // ========== 原有逻辑保留（仅补充材料成本同步） ==========
+            const deliveryTime = document.getElementById('delivery_time');
+            const hourlyRate = document.getElementById('hourly_rate');
+            
+            const capacityCutting = document.getElementById('capacity_cutting');
+            const capacityDiamondPlaning = document.getElementById('capacity_diamond_planing');
+            const capacity3dCarving = document.getElementById('capacity_3d_carving');
+            const capacityWaterCarving = document.getElementById('capacity_water_carving');
+            const capacityDrilling = document.getElementById('capacity_drilling');
+            const capacityTrimming = document.getElementById('capacity_trimming');
+            const capacityMagnet = document.getElementById('capacity_magnet');
+            const capacityLaser = document.getElementById('capacity_laser');
+            const capacityPeeling = document.getElementById('capacity_peeling');
+            const capacityHotBending = document.getElementById('capacity_hot_bending');
+            const capacityColdBending = document.getElementById('capacity_cold_bending');
+            const capacityOther1 = document.getElementById('capacity_other1');
+            const capacityOther2 = document.getElementById('capacity_other2');
+            const capacityOther3 = document.getElementById('capacity_other3');
+            const capacityAssembly = document.getElementById('capacity_assembly');
+            const capacityCleaning = document.getElementById('capacity_cleaning');
+            const capacityPackaging = document.getElementById('capacity_packaging');
+            
+            const totalCapacityCutting = document.getElementById('total_capacity_cutting');
+            const workersCutting = document.getElementById('workers_cutting');
+            const hoursCutting = document.getElementById('hours_cutting');
+            const totalCapacityDiamondPlaning = document.getElementById('total_capacity_diamond_planing');
+            const workersDiamondPlaning = document.getElementById('workers_diamond_planing');
+            const hoursDiamondPlaning = document.getElementById('hours_diamond_planing');
+            
+            const totalCapacity3dCarving = document.getElementById('total_capacity_3d_carving');
+            const totalCapacityWaterCarving = document.getElementById('total_capacity_water_carving');
+            const totalCapacityDrilling = document.getElementById('total_capacity_drilling');
+            const totalCapacityTrimming = document.getElementById('total_capacity_trimming');
+            const totalCapacityMagnet = document.getElementById('total_capacity_magnet');
+            const totalCapacityLaser = document.getElementById('total_capacity_laser');
+            const totalCapacityPeeling = document.getElementById('total_capacity_peeling');
+
+            const totalCapacityHotBending = document.getElementById('total_capacity_hot_bending');
+            const totalCapacityColdBending = document.getElementById('total_capacity_cold_bending');
+            const totalCapacityOther1 = document.getElementById('total_capacity_other1');
+            const totalCapacityOther2 = document.getElementById('total_capacity_other2');
+            const totalCapacityOther3 = document.getElementById('total_capacity_other3');
+            const totalCapacityAssembly = document.getElementById('total_capacity_assembly');
+            const totalCapacityCleaning = document.getElementById('total_capacity_cleaning');
+            const totalCapacityPackaging = document.getElementById('total_capacity_packaging');
+            
+            const workers3dCarving = document.getElementById('workers_3d_carving');
+            const workersWaterCarving = document.getElementById('workers_water_carving');
+            const workersDrilling = document.getElementById('workers_drilling');
+            const workersTrimming = document.getElementById('workers_trimming');
+            const workersMagnet = document.getElementById('workers_magnet');
+            const workersLaser = document.getElementById('workers_laser');
+            const workersPeeling = document.getElementById('workers_peeling');
+
+            const workersHotBending = document.getElementById('workers_hot_bending');
+            const workersColdBending = document.getElementById('workers_cold_bending');
+            const workersOther1 = document.getElementById('workers_other1');
+            const workersOther2 = document.getElementById('workers_other2');
+            const workersOther3 = document.getElementById('workers_other3');
+            const workersAssembly = document.getElementById('workers_assembly');
+            const workersCleaning = document.getElementById('workers_cleaning');
+            const workersPackaging = document.getElementById('workers_packaging');
+            
+            const hours3dCarving = document.getElementById('hours_3d_carving');
+            const hoursWaterCarving = document.getElementById('hours_water_carving');
+            const hoursDrilling = document.getElementById('hours_drilling');
+            const hoursTrimming = document.getElementById('hours_trimming');
+            const hoursMagnet = document.getElementById('hours_magnet');
+            const hoursLaser = document.getElementById('hours_laser');
+            const hoursPeeling = document.getElementById('hours_peeling');
+
+            const hoursHotBending = document.getElementById('hours_hot_bending');
+            const hoursColdBending = document.getElementById('hours_cold_bending');
+            const hoursOther1 = document.getElementById('hours_other1');
+            const hoursOther2 = document.getElementById('hours_other2');
+            const hoursOther3 = document.getElementById('hours_other3');
+            const hoursAssembly = document.getElementById('hours_assembly');
+            const hoursCleaning = document.getElementById('hours_cleaning');
+            const hoursPackaging = document.getElementById('hours_packaging');
+            
+            const totalWorkers = document.getElementById('total_workers');
+            const totalHours = document.getElementById('total_hours');
+            const totalCapacitySum = document.getElementById('total_capacity_sum');
+            
+            const totalMaterialCost = document.getElementById('total_material_cost');
+            const totalLaborCost = document.getElementById('total_labor_cost');
+            const totalProjectCost = document.getElementById('total_project_cost');
+            const unitCost = document.getElementById('unit_cost');
+            
+            const materialCostRatio = document.getElementById('material_cost_ratio');
+            const laborCostRatio = document.getElementById('labor_cost_ratio');
+            
+            const calculateBtn = document.getElementById('calculate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const showFormulasBtn = document.getElementById('show-formulas-btn');
+            const hideFormulasBtn = document.getElementById('hide-formulas-btn');
+            
+            const chkCutting = document.getElementById('chk_cutting');
+            const chkDiamondPlaning = document.getElementById('chk_diamond_planing');
+            const chk3dCarving = document.getElementById('chk_3d_carving');
+            const chkWaterCarving = document.getElementById('chk_water_carving');
+            const chkDrilling = document.getElementById('chk_drilling');
+            const chkTrimming = document.getElementById('chk_trimming');
+            const chkMagnet = document.getElementById('chk_magnet');
+            const chkLaser = document.getElementById('chk_laser');
+            const chkPeeling = document.getElementById('chk_peeling');
+
+            const chkHotBending = document.getElementById('chk_hot_bending');
+            const chkColdBending = document.getElementById('chk_cold_bending');
+            const chkOther1 = document.getElementById('chk_other1');
+            const chkOther2 = document.getElementById('chk_other2');
+            const chkOther3 = document.getElementById('chk_other3');
+            const chkAssembly = document.getElementById('chk_assembly');
+            const chkCleaning = document.getElementById('chk_cleaning');
+            const chkPackaging = document.getElementById('chk_packaging');
+            
+            const rowCutting = document.getElementById('row_cutting');
+            const rowDiamondPlaning = document.getElementById('row_diamond_planing');
+            const row3dCarving = document.getElementById('row_3d_carving');
+            const rowWaterCarving = document.getElementById('row_water_carving');
+            const rowDrilling = document.getElementById('row_drilling');
+            const rowTrimming = document.getElementById('row_trimming');
+            const rowMagnet = document.getElementById('row_magnet');
+            const rowLaser = document.getElementById('row_laser');
+            const rowPeeling = document.getElementById('row_peeling');
+
+            const rowHotBending = document.getElementById('row_hot_bending');
+            const rowColdBending = document.getElementById('row_cold_bending');
+            const rowOther1 = document.getElementById('row_other1');
+            const rowOther2 = document.getElementById('row_other2');
+            const rowOther3 = document.getElementById('row_other3');
+            const rowAssembly = document.getElementById('row_assembly');
+            const rowCleaning = document.getElementById('row_cleaning');
+            const rowPackaging = document.getElementById('row_packaging');
+            
+            const defaultValues = {
+                materialCost: '',
+                productionQuantity: '',
+                deliveryTime: '',
+                hourlyRate: 30,
+                capacityCutting: '',          
+                capacityDiamondPlaning: '',   
+                capacity3dCarving: '',
+                capacityWaterCarving: '',
+                capacityDrilling: '',
+                capacityTrimming: '',
+                capacityMagnet: '',
+                capacityLaser: '',
+                capacityPeeling: '',
+
+                capacityHotBending: '',
+                capacityColdBending: '',
+                capacityOther1: '',
+                capacityOther2: '',
+                capacityOther3: '',
+                capacityAssembly: '',
+                capacityCleaning: '',
+                capacityPackaging: '',
+                workersCutting: '',
+                workersDiamondPlaning: '',
+                workers3dCarving: '',
+                workersWaterCarving: '',
+                workersDrilling: '',
+                workersTrimming: '',
+                workersMagnet: '',
+                workersLaser: '',
+                workersPeeling: '',
+
+                workersHotBending: '',
+                workersColdBending: '',
+                workersOther1: '',
+                workersOther2: '',
+                workersOther3: '',
+                workersAssembly: '',
+                workersCleaning: '',
+                workersPackaging: ''
+            };
+            
+            function toggleProcessDisplay() {
+                rowCutting.classList.toggle('hidden-process', !chkCutting.checked);
+                rowDiamondPlaning.classList.toggle('hidden-process', !chkDiamondPlaning.checked);
+                row3dCarving.classList.toggle('hidden-process', !chk3dCarving.checked);
+                rowWaterCarving.classList.toggle('hidden-process', !chkWaterCarving.checked);
+                rowDrilling.classList.toggle('hidden-process', !chkDrilling.checked);
+                rowTrimming.classList.toggle('hidden-process', !chkTrimming.checked);
+                rowMagnet.classList.toggle('hidden-process', !chkMagnet.checked);
+                rowLaser.classList.toggle('hidden-process', !chkLaser.checked);
+                rowPeeling.classList.toggle('hidden-process', !chkPeeling.checked);
+
+                rowHotBending.classList.toggle('hidden-process', !chkHotBending.checked);
+                rowColdBending.classList.toggle('hidden-process', !chkColdBending.checked);
+                rowOther1.classList.toggle('hidden-process', !chkOther1.checked);
+                rowOther2.classList.toggle('hidden-process', !chkOther2.checked);
+                rowOther3.classList.toggle('hidden-process', !chkOther3.checked);
+                rowAssembly.classList.toggle('hidden-process', !chkAssembly.checked);
+                rowCleaning.classList.toggle('hidden-process', !chkCleaning.checked);
+                rowPackaging.classList.toggle('hidden-process', !chkPackaging.checked);
+                
+                calculateAll();
+            }
+            
+            function checkCapacityLimit() {
+                const productionQty = parseFloat(productionQuantity.value) || 0;
+                const capacityInputs = document.querySelectorAll('.total-capacity-input');
+                
+                capacityInputs.forEach(input => {
+                    input.classList.remove('over-limit');
+                });
+                
+                capacityInputs.forEach(input => {
+                    if (input.id === 'total_capacity_sum') return;
+                    
+                    const capacityValue = parseFloat(input.value) || 0;
+                    if (capacityValue > productionQty) {
+                        input.classList.add('over-limit');
+                    }
+                });
+            }
+            
+            function calculateAll() {
+                // 先同步生产数量并计算材料成本（确保最新）
+                syncProductionQuantity();
+                calculateTotalMaterialCost();
+                
+                const mCost = parseFloat(materialCost.value) || 0;
+                const pQty = parseInt(productionQuantity.value) || 0;
+                const dTime = parseInt(deliveryTime.value) || 0;
+                const hRate = parseFloat(hourlyRate.value) || 0;
+                
+                let tWorkers = 0;
+                let tHours = 0;
+                let tCapacitySum = 0;
+                
+                if (chkCutting.checked) {
+                    const capCutting = parseFloat(capacityCutting.value) || 0;
+                    const workerCutting = parseInt(workersCutting.value) || 1;
+                    const totalCapCutting = capCutting;
+                    const hourCutting = capCutting > 0 ? (pQty / capCutting) : 0;
+                    totalCapacityCutting.value = totalCapCutting.toFixed(2);
+                    workersCutting.value = workerCutting;
+                    hoursCutting.value = hourCutting.toFixed(2);
+                    
+                    tWorkers += workerCutting;
+                    tHours += parseFloat(hoursCutting.value) * workerCutting;
+                    tCapacitySum += totalCapCutting;
+                } else {
+                    totalCapacityCutting.value = '';
+                    workersCutting.value = '';
+                    hoursCutting.value = '';
+                }
+                
+                if (chkDiamondPlaning.checked) {
+                    const capDiamondPlaning = parseFloat(capacityDiamondPlaning.value) || 0;
+                    const workerDiamondPlaning = parseInt(workersDiamondPlaning.value) || 1;
+                    const totalCapDiamondPlaning = capDiamondPlaning;
+                    const hourDiamondPlaning = capDiamondPlaning > 0 ? (pQty / capDiamondPlaning) : 0;
+                    totalCapacityDiamondPlaning.value = totalCapDiamondPlaning.toFixed(2);
+                    workersDiamondPlaning.value = workerDiamondPlaning;
+                    hoursDiamondPlaning.value = hourDiamondPlaning.toFixed(2);
+                    
+                    tWorkers += workerDiamondPlaning;
+                    tHours += parseFloat(hoursDiamondPlaning.value) * workerDiamondPlaning;
+                    tCapacitySum += totalCapDiamondPlaning;
+                } else {
+                    totalCapacityDiamondPlaning.value = '';
+                    workersDiamondPlaning.value = '';
+                    hoursDiamondPlaning.value = '';
+                }
+                
+                if (chk3dCarving.checked) {
+                    const cap3dCarving = parseFloat(capacity3dCarving.value) || 0;
+                    const worker3dCarving = parseInt(workers3dCarving.value) || 1;
+                    const totalCap3dCarving = cap3dCarving;
+                    const hour3dCarving = cap3dCarving > 0 ? (pQty / cap3dCarving) : 0;
+                    totalCapacity3dCarving.value = totalCap3dCarving.toFixed(2);
+                    workers3dCarving.value = worker3dCarving;
+                    hours3dCarving.value = hour3dCarving.toFixed(2);
+                    
+                    tWorkers += worker3dCarving;
+                    tHours += parseFloat(hours3dCarving.value) * worker3dCarving;
+                    tCapacitySum += totalCap3dCarving;
+                } else {
+                    totalCapacity3dCarving.value = '';
+                    workers3dCarving.value = '';
+                    hours3dCarving.value = '';
+                }
+                
+                if (chkWaterCarving.checked) {
+                    const capWaterCarving = parseFloat(capacityWaterCarving.value) || 0;
+                    const workerWaterCarving = parseInt(workersWaterCarving.value) || 1;
+                    const totalCapWaterCarving = capWaterCarving;
+                    const hourWaterCarving = capWaterCarving > 0 ? (pQty / capWaterCarving) : 0;
+                    totalCapacityWaterCarving.value = totalCapWaterCarving.toFixed(2);
+                    workersWaterCarving.value = workerWaterCarving;
+                    hoursWaterCarving.value = hourWaterCarving.toFixed(2);
+                    
+                    tWorkers += workerWaterCarving;
+                    tHours += parseFloat(hoursWaterCarving.value) * workerWaterCarving;
+                    tCapacitySum += totalCapWaterCarving;
+                } else {
+                    totalCapacityWaterCarving.value = '';
+                    workersWaterCarving.value = '';
+                    hoursWaterCarving.value = '';
+                }
+                
+                if (chkDrilling.checked) {
+                    const capDrilling = parseFloat(capacityDrilling.value) || 0;
+                    const workerDrilling = parseInt(workersDrilling.value) || 1;
+                    const totalCapDrilling = capDrilling;
+                    const hourDrilling = capDrilling > 0 ? (pQty / capDrilling) : 0;
+                    totalCapacityDrilling.value = totalCapDrilling.toFixed(2);
+                    workersDrilling.value = workerDrilling;
+                    hoursDrilling.value = hourDrilling.toFixed(2);
+                    
+                    tWorkers += workerDrilling;
+                    tHours += parseFloat(hoursDrilling.value) * workerDrilling;
+                    tCapacitySum += totalCapDrilling;
+                } else {
+                    totalCapacityDrilling.value = '';
+                    workersDrilling.value = '';
+                    hoursDrilling.value = '';
+                }
+                
+                if (chkTrimming.checked) {
+                    const capTrimming = parseFloat(capacityTrimming.value) || 0;
+                    const workerTrimming = parseInt(workersTrimming.value) || 1;
+                    const totalCapTrimming = capTrimming;
+                    const hourTrimming = capTrimming > 0 ? (pQty / capTrimming) : 0;
+                    totalCapacityTrimming.value = totalCapTrimming.toFixed(2);
+                    workersTrimming.value = workerTrimming;
+                    hoursTrimming.value = hourTrimming.toFixed(2);
+                    
+                    tWorkers += workerTrimming;
+                    tHours += parseFloat(hoursTrimming.value) * workerTrimming;
+                    tCapacitySum += totalCapTrimming;
+                } else {
+                    totalCapacityTrimming.value = '';
+                    workersTrimming.value = '';
+                    hoursTrimming.value = '';
+                }
+                
+                if (chkMagnet.checked) {
+                    const capMagnet = parseFloat(capacityMagnet.value) || 0;
+                    const workerMagnet = parseInt(workersMagnet.value) || 1;
+                    const totalCapMagnet = capMagnet;
+                    const hourMagnet = capMagnet > 0 ? (pQty / capMagnet) : 0;
+                    totalCapacityMagnet.value = totalCapMagnet.toFixed(2);
+                    workersMagnet.value = workerMagnet;
+                    hoursMagnet.value = hourMagnet.toFixed(2);
+                    
+                    tWorkers += workerMagnet;
+                    tHours += parseFloat(hoursMagnet.value) * workerMagnet;
+                    tCapacitySum += totalCapMagnet;
+                } else {
+                    totalCapacityMagnet.value = '';
+                    workersMagnet.value = '';
+                    hoursMagnet.value = '';
+                }
+                
+                if (chkLaser.checked) {
+                    const capLaser = parseFloat(capacityLaser.value) || 0;
+                    const workerLaser = parseInt(workersLaser.value) || 1;
+                    const totalCapLaser = capLaser;
+                    const hourLaser = capLaser > 0 ? (pQty / capLaser) : 0;
+                    totalCapacityLaser.value = totalCapLaser.toFixed(2);
+                    workersLaser.value = workerLaser;
+                    hoursLaser.value = hourLaser.toFixed(2);
+                    
+                    tWorkers += workerLaser;
+                    tHours += parseFloat(hoursLaser.value) * workerLaser;
+                    tCapacitySum += totalCapLaser;
+                } else {
+                    totalCapacityLaser.value = '';
+                    workersLaser.value = '';
+                    hoursLaser.value = '';
+                }
+                
+                if (chkPeeling.checked) {
+                    const capPeeling = parseFloat(capacityPeeling.value) || 0;
+                    const workerPeeling = parseInt(workersPeeling.value) || 1;
+                    const totalCapPeeling = capPeeling;
+                    const hourPeeling = capPeeling > 0 ? (pQty / capPeeling) : 0;
+                    totalCapacityPeeling.value = totalCapPeeling.toFixed(2);
+                    workersPeeling.value = workerPeeling;
+                    hoursPeeling.value = hourPeeling.toFixed(2);
+                    
+                    tWorkers += workerPeeling;
+                    tHours += parseFloat(hoursPeeling.value) * workerPeeling;
+                    tCapacitySum += totalCapPeeling;
+                } else {
+                    totalCapacityPeeling.value = '';
+                    workersPeeling.value = '';
+                    hoursPeeling.value = '';
+                }
+                
+
+                
+                if (chkHotBending.checked) {
+                    const capHotBending = parseFloat(capacityHotBending.value) || 0;
+                    const workerHotBending = parseInt(workersHotBending.value) || 1;
+                    const totalCapHotBending = capHotBending;
+                    const hourHotBending = capHotBending > 0 ? (pQty / capHotBending) : 0;
+                    totalCapacityHotBending.value = totalCapHotBending.toFixed(2);
+                    workersHotBending.value = workerHotBending;
+                    hoursHotBending.value = hourHotBending.toFixed(2);
+                    
+                    tWorkers += workerHotBending;
+                    tHours += parseFloat(hoursHotBending.value) * workerHotBending;
+                    tCapacitySum += totalCapHotBending;
+                } else {
+                    totalCapacityHotBending.value = '';
+                    workersHotBending.value = '';
+                    hoursHotBending.value = '';
+                }
+                
+                if (chkColdBending.checked) {
+                    const capColdBending = parseFloat(capacityColdBending.value) || 0;
+                    const workerColdBending = parseInt(workersColdBending.value) || 1;
+                    const totalCapColdBending = capColdBending;
+                    const hourColdBending = capColdBending > 0 ? (pQty / capColdBending) : 0;
+                    totalCapacityColdBending.value = totalCapColdBending.toFixed(2);
+                    workersColdBending.value = workerColdBending;
+                    hoursColdBending.value = hourColdBending.toFixed(2);
+                    
+                    tWorkers += workerColdBending;
+                    tHours += parseFloat(hoursColdBending.value) * workerColdBending;
+                    tCapacitySum += totalCapColdBending;
+                } else {
+                    totalCapacityColdBending.value = '';
+                    workersColdBending.value = '';
+                    hoursColdBending.value = '';
+                }
+                
+                if (chkOther1.checked) {
+                    const capOther1 = parseFloat(capacityOther1.value) || 0;
+                    const workerOther1 = parseInt(workersOther1.value) || 1;
+                    const totalCapOther1 = capOther1;
+                    const hourOther1 = capOther1 > 0 ? (pQty / capOther1) : 0;
+                    totalCapacityOther1.value = totalCapOther1.toFixed(2);
+                    workersOther1.value = workerOther1;
+                    hoursOther1.value = hourOther1.toFixed(2);
+                    
+                    tWorkers += workerOther1;
+                    tHours += parseFloat(hoursOther1.value) * workerOther1;
+                    tCapacitySum += totalCapOther1;
+                } else {
+                    totalCapacityOther1.value = '';
+                    workersOther1.value = '';
+                    hoursOther1.value = '';
+                }
+                
+                if (chkOther2.checked) {
+                    const capOther2 = parseFloat(capacityOther2.value) || 0;
+                    const workerOther2 = parseInt(workersOther2.value) || 1;
+                    const totalCapOther2 = capOther2;
+                    const hourOther2 = capOther2 > 0 ? (pQty / capOther2) : 0;
+                    totalCapacityOther2.value = totalCapOther2.toFixed(2);
+                    workersOther2.value = workerOther2;
+                    hoursOther2.value = hourOther2.toFixed(2);
+                    
+                    tWorkers += workerOther2;
+                    tHours += parseFloat(hoursOther2.value) * workerOther2;
+                    tCapacitySum += totalCapOther2;
+                } else {
+                    totalCapacityOther2.value = '';
+                    workersOther2.value = '';
+                    hoursOther2.value = '';
+                }
+                
+                if (chkOther3.checked) {
+                    const capOther3 = parseFloat(capacityOther3.value) || 0;
+                    const workerOther3 = parseInt(workersOther3.value) || 1;
+                    const totalCapOther3 = capOther3;
+                    const hourOther3 = capOther3 > 0 ? (pQty / capOther3) : 0;
+                    totalCapacityOther3.value = totalCapOther3.toFixed(2);
+                    workersOther3.value = workerOther3;
+                    hoursOther3.value = hourOther3.toFixed(2);
+                    
+                    tWorkers += workerOther3;
+                    tHours += parseFloat(hoursOther3.value) * workerOther3;
+                    tCapacitySum += totalCapOther3;
+                } else {
+                    totalCapacityOther3.value = '';
+                    workersOther3.value = '';
+                    hoursOther3.value = '';
+                }
+                
+                if (chkAssembly.checked) {
+                    const capAssembly = parseFloat(capacityAssembly.value) || 0;
+                    const workerAssembly = parseInt(workersAssembly.value) || 1;
+                    const totalCapAssembly = capAssembly;
+                    const hourAssembly = capAssembly > 0 ? (pQty / capAssembly) : 0;
+                    totalCapacityAssembly.value = totalCapAssembly.toFixed(2);
+                    workersAssembly.value = workerAssembly;
+                    hoursAssembly.value = hourAssembly.toFixed(2);
+                    
+                    tWorkers += workerAssembly;
+                    tHours += parseFloat(hoursAssembly.value) * workerAssembly;
+                    tCapacitySum += totalCapAssembly;
+                } else {
+                    totalCapacityAssembly.value = '';
+                    workersAssembly.value = '';
+                    hoursAssembly.value = '';
+                }
+                
+                if (chkCleaning.checked) {
+                    const capCleaning = parseFloat(capacityCleaning.value) || 0;
+                    const workerCleaning = parseInt(workersCleaning.value) || 1;
+                    const totalCapCleaning = capCleaning;
+                    const hourCleaning = capCleaning > 0 ? (pQty / capCleaning) : 0;
+                    totalCapacityCleaning.value = totalCapCleaning.toFixed(2);
+                    workersCleaning.value = workerCleaning;
+                    hoursCleaning.value = hourCleaning.toFixed(2);
+                    
+                    tWorkers += workerCleaning;
+                    tHours += parseFloat(hoursCleaning.value) * workerCleaning;
+                    tCapacitySum += totalCapCleaning;
+                } else {
+                    totalCapacityCleaning.value = '';
+                    workersCleaning.value = '';
+                    hoursCleaning.value = '';
+                }
+                
+                if (chkPackaging.checked) {
+                    const capPackaging = parseFloat(capacityPackaging.value) || 0;
+                    const workerPackaging = parseInt(workersPackaging.value) || 1;
+                    const totalCapPackaging = capPackaging;
+                    const hourPackaging = capPackaging > 0 ? (pQty / capPackaging) : 0;
+                    totalCapacityPackaging.value = totalCapPackaging.toFixed(2);
+                    workersPackaging.value = workerPackaging;
+                    hoursPackaging.value = hourPackaging.toFixed(2);
+                    
+                    tWorkers += workerPackaging;
+                    tHours += parseFloat(hoursPackaging.value) * workerPackaging;
+                    tCapacitySum += totalCapPackaging;
+                } else {
+                    totalCapacityPackaging.value = '';
+                    workersPackaging.value = '';
+                    hoursPackaging.value = '';
+                }
+                
+                totalWorkers.value = tWorkers;
+                totalHours.value = tHours.toFixed(2);
+                totalCapacitySum.value = tCapacitySum.toFixed(2);
+                
+                const tMaterialCost = mCost * pQty;
+                const tLaborCost = tHours * hRate;
+                const tProjectCost = tMaterialCost + tLaborCost;
+                const uCost = tProjectCost / pQty;
+                
+                const mRatio = tProjectCost > 0 ? (tMaterialCost / tProjectCost) * 100 : 0;
+                const lRatio = tProjectCost > 0 ? (tLaborCost / tProjectCost) * 100 : 0;
+                
+                totalMaterialCost.value = tMaterialCost.toFixed(2);
+                totalLaborCost.value = tLaborCost.toFixed(2);
+                totalProjectCost.value = tProjectCost.toFixed(2);
+                unitCost.value = uCost.toFixed(2);
+                
+                materialCostRatio.value = mRatio.toFixed(2);
+                laborCostRatio.value = lRatio.toFixed(2);
+                
+                checkCapacityLimit();
+            }
+            
+            function resetToDefault() {
+                // 重置材料成本区域
+                boardQuantity.value = '';
+                boardPrice.value = '';
+                boardTotal.value = '';
+                totalMaterialDetailCost.value = '';
+                
+                // 保留一条配件行，清空内容
+                const accessoryRows = document.querySelectorAll('.accessory-row');
+                accessoryRows.forEach((row, index) => {
+                    if (index > 0) {
+                        row.remove();
+                    } else {
+                        row.querySelector('.accessory-quantity').value = '';
+                        row.querySelector('.accessory-price').value = '';
+                        row.querySelector('.accessory-total').value = '';
+                        row.querySelector('.accessory-type').value = '包装';
+                        row.querySelector('.accessory-note-input').value = '';
+                        // 重置备注为包装的默认备注
+                        updateAccessoryNote(row);
+                    }
+                });
+                reorderAccessoryRows();
+                
+                // 重置原有字段
+                materialCost.value = defaultValues.materialCost;
+                productionQuantity.value = defaultValues.productionQuantity;
+                deliveryTime.value = defaultValues.deliveryTime;
+                hourlyRate.value = defaultValues.hourlyRate;
+                
+                capacityCutting.value = defaultValues.capacityCutting;
+                capacityDiamondPlaning.value = defaultValues.capacityDiamondPlaning;
+                capacity3dCarving.value = defaultValues.capacity3dCarving;
+                capacityWaterCarving.value = defaultValues.capacityWaterCarving;
+                capacityDrilling.value = defaultValues.capacityDrilling;
+                capacityTrimming.value = defaultValues.capacityTrimming;
+                capacityMagnet.value = defaultValues.capacityMagnet;
+                capacityLaser.value = defaultValues.capacityLaser;
+                capacityPeeling.value = defaultValues.capacityPeeling;
+
+                capacityHotBending.value = defaultValues.capacityHotBending;
+                capacityColdBending.value = defaultValues.capacityColdBending;
+                capacityOther1.value = defaultValues.capacityOther1;
+                capacityOther2.value = defaultValues.capacityOther2;
+                capacityOther3.value = defaultValues.capacityOther3;
+                capacityAssembly.value = defaultValues.capacityAssembly;
+                capacityCleaning.value = defaultValues.capacityCleaning;
+                capacityPackaging.value = defaultValues.capacityPackaging;
+                
+                workersCutting.value = defaultValues.workersCutting;
+                workersDiamondPlaning.value = defaultValues.workersDiamondPlaning;
+                workers3dCarving.value = defaultValues.workers3dCarving;
+                workersWaterCarving.value = defaultValues.workersWaterCarving;
+                workersDrilling.value = defaultValues.workersDrilling;
+                workersTrimming.value = defaultValues.workersTrimming;
+                workersMagnet.value = defaultValues.workersMagnet;
+                workersLaser.value = defaultValues.workersLaser;
+                workersPeeling.value = defaultValues.workersPeeling;
+
+                workersHotBending.value = defaultValues.workersHotBending;
+                workersColdBending.value = defaultValues.workersColdBending;
+                workersOther1.value = defaultValues.workersOther1;
+                workersOther2.value = defaultValues.workersOther2;
+                workersOther3.value = defaultValues.workersOther3;
+                workersAssembly.value = defaultValues.workersAssembly;
+                workersCleaning.value = defaultValues.workersCleaning;
+                workersPackaging.value = defaultValues.workersPackaging;
+                
+                chkCutting.checked = true;
+                chkDiamondPlaning.checked = true;
+                chk3dCarving.checked = false;
+                chkWaterCarving.checked = false;
+                chkDrilling.checked = false;
+                chkTrimming.checked = false;
+                chkMagnet.checked = false;
+                chkLaser.checked = true;
+                chkPeeling.checked = true;
+
+                chkHotBending.checked = false;
+                chkColdBending.checked = false;
+                chkOther1.checked = false;
+                chkOther2.checked = false;
+                chkOther3.checked = false;
+                chkAssembly.checked = true;
+                chkCleaning.checked = true;
+                chkPackaging.checked = true;
+                
+                totalCapacitySum.value = '';
+                
+                toggleProcessDisplay();
+                calculateAll();
+                hideFormulas();
+            }
+            
+            function showFormulas() {
+                const formulaNotes = document.querySelectorAll('.formula-note');
+                formulaNotes.forEach(note => {
+                    note.classList.remove('hidden-formula');
+                });
+                showFormulasBtn.style.display = 'none';
+                hideFormulasBtn.style.display = 'inline-block';
+            }
+            
+            function hideFormulas() {
+                const formulaNotes = document.querySelectorAll('.formula-note');
+                formulaNotes.forEach(note => {
+                    note.classList.add('hidden-formula');
+                });
+                showFormulasBtn.style.display = 'inline-block';
+                hideFormulasBtn.style.display = 'none';
+            }
+            
+            calculateBtn.addEventListener('click', calculateAll);
+            resetBtn.addEventListener('click', resetToDefault);
+            showFormulasBtn.addEventListener('click', showFormulas);
+            hideFormulasBtn.addEventListener('click', hideFormulas);
+            
+            chkCutting.addEventListener('change', toggleProcessDisplay);
+            chkDiamondPlaning.addEventListener('change', toggleProcessDisplay);
+            chk3dCarving.addEventListener('change', toggleProcessDisplay);
+            chkWaterCarving.addEventListener('change', toggleProcessDisplay);
+            chkDrilling.addEventListener('change', toggleProcessDisplay);
+            chkTrimming.addEventListener('change', toggleProcessDisplay);
+            chkMagnet.addEventListener('change', toggleProcessDisplay);
+            chkLaser.addEventListener('change', toggleProcessDisplay);
+            chkPeeling.addEventListener('change', toggleProcessDisplay);
+
+            chkHotBending.addEventListener('change', toggleProcessDisplay);
+            chkColdBending.addEventListener('change', toggleProcessDisplay);
+            chkOther1.addEventListener('change', toggleProcessDisplay);
+            chkOther2.addEventListener('change', toggleProcessDisplay);
+            chkOther3.addEventListener('change', toggleProcessDisplay);
+            chkAssembly.addEventListener('change', toggleProcessDisplay);
+            chkCleaning.addEventListener('change', toggleProcessDisplay);
+            chkPackaging.addEventListener('change', toggleProcessDisplay);
+            
+            const inputElements = document.querySelectorAll('input[type="number"]:not([readonly])');
+            inputElements.forEach(input => {
+                input.addEventListener('change', calculateAll);
+                input.addEventListener('input', calculateAll);
+            });
+            
+            chkCutting.checked = true;
+            chkDiamondPlaning.checked = true;
+            chk3dCarving.checked = false;
+            chkWaterCarving.checked = false;
+            chkDrilling.checked = false;
+            chkTrimming.checked = false;
+            chkMagnet.checked = false;
+            chkLaser.checked = true;
+            chkPeeling.checked = true;
+
+            chkHotBending.checked = false;
+            chkColdBending.checked = false;
+            chkOther1.checked = false;
+            chkOther2.checked = false;
+            chkOther3.checked = false;
+            chkAssembly.checked = true;
+            chkCleaning.checked = true;
+            chkPackaging.checked = true;
+            
+            toggleProcessDisplay();
+            calculateAll();
+        });
+
+        // 水印相关函数
+        window.onload = function() {
+            createFixedGridWatermark();
+        };
+
+        function createFixedGridWatermark() {
+            const watermark = document.querySelector('.watermark');
+            const watermarkContent = document.querySelector('.watermark-content').innerText;
+            const fragment = document.createDocumentFragment();
+            
+            watermark.innerHTML = '';
+            
+            const cols = 6;
+            const rows = 4;
+            
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const colGap = screenWidth / cols;
+            const rowGap = screenHeight / rows;
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const watermarkItem = document.createElement('div');
+                    watermarkItem.className = 'watermark-content';
+                    watermarkItem.innerText = watermarkContent;
+                    watermarkItem.style.position = 'absolute';
+                    watermarkItem.style.top = `${(i + 0.5) * rowGap}px`;
+                    watermarkItem.style.left = `${(j + 0.5) * colGap}px`;
+                    watermarkItem.style.transform = 'translate(-50%, -50%) rotate(-25deg)';
+                    fragment.appendChild(watermarkItem);
+                }
+            }
+            
+            watermark.appendChild(fragment);
+        }
+
+        window.addEventListener('resize', function() {
+            createFixedGridWatermark();
+        });
+    </script>
+</body>
+</html>

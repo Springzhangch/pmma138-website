@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亚克力报价大师（粤丰v1.2.6）</title>
+    <style>
+        /* 苹果风格基础样式 */
+        :root {
+            --apple-bg: #f5f5f7;
+            --apple-white: #ffffff;
+            --apple-blue: #0071e3;
+            --apple-hover-blue: #0077ed;
+            --apple-border: #000000; /* 核心修改：将默认边框色改为黑色 */
+            --apple-text: #1d1d1f;
+            --apple-secondary-text: #86868b;
+            --apple-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --apple-shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--apple-bg);
+            color: var(--apple-text);
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            line-height: 1.5;
+            position: relative; /* 水印容器需要相对定位 */
+            min-height: 100vh; /* 确保水印覆盖整个页面高度 */
+        }
+
+        /* 水印样式 - 核心修改：opacity 从 0.1 改为 0.05 */
+        .watermark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 不影响页面交互 */
+            z-index: 9999; /* 确保水印在最上层但不遮挡内容 */
+            opacity: 0.05; /* 降低透明度，让水印更淡 */
+        }
+
+        .watermark-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg); /* -25°倾斜 */
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            white-space: nowrap;
+            letter-spacing: 5px;
+            user-select: none; /* 禁止选中水印文字 */
+        }
+
+        h1 {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 26px; /* 原24px +2 */
+            font-weight: 600;
+            color: var(--apple-text);
+            letter-spacing: -0.5px;
+            z-index: 10; /* 确保标题在水印上层 */
+        }
+
+        h2 {
+            font-size: 20px; /* 原18px +2 */
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--apple-text);
+            position: relative;
+            z-index: 10; /* 确保标题在水印上层 */
+        }
+
+        /* 报价区域样式 */
+        .quote-section {
+            flex: 1;
+            min-width: 320px;
+            background: var(--apple-white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--apple-shadow);
+            transition: var(--transition);
+            margin-top: 80px;
+            position: relative;
+            z-index: 10; /* 确保内容在水印上层 */
+        }
+
+        .quote-section:hover {
+            box-shadow: var(--apple-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        /* 汇总区域样式 */
+        #summary-section {
+            width: 100%;
+            background: var(--apple-white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--apple-shadow);
+            margin-top: 20px;
+            position: relative;
+            z-index: 10; /* 确保内容在水印上层 */
+        }
+
+        /* 标签样式 */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px; /* 原14px +2 */
+            color: var(--apple-text);
+            font-weight: 500;
+        }
+
+        /* 输入框/下拉框样式 */
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--apple-border); /* 现在使用黑色边框变量 */
+            border-radius: 12px;
+            background: var(--apple-white);
+            font-size: 16px; /* 原14px +2 */
+            color: var(--apple-text);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            border-color: var(--apple-blue); /* 聚焦时仍保留蓝色边框（可改为#000保持黑色） */
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        }
+
+        /* 按钮样式（苹果风格 + 光束动画） */
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--apple-blue);
+            color: white;
+            border: none;
+            border-radius: 12px; /* 胶囊形圆角 */
+            font-size: 17px; /* 原15px +2 */
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 8px;
+            /* 光束动画所需样式 */
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 光束动画核心：伪元素实现1px边框光束 */
+        button::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            border: 1px solid transparent;
+            background: linear-gradient(90deg, transparent, #ffffff, transparent);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            /* 初始状态无动画 */
+            animation: none;
+        }
+
+        /* 鼠标悬停时启动光束动画 */
+        button:hover::before {
+            opacity: 1;
+            /* 每次悬停重新启动动画 */
+            animation: beam 2s linear 0s 1 normal forwards;
+        }
+
+        /* 光束移动动画 - 从左到右单次移动 */
+        @keyframes beam {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* 原有hover效果保留并增强 */
+        button:hover {
+            background-color: var(--apple-hover-blue);
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        button:active {
+            transform: translateY(0) scale(1);
+            opacity: 0.95;
+        }
+
+        /* 辅助区域样式 */
+        #note, #note2, #note3 {
+            margin-top: -12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            background-color: #f8f8fa;
+            border: 1px solid var(--apple-border); /* 辅助区域也改为黑色边框（可选） */
+            font-size: 15px; /* 原13px +2 */
+            color: var(--apple-secondary-text);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        #calculation-process, #calculation-process2, #calculation-process3 {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            background-color: #f8f8fa;
+            border: 1px solid var(--apple-border); /* 计算过程区域也改为黑色边框（可选） */
+            font-size: 15px; /* 原13px +2 */
+            line-height: 1.8;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* 定制尺寸/数量区域显隐动画 */
+        #custom-size, #custom-size2, #custom-size3,
+        #quantity-section, #quantity-section2, #quantity-section3 {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* 文本居中样式 */
+        .center-text {
+            text-align: center;
+            font-size: 20px; /* 原18px +2 */
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--apple-text);
+            position: relative;
+        }
+
+        .center-text::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 2px;
+            background-color: var(--apple-border); /* 分割线也改为黑色（可选） */
+            margin: 12px auto 0;
+            border-radius: 1px;
+        }
+
+        /* 结果/总成本区域样式 */
+        #result, #result2, #result3,
+        #total-cost, #total-cost2, #total-cost3 {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 17px; /* 原15px +2 */
+            font-weight: 500;
+            color: var(--apple-text);
+            background-color: #f8f8fa;
+            border: 1px solid var(--apple-border); /* 结果区域也改为黑色边框（可选） */
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* 汇总文本样式 */
+        #summary {
+            font-size: 17px; /* 原15px +2 */
+            line-height: 1.8;
+            color: var(--apple-text);
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式优化（苹果移动端适配） */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .quote-section {
+                margin-top: 70px;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 22px; /* 原20px +2 */
+                top: 16px;
+            }
+
+            #summary-section {
+                padding: 20px;
+            }
+
+            /* 移动端水印适配 */
+            .watermark-content {
+                font-size: 16px;
+                letter-spacing: 3px;
+                transform: translate(-50%, -50%) rotate(-25deg); /* 保持-25°倾斜 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 水印容器 - 文字为"粤丰展示" -->
+    <div class="watermark">
+        <div class="watermark-content">粤丰展示</div>
+    </div>
+
+    <h1>亚克力报价大师（粤丰v1.2.6）</h1>
+    <div class="quote-section">
+        <p class="center-text">壹</p>
+        <label for="board-type">选择板材类型：</label>
+        <select id="board-type" onchange="showNote('note', 'board-type'); updateBoardSizeOptions('board-size', 'board-type')">
+            <option value="">请选择</option>
+            <option value="extruded">挤压板（透明度92%以上）</option>
+            <option value="cast" selected>浇筑板（透明度98%以上）</option>
+            <option value="special">特种板</option>
+            <option value="regular">常规板材（面积计算）</option>
+        </select>
+        <div id="note"></div>
+        <label for="board-size">选择板材尺寸：</label>
+        <select id="board-size" onchange="toggleCustomSize('custom-size', 'board-size')">
+            <!-- 选项会根据板材类型动态更新 -->
+        </select>
+        <div id="custom-size">
+            <label for="custom-length">定制板材长度（MM）：</label>
+            <input type="number" id="custom-length" placeholder="输入定制板材长度">
+            <label for="custom-width">定制板材宽度（MM）：</label>
+            <input type="number" id="custom-width" placeholder="输入定制板材宽度">
+        </div>
+        <label for="product-length">片长度（MM）：</label>
+        <input type="number" id="product-length" placeholder="输入定制板材长度">
+        <label for="product-width">片宽度（MM）：</label>
+        <input type="number" id="product-width" placeholder="输入定制板材宽度">
+        <label for="product-thickness">片厚度（MM）：</label>
+        <input type="number" id="product-thickness" placeholder="输入片厚度">
+        <label for="unit-price">单价（元/KG）：</label>
+        <input type="number" id="unit-price" placeholder="输入单价">
+        <button onclick="calculateCost('result', 'calculation-process', 'quantity-section', 'board-type', 'board-size', 'custom-length', 'custom-width', 'product-length', 'product-width', 'product-thickness', 'unit-price')">计算成本</button>
+        <div id="result"></div>
+        <div id="quantity-section">
+            <label for="quantity">输入片数量：</label>
+            <input type="number" id="quantity" placeholder="输入片数量" oninput="calculateTotalCost('total-cost', 'calculation-process', 'quantity', 'singleProductCost', 'cutCount', 'boardPrice'); updateSummary()">
+            <div id="total-cost"></div>
+        </div>
+        <div id="calculation-process"></div>
+    </div>
+    <div class="quote-section">
+        <p class="center-text">贰</p>
+        <label for="board-type2">选择板材类型：</label>
+        <select id="board-type2" onchange="showNote('note2', 'board-type2'); updateBoardSizeOptions('board-size2', 'board-type2')">
+            <option value="">请选择</option>
+            <option value="extruded">挤压板（透明度92%以上）</option>
+            <option value="cast" selected>浇筑板（透明度98%以上）</option>
+            <option value="special">特种板</option>
+            <option value="regular">常规板材（面积计算）</option>
+        </select>
+        <div id="note2"></div>
+        <label for="board-size2">选择板材尺寸：</label>
+        <select id="board-size2" onchange="toggleCustomSize('custom-size2', 'board-size2')">
+            <!-- 选项会根据板材类型动态更新 -->
+        </select>
+        <div id="custom-size2">
+            <label for="custom-length2">定制板材长度（MM）：</label>
+            <input type="number" id="custom-length2" placeholder="输入定制板材长度">
+            <label for="custom-width2">定制板材宽度（MM）：</label>
+            <input type="number" id="custom-width2" placeholder="输入定制板材宽度">
+        </div>
+        <label for="product-length2">片长度（MM）：</label>
+        <input type="number" id="product-length2" placeholder="输入片长度">
+        <label for="product-width2">片宽度（MM）：</label>
+        <input type="number" id="product-width2" placeholder="输入片宽度">
+        <label for="product-thickness2">片厚度（MM）：</label>
+        <input type="number" id="product-thickness2" placeholder="输入片厚度">
+        <label for="unit-price2">单价（元/KG）：</label>
+        <input type="number" id="unit-price2" placeholder="输入单价">
+        <button onclick="calculateCost('result2', 'calculation-process2', 'quantity-section2', 'board-type2', 'board-size2', 'custom-length2', 'custom-width2', 'product-length2', 'product-width2', 'product-thickness2', 'unit-price2')">计算成本</button>
+        <div id="result2"></div>
+        <div id="quantity-section2">
+            <label for="quantity2">输入片数量：</label>
+            <input type="number" id="quantity2" placeholder="输入片数量" oninput="calculateTotalCost('total-cost2', 'calculation-process2', 'quantity2', 'singleProductCost2', 'cutCount2', 'boardPrice2'); updateSummary()">
+            <div id="total-cost2"></div>
+        </div>
+        <div id="calculation-process2"></div>
+    </div>
+    <div class="quote-section">
+        <p class="center-text">叁</p>
+        <label for="board-type3">选择板材类型：</label>
+        <select id="board-type3" onchange="showNote('note3', 'board-type3'); updateBoardSizeOptions('board-size3', 'board-type3')">
+            <option value="">请选择</option>
+            <option value="extruded">挤压板（透明度92%以上）</option>
+            <option value="cast" selected>浇筑板（透明度98%以上）</option>
+            <option value="special">特种板</option>
+            <option value="regular">常规板材（面积计算）</option>
+        </select>
+        <div id="note3"></div>
+        <label for="board-size3">选择板材尺寸：</label>
+        <select id="board-size3" onchange="toggleCustomSize('custom-size3', 'board-size3')">
+            <!-- 选项会根据板材类型动态更新 -->
+        </select>
+        <div id="custom-size3">
+            <label for="custom-length3">定制板材长度（MM）：</label>
+            <input type="number" id="custom-length3" placeholder="输入定制板材长度">
+            <label for="custom-width3">定制板材宽度（MM）：</label>
+            <input type="number" id="custom-width3" placeholder="输入定制板材宽度">
+        </div>
+        <label for="product-length3">片长度（MM）：</label>
+        <input type="number" id="product-length3" placeholder="输入片长度">
+        <label for="product-width3">片宽度（MM）：</label>
+        <input type="number" id="product-width3" placeholder="输入片宽度">
+        <label for="product-thickness3">片厚度（MM）：</label>
+        <input type="number" id="product-thickness3" placeholder="输入片厚度">
+        <label for="unit-price3">单价（元/KG）：</label>
+        <input type="number" id="unit-price3" placeholder="输入单价">
+        <button onclick="calculateCost('result3', 'calculation-process3', 'quantity-section3', 'board-type3', 'board-size3', 'custom-length3', 'custom-width3', 'product-length3', 'product-width3', 'product-thickness3', 'unit-price3')">计算成本</button>
+        <div id="result3"></div>
+        <div id="quantity-section3">
+            <label for="quantity3">输入片数量：</label>
+            <input type="number" id="quantity3" placeholder="输入片数量" oninput="calculateTotalCost('total-cost3', 'calculation-process3', 'quantity3', 'singleProductCost3', 'cutCount3', 'boardPrice3'); updateSummary()">
+            <div id="total-cost3"></div>
+        </div>
+        <div id="calculation-process3"></div>
+    </div>
+    <div id="summary-section">
+        <h2>汇总信息</h2>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        // 页面加载完成后自动初始化默认选中的浇筑板相关内容
+        window.onload = function() {
+            // 初始化三个板材选择框的默认状态
+            initBoardType('board-type', 'note', 'board-size');
+            initBoardType('board-type2', 'note2', 'board-size2');
+            initBoardType('board-type3', 'note3', 'board-size3');
+            
+            // 生成固定6列4行的水印
+            createFixedGridWatermark();
+        };
+
+        // 创建固定6列4行的水印（替换原有自适应逻辑）
+        function createFixedGridWatermark() {
+            const watermark = document.querySelector('.watermark');
+            const watermarkContent = document.querySelector('.watermark-content').innerText; // 获取水印文字
+            const fragment = document.createDocumentFragment();
+            
+            // 清空原有水印内容
+            watermark.innerHTML = '';
+            
+            // 固定配置：6列竖排，4行横排
+            const cols = 6; // 竖排数量（列数）
+            const rows = 4; // 横排数量（行数）
+            
+            // 计算每个水印的间距（平均分配屏幕空间）
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const colGap = screenWidth / cols; // 列间距
+            const rowGap = screenHeight / rows; // 行间距
+            
+            // 生成6列4行的水印
+            for (let i = 0; i < rows; i++) { // 4行
+                for (let j = 0; j < cols; j++) { // 6列
+                    const watermarkItem = document.createElement('div');
+                    watermarkItem.className = 'watermark-content';
+                    watermarkItem.innerText = watermarkContent; // 使用"粤丰展示"文字
+                    watermarkItem.style.position = 'absolute';
+                    // 定位：每个水印居中显示在对应格子里
+                    watermarkItem.style.top = `${(i + 0.5) * rowGap}px`;
+                    watermarkItem.style.left = `${(j + 0.5) * colGap}px`;
+                    watermarkItem.style.transform = 'translate(-50%, -50%) rotate(-25deg)'; // 保持-25°倾斜
+                    fragment.appendChild(watermarkItem);
+                }
+            }
+            
+            watermark.appendChild(fragment);
+        }
+
+        // 窗口大小改变时重新生成固定网格水印
+        window.addEventListener('resize', function() {
+            createFixedGridWatermark();
+        });
+
+        function initBoardType(boardTypeId, noteId, boardSizeId) {
+            // 设置默认选中值
+            document.getElementById(boardTypeId).value = 'cast';
+            // 显示对应的备注信息
+            showNote(noteId, boardTypeId);
+            // 更新板材尺寸选项
+            updateBoardSizeOptions(boardSizeId, boardTypeId);
+        }
+
+        function showNote(noteId, boardTypeInputId) {
+            const boardType = document.getElementById(boardTypeInputId).value;
+            const noteDiv = document.getElementById(noteId);
+            if (boardType === 'extruded') {
+                noteDiv.innerHTML = `备注信息：<br>1. 挤压板边缘会有麻点，而且挤压板的B级板边缘可以看到发黄发黑，挤压板的A级板边缘则会比较透黑。<br>2. 表面效果，挤压板较浇注板麻点会多很多。<br>3. 挤压板的公差可以控制在±0.1mm。`;
+            } else if (boardType === 'cast') {
+                noteDiv.innerHTML = `备注信息：<br>1. 浇注板边缘没有麻点，而且边缘非常透明；<br>2. 表面效果，浇注板较挤压板麻点会少很多。<br>3. 浇注板在公差上是随着其要求厚度的增加而增加的，行业标准±10%。`;
+            } else if (boardType === 'special') {
+                noteDiv.innerHTML = `备注信息：<br>特种板板材有特殊的性能，计算时不考虑 +3 的间隙。`;
+            } else if (boardType === 'regular') {
+                noteDiv.innerHTML = `备注信息：<br>按面积计算成本。`;
+            } else {
+                noteDiv.innerHTML = '';
+            }
+        }
+
+        function updateBoardSizeOptions(boardSizeSelectId, boardTypeInputId) {
+            const boardType = document.getElementById(boardTypeInputId).value;
+            const boardSizeSelect = document.getElementById(boardSizeSelectId);
+            boardSizeSelect.innerHTML = '';
+
+            if (boardType === 'extruded') {
+                boardSizeSelect.style.display = 'block';
+                const options = [
+                    { value: '1220x2440-extruded', text: '1220*2440MM（挤压板）' },
+                    { value: '1830x1220-extruded', text: '1830*1220MM（挤压板）' },
+                    { value: 'custom-extruded', text: '定制尺寸（挤压板）' }
+                ];
+                options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    boardSizeSelect.appendChild(opt);
+                });
+            } else if (boardType === 'cast') {
+                boardSizeSelect.style.display = 'block';
+                const options = [
+                    { value: '1220x2440-cast', text: '1220*2440MM（浇注板）' },
+                    { value: '1270x2490-cast', text: '1270*2490MM（浇注板，可用规格2460*1240MM）' },
+                    { value: '1290x2500-cast', text: '1220*2440MM（浇注板）' },
+                    { value: '1570x2570-cast', text: '1570*2570MM（浇注板）' },
+                    { value: '2000x3000-cast', text: '2000*3000MM（浇注板）' },
+                    { value: '2000x1000-cast', text: '2000*1000MM（浇注板）' },
+                    { value: '1830x1220-cast', text: '1830*1220MM（浇注板）' },
+                    { value: 'custom-cast', text: '定制尺寸（浇注板）' }
+                ];
+                options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    boardSizeSelect.appendChild(opt);
+                });
+            } else if (boardType === 'special') {
+                boardSizeSelect.style.display = 'block';
+                const options = [
+                    { value: '1220x2440-special', text: '1220*2440MM（特种板）' },
+                    { value: '1830x1220-special', text: '1830*1220MM（特种板）' },
+                    { value: 'custom-special', text: '定制尺寸（特种板）' }
+                ];
+                options.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    boardSizeSelect.appendChild(opt);
+                });
+            } else if (boardType === 'regular') {
+                boardSizeSelect.style.display = 'none';
+                document.getElementById(boardSizeSelectId.replace('board-size', 'custom-size')).style.display = 'none';
+            }
+        }
+
+        function toggleCustomSize(customSizeDivId, boardSizeSelectId) {
+            const boardSize = document.getElementById(boardSizeSelectId).value;
+            const customSizeDiv = document.getElementById(customSizeDivId);
+            if (boardSize.includes('custom')) {
+                customSizeDiv.style.display = 'block';
+            } else {
+                customSizeDiv.style.display = 'none';
+            }
+        }
+
+        function calculateMaxCuts(boardL, boardW, productL, productW, boardType) {
+            if (boardL <= 0 || boardW <= 0) return 0;
+            let gap = boardType === 'special' ? 0 : 3;
+            const a = Math.floor(boardL / (productL + gap));
+            const b = Math.floor(boardW / (productW + gap));
+            const cuts1 = a * b;
+
+            const c = Math.floor(boardL / (productW + gap));
+            const d = Math.floor(boardW / (productL + gap));
+            const cuts2 = c * d;
+
+            return Math.max(cuts1, cuts2);
+        }
+
+        function calculateCost(resultId, processId, quantitySectionId, boardTypeInputId, boardSizeSelectId, customLengthId, customWidthId, productLengthId, productWidthId, productThicknessId, unitPriceId) {
+            const boardType = document.getElementById(boardTypeInputId).value;
+            const productLength = parseFloat(document.getElementById(productLengthId).value);
+            const productWidth = parseFloat(document.getElementById(productWidthId).value);
+            const productThickness = parseFloat(document.getElementById(productThicknessId).value);
+            const unitPrice = parseFloat(document.getElementById(unitPriceId).value);
+
+            if (isNaN(productLength) || isNaN(productWidth) || isNaN(productThickness) || isNaN(unitPrice)) {
+                document.getElementById(resultId).innerHTML = '请输入有效的片尺寸和单价。';
+                document.getElementById(processId).innerHTML = '';
+                document.getElementById(quantitySectionId).style.display = 'none';
+                return;
+            }
+
+            if (boardType === 'regular') {
+                const singleProductCost = ((productLength + 5) / 1000) * ((productWidth + 5) / 1000) * productThickness * 1.2 * unitPrice;
+                document.getElementById(resultId).innerHTML = `单个片的成本是：${singleProductCost.toFixed(2)} 元/片`;
+
+                let process = `计算过程：<br>`;
+                process += `按面积计算：<br>`;
+                process += `单片价格：（${productLength}+5/1000）*（${productWidth}+5/1000）*${productThickness}*1.2*${unitPrice}=${singleProductCost.toFixed(3)}元`;
+                document.getElementById(processId).innerHTML = process;
+                document.getElementById(quantitySectionId).style.display = 'block';
+                window[`singleProductCost${resultId.replace('result', '')}`] = singleProductCost;
+                window[`cutCount${resultId.replace('result', '')}`] = 1;
+                window[`boardPrice${resultId.replace('result', '')}`] = singleProductCost;
+                calculateTotalCost(`total-cost${resultId.replace('result', '')}`, processId, `quantity${resultId.replace('result', '')}`, `singleProductCost${resultId.replace('result', '')}`, `cutCount${resultId.replace('result', '')}`, `boardPrice${resultId.replace('result', '')}`);
+                updateSummary();
+                return;
+            }
+
+            const boardSize = document.getElementById(boardSizeSelectId).value;
+            let boardLength, boardWidth;
+            if (boardSize.includes('custom')) {
+                boardLength = parseFloat(document.getElementById(customLengthId).value);
+                boardWidth = parseFloat(document.getElementById(customWidthId).value);
+                if (isNaN(boardLength) || isNaN(boardWidth)) {
+                    document.getElementById(resultId).innerHTML = '请输入有效的定制板材尺寸。';
+                    document.getElementById(processId).innerHTML = '';
+                    document.getElementById(quantitySectionId).style.display = 'none';
+                    return;
+                }
+            } else if (boardSize.includes('1220x2440')) {
+                boardLength = 2440;
+                boardWidth = 1220;
+            } else if (boardSize.includes('1830x1220')) {
+                boardLength = 1830;
+                boardWidth = 1220;
+            } else if (boardSize.includes('1270x2490')) {
+                boardLength = 2490;
+                boardWidth = 1270;
+            } else if (boardSize.includes('1290x2500')) {
+                boardLength = 2500;
+                boardWidth = 1290;
+            } else if (boardSize.includes('1570x2570')) {
+                boardLength = 2570;
+                boardWidth = 1570;
+            } else if (boardSize.includes('2000x3000')) {
+                boardLength = 3000;
+                boardWidth = 2000;
+            } else if (boardSize.includes('2000x1000')) {
+                boardLength = 2000;
+                boardWidth = 1000;
+            }
+
+            let gap = boardType === 'special' ? 0 : 3;
+
+            // 替换原有的method1和method2计算部分
+            const a = Math.floor(boardLength / (productLength + gap));
+            const b = Math.floor(boardWidth / (productWidth + gap));
+            const method1Initial = a * b;
+            const remainingL1 = boardLength - a * (productLength + gap);
+            const remainingW1 = boardWidth - b * (productWidth + gap);
+            const method1Remaining1 = calculateMaxCuts(remainingL1, boardWidth, productLength, productWidth, boardType);
+            const method1Remaining2 = calculateMaxCuts(boardLength, remainingW1, productLength, productWidth, boardType);
+            const method1Total = method1Initial + method1Remaining1 + method1Remaining2;
+
+            const c = Math.floor(boardLength / (productWidth + gap));
+            const d = Math.floor(boardWidth / (productLength + gap));
+            const method2Initial = c * d;
+            const remainingL2 = boardLength - c * (productWidth + gap);
+            const remainingW2 = boardWidth - d * (productLength + gap);
+            const method2Remaining1 = calculateMaxCuts(remainingL2, boardWidth, productLength, productWidth, boardType);
+            const method2Remaining2 = calculateMaxCuts(boardLength, remainingW2, productLength, productWidth, boardType);
+            const method2Total = method2Initial + method2Remaining1 + method2Remaining2;
+
+            const cutCount = Math.max(method1Total, method2Total);
+
+            // 计算大板价格
+            const boardPrice = (boardLength / 1000) * (boardWidth / 1000) * productThickness * 1.2 * unitPrice;
+
+            // 计算单个产品成本
+            const singleProductCost = boardPrice / cutCount;
+
+            document.getElementById(resultId).innerHTML = `单个片的成本是：${singleProductCost.toFixed(2)} 元/片<br>一张板可以开${cutCount}片`;
+
+            let process = `计算过程：<br>`;
+            process += `1. 计算开料数量：<br>`;
+            process += `  第一种开料方法：${boardLength} / (${productLength} + ${gap}) = ${a} 片；`;
+            process += `${boardWidth} / (${productWidth} + ${gap}) = ${b} 片，可做 ${method1Initial} 片<br>`;
+            if (method1Remaining1 > 0 || method1Remaining2 > 0) {
+                process += `  剩余部分1（${remainingL1}x${boardWidth}）可切割 ${method1Remaining1} 片<br>`;
+                process += `  剩余部分2（${boardLength}x${remainingW1}）可切割 ${method1Remaining2} 片<br>`;
+                process += `  第一种开料方法总数量：${method1Initial} + ${method1Remaining1} + ${method1Remaining2} = ${method1Total} 片<br>`;
+            }
+            process += `  第二种开料方法：${boardLength} / (${productWidth} + ${gap}) = ${c} 片；`;
+            process += `${boardWidth} / (${productLength} + ${gap}) = ${d} 片，可做 ${method2Initial} 片<br>`;
+            if (method2Remaining1 > 0 || method2Remaining2 > 0) {
+                process += `  剩余部分1（${remainingL2}x${boardWidth}）可切割 ${method2Remaining1} 片<br>`;
+                process += `  剩余部分2（${boardLength}x${remainingW2}）可切割 ${method2Remaining2} 片<br>`;
+                process += `  第二种开料方法总数量：${method2Initial} + ${method2Remaining1} + ${method2Remaining2} = ${method2Total} 片<br>`;
+            }
+            process += `  选择开料数量多的方法，可开 ${cutCount} 片<br>`;
+            process += `2. 计算大板价格：<br>`;
+            process += `  公式：长（米）* 宽（米）* 厚（毫米）* 密度（1.2）* 单价（元/KG）<br>`;
+            process += `  大板价格 = (${boardLength} / 1000) * (${boardWidth} / 1000) * ${productThickness} * 1.2 * ${unitPrice} = ${boardPrice.toFixed(2)} 元<br>`;
+            process += `3. 计算单个片成本：<br>`;
+            process += `  公式：大板的价格 / 片所开出来的数量<br>`;
+            process += `  单个片成本 = ${boardPrice.toFixed(2)} / ${cutCount} = ${singleProductCost.toFixed(2)} 元/片`;
+
+            document.getElementById(processId).innerHTML = process;
+            document.getElementById(quantitySectionId).style.display = 'block';
+            window[`singleProductCost${resultId.replace('result', '')}`] = singleProductCost;
+            window[`cutCount${resultId.replace('result', '')}`] = cutCount;
+            window[`boardPrice${resultId.replace('result', '')}`] = boardPrice;
+            calculateTotalCost(`total-cost${resultId.replace('result', '')}`, processId, `quantity${resultId.replace('result', '')}`, `singleProductCost${resultId.replace('result', '')}`, `cutCount${resultId.replace('result', '')}`, `boardPrice${resultId.replace('result', '')}`);
+            updateSummary();
+        }
+
+        function calculateTotalCost(totalCostId, processId, quantityId, singleProductCostVar, cutCountVar, boardPriceVar) {
+            const quantity = parseFloat(document.getElementById(quantityId).value);
+            const singleProductCost = window[singleProductCostVar];
+            const cutCount = window[cutCountVar];
+            const boardPrice = window[boardPriceVar];
+            if (isNaN(quantity) || isNaN(singleProductCost) || isNaN(cutCount) || isNaN(boardPrice)) {
+                document.getElementById(totalCostId).innerHTML = '';
+                return;
+            }
+            const totalCost = quantity * singleProductCost;
+            document.getElementById(totalCostId).innerHTML = `数量为 ${quantity} 时的总成本是：${totalCost.toFixed(2)} 元`;
+
+            if (document.getElementById(totalCostId.replace('total-cost', 'board-type')).value!== 'regular') {
+                const boardCount = Math.ceil(quantity / cutCount);
+                const totalBoardCost = boardCount * boardPrice;
+                document.getElementById(totalCostId).innerHTML += `<br>使用 ${boardCount} 张板材的总成本是：${totalBoardCost.toFixed(2)} 元`;
+
+                let process = document.getElementById(processId).innerHTML;
+                // 移除之前的使用板材数量计算部分
+                process = process.split('<br>4. 计算使用板材数量：')[0];
+                process += `<br>4. 计算使用板材数量：<br>`;
+                process += `  公式：使用板材数量 = 向上取整(片总数量 / 每张板可开片数量)<br>`;
+                process += `  使用板材数量 = 向上取整(${quantity} / ${cutCount}) = ${boardCount} 张<br>`;
+                process += `5. 计算板材总成本：<br>`;
+                process += `  公式：板材总成本 = 使用板材数量 * 大板价格<br>`;
+                process += `  板材总成本 = ${boardCount} * ${boardPrice.toFixed(2)} = ${totalBoardCost.toFixed(2)} 元`;
+                document.getElementById(processId).innerHTML = process;
+            }
+        }
+
+        function updateSummary() {
+            const quantity1 = parseFloat(document.getElementById('quantity').value);
+            const totalCost1Element = document.getElementById('total-cost');
+            const totalCost1 = totalCost1Element.innerText ? totalCost1Element.innerText.split('数量为 ')[1].split(' 时的总成本是：')[1].split(' 元')[0] : null;
+            const productLength1 = document.getElementById('product-length').value;
+            const productWidth1 = document.getElementById('product-width').value;
+
+            const quantity2 = parseFloat(document.getElementById('quantity2').value);
+            const totalCost2Element = document.getElementById('total-cost2');
+            const totalCost2 = totalCost2Element.innerText ? totalCost2Element.innerText.split('数量为 ')[1].split(' 时的总成本是：')[1].split(' 元')[0] : null;
+            const productLength2 = document.getElementById('product-length2').value;
+            const productWidth2 = document.getElementById('product-width2').value;
+
+            const quantity3 = parseFloat(document.getElementById('quantity3').value);
+            const totalCost3Element = document.getElementById('total-cost3');
+            const totalCost3 = totalCost3Element.innerText ? totalCost3Element.innerText.split('数量为 ')[1].split(' 时的总成本是：')[1].split(' 元')[0] : null;
+            const productLength3 = document.getElementById('product-length3').value;
+            const productWidth3 = document.getElementById('product-width3').value;
+
+            const validCosts = [];
+            let summaryText = '根据以上信息<br>';
+            if (!isNaN(quantity1) && totalCost1) {
+                summaryText += `壹：片尺寸${productLength1}*${productWidth1}mm，${quantity1}片成本为${totalCost1} 元<br>`;
+                validCosts.push(parseFloat(totalCost1));
+            }
+            if (!isNaN(quantity2) && totalCost2) {
+                summaryText += `贰：片尺寸${productLength2}*${productWidth2}mm，${quantity2}片成本为${totalCost2} 元<br>`;
+                validCosts.push(parseFloat(totalCost2));
+            }
+            if (!isNaN(quantity3) && totalCost3) {
+                summaryText += `叁：片尺寸${productLength3}*${productWidth3}mm，${quantity3}片成本为${totalCost3} 元<br>`;
+                validCosts.push(parseFloat(totalCost3));
+            }
+
+            if (validCosts.length > 0) {
+                const total = validCosts.reduce((acc, cost) => acc + cost, 0);
+                const costString = validCosts.map(cost => cost.toFixed(2)).join('+');
+                summaryText += `总成本：${costString}=${total.toFixed(2)}元`;
+            } else {
+                summaryText = '暂无有效成本信息';
+            }
+
+            document.getElementById('summary').innerHTML = summaryText;
+        }
+    </script>
+</body>
+</html>

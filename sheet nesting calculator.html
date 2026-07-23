@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>板材排料优化计算器（粤丰v1.4）</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        .main-content {
+            display: flex;
+            padding: 25px;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f8fafc;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+        }
+        .visualization-section {
+            flex: 1.8;
+            min-width: 300px;
+            background-color: #f8fafc;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        h2 {
+            font-size: 1.6rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e3e8f0;
+        }
+        .input-group {
+            margin-bottom: 22px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 1.05rem;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #d6e0ea;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .result-summary {
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+        }
+        .summary-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .result-item {
+            background: #f0f4f8;
+            padding: 18px;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+        }
+        .result-item h4 {
+            margin-bottom: 10px;
+            color: #3498db;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .result-item p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .visualization-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .visualization-header {
+            padding: 15px;
+            background-color: #f0f4f8;
+            border-bottom: 1px solid #e1e8f0;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .visualization-area {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            position: relative;
+            overflow: auto;
+        }
+        .sheet {
+            position: relative;
+            border: 2px solid #2c3e50;
+            border-radius: 4px;
+            background-color: #e3e9f0;
+            transform-origin: center center;
+        }
+        .part {
+            position: absolute;
+            border: 1px solid #fff;
+            background-color: rgba(52, 152, 219, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+            font-size: 12px;
+        }
+        .part.horizontal {
+            background-color: rgba(249, 168, 37, 0.75);
+        }
+        .part.remnant-piece {
+            background-color: rgba(46, 204, 113, 0.7);
+        }
+        .info-marker {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f0f4f8;
+            justify-content: center;
+            border-top: 1px solid #e1e8f0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+        }
+        .part-color {
+            background-color: rgba(52, 152, 219, 0.75);
+        }
+        .horizontal-color {
+            background-color: rgba(249, 168, 37, 0.75);
+        }
+        .remnant-piece-color {
+            background-color: rgba(46, 204, 113, 0.7);
+        }
+        .remnant-color {
+            background-color: rgba(241, 196, 15, 0.5);
+        }
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #7b8a9a;
+            font-size: 0.9rem;
+        }
+        .method-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .method-btn {
+            flex: 1;
+            padding: 12px;
+            background: #e3e8f0;
+            border: none;
+            border-radius: 6px;
+            color: #2c3e50;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .method-btn.active {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+        }
+        .method-btn .piece-count {
+            font-size: 0.85rem;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+        .instructions {
+            background: #fff6e0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border-left: 4px solid #f1c40f;
+        }
+        .instructions h3 {
+            color: #d35400;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .instructions ul {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .error-prompt {
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9d0cf;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .result-item h4 svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+    
+.light-gray-color {
+    background-color: rgba(200, 200, 200, 0.5); /* 浅灰色 */
+}
+                </style>
+<style>
+.watermark {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='rgba(0,0,0,0.3)' text-anchor='middle' transform='rotate(-30, 100, 100)'%3E粤丰展示%3C/text%3E%3C/svg%3E");
+    background-repeat: repeat;
+    z-index: 1000; /* 提高层级确保可见 */
+    pointer-events: none; /* 不影响页面交互 */
+    opacity: 0.3;
+}
+</style><script>
+function swapPlateDimensions() {
+    // 获取板材输入框（使用多种选择器确保兼容性）
+    var widthInput = document.querySelector('input[id*="板材"][id*="宽"], input[placeholder*="板材"][placeholder*="宽"]');
+    var heightInput = document.querySelector('input[id*="板材"][id*="高"], input[placeholder*="板材"][placeholder*="高"]');
+    
+    if (widthInput && heightInput) {
+        // 交换值
+        var temp = widthInput.value;
+        widthInput.value = heightInput.value;
+        heightInput.value = temp;
+        console.log("板材尺寸已交换");
+    } else {
+        console.error("未找到板材输入框");
+    }
+}
+</script></head>
+<body><div class="watermark"></div>
+<div class="container">
+<header>
+<h1>板材排料优化计算器（粤丰v1.4）</h1>
+<p class="subtitle">优化材料利用率 · 减少浪费 · 降低成本 · 复杂运算升级版</p>
+</header>
+<div class="main-content">
+<div class="input-section">
+<h2>参数输入</h2>
+<div class="input-group">
+<label for="sheetWidth">板材长×宽（mm）</label>
+<div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;"><input id="sheetWidth" placeholder="请输入板材宽度" type="number" value="1220"/><button onclick="swapPlateDimensions()" onmouseout="this.style.backgroundColor='#f0f0f0'" onmouseover="this.style.backgroundColor='#e0e0e0'" style="
+    padding: 8px 20px; 
+    border: none; 
+    border-radius: 4px; 
+    background-color: #f0f0f0; 
+    cursor: pointer; 
+    transition: background-color 0.3s;
+" type="button">板材换边</button><input id="sheetHeight" placeholder="请输入板材高度" type="number" value="2440"/></div></div>
+<div class="input-group">
+</div>
+<div class="input-group">
+<label for="partWidth">零件宽度 (mm)</label>
+<input id="partWidth" placeholder="请输入零件宽度" type="number" value="200"/>
+</div>
+<div class="input-group">
+<label for="partHeight">零件高度 (mm)</label>
+<input id="partHeight" placeholder="请输入零件高度" type="number" value="500"/>
+</div>
+<div class="input-group">
+<label for="gap">切割间隙 (mm)</label>
+<input id="gap" min="0" placeholder="请输入切割间隙" type="number" value="3"/>
+</div>
+<button id="calculateBtn">计算最优排料方案</button>
+<div class="result-summary">
+<div class="summary-title">
+<svg fill="none" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 16V12" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 8H12.01" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                        计算结果摘要
+                    </div>
+<div class="summary-content">
+<div class="result-item">
+<h4>
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 6V12L16 14" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                                最优排料数量
+                            </h4>
+<p id="resultCount">等待计算...</p>
+</div>
+<div class="result-item">
+<h4>
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M10.29 3.85999L1.82 18C1.64538 18.3024 1.55299 18.6453 1.55199 18.9945C1.55099 19.3437 1.64141 19.6871 1.81445 19.9905C1.98749 20.2939 2.23675 20.5467 2.53773 20.7238C2.83871 20.9009 3.18082 20.9961 3.53 21H20.47C20.8192 20.9961 21.1613 20.9009 21.4623 20.7238C21.7632 20.5467 22.0125 20.2939 22.1856 19.9905C22.3586 19.6871 22.449 19.3437 22.448 18.9945C22.447 18.6453 22.3546 18.3024 22.18 18L13.71 3.85999C13.5317 3.56607 13.2807 3.3231 12.9812 3.15446C12.6817 2.98583 12.3438 2.89722 12 2.89722C11.6562 2.89722 11.3183 2.98583 11.0188 3.15446C10.7193 3.3231 10.4683 3.56607 10.29 3.85999V3.85999Z" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 17V11" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M12 7H12.01" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                                板材利用率
+                            </h4>
+<p id="resultUtilization">等待计算...</p>
+</div>
+<div class="result-item">
+<h4>
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 6H21" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M3 12H21" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M3 18H21" stroke="#3498db" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                                竖放零件
+                            </h4>
+<p id="verticalPieces">等待计算...</p>
+</div>
+<div class="result-item">
+<h4>
+<svg fill="none" height="20" viewbox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 6H21" stroke="#f39c12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M3 12H21" stroke="#f39c12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M3 18H21" stroke="#f39c12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+                                横放零件
+                            </h4>
+<p id="horizontalPieces">等待计算...</p>
+</div>
+</div>
+</div>
+</div>
+<div class="visualization-section">
+<div class="method-selector">
+<button class="method-btn active" data-method="1">
+                        排料方式 1
+                        <span class="piece-count">(0片)</span>
+</button>
+<button class="method-btn" data-method="2">
+                        排料方式 2
+                        <span class="piece-count">(0片)</span>
+</button>
+<button class="method-btn" data-method="complex">
+                        复杂运算方案
+                        <span class="piece-count">(0片)</span>
+</button>
+<button class="method-btn" data-method="best">
+                        最优方案
+                        <span class="piece-count">(0片)</span>
+</button>
+</div>
+<h2>排料可视化</h2>
+<div class="visualization-container">
+<div class="visualization-header">
+<span id="layoutMethodTitle">等待计算...</span>
+<span id="sheetSizeInfo">板材尺寸: 1220 x 2440 mm</span>
+</div>
+<div class="visualization-area" id="visualizationArea">
+<!-- 排料可视化会在这里动态渲染 -->
+</div>
+<div class="legend">
+<div class="legend-item">
+<div class="legend-color part-color"></div>
+<span>竖放零件</span>
+</div>
+<div class="legend-item">
+<div class="legend-color horizontal-color"></div>
+<span>横放零件</span>
+</div>
+<div class="legend-item">
+<div class="legend-color light-gray-color"></div>
+<span>不可用余料</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer>© 2025 粤丰智能板材排料优化系统 v1.4 | 节省材料，提高生产效率</footer>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculateBtn = document.getElementById('calculateBtn');
+            const methodButtons = document.querySelectorAll('.method-btn');
+            const resultCountElement = document.getElementById('resultCount');
+            const resultUtilizationElement = document.getElementById('resultUtilization');
+            const verticalPiecesElement = document.getElementById('verticalPieces');
+            const horizontalPiecesElement = document.getElementById('horizontalPieces');
+            const layoutMethodTitleElement = document.getElementById('layoutMethodTitle');
+            const sheetSizeInfoElement = document.getElementById("sheetSizeInfo");
+            
+            // 存储计算结果
+            let layoutMethod1 = null;
+            let layoutMethod2 = null;
+            let complexLayout = null;
+            let bestLayout = null;
+            let currentScale = 1;
+            
+            // 初始状态
+            resultCountElement.textContent = '等待计算...';
+            resultUtilizationElement.textContent = '等待计算...';
+            verticalPiecesElement.textContent = '等待计算...';
+            horizontalPiecesElement.textContent = '等待计算...';
+            layoutMethodTitleElement.textContent = '等待计算...';
+            
+            calculateBtn.addEventListener("click", function() {
+                calculateAndRender();
+            });
+            
+            methodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    methodButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const sheetWidth = parseFloat(document.getElementById('sheetWidth').value);
+                    const sheetHeight = parseFloat(document.getElementById('sheetHeight').value);
+                    const partWidth = parseFloat(document.getElementById('partWidth').value);
+                    const partHeight = parseFloat(document.getElementById('partHeight').value);
+                    const gap = parseFloat(document.getElementById('gap').value);
+                    
+                    if (!isValidInputs(sheetWidth, sheetHeight, partWidth, partHeight, gap)) {
+                        return;
+                    }
+                    
+                    const method = this.dataset.method;
+                    renderLayout(sheetWidth, sheetHeight, partWidth + gap, partHeight + gap, method);
+                });
+            });
+            
+            function calculateAndRender() {
+                const sheetWidth = parseFloat(document.getElementById('sheetWidth').value);
+                const sheetHeight = parseFloat(document.getElementById('sheetHeight').value);
+                const partWidth = parseFloat(document.getElementById('partWidth').value);
+                const partHeight = parseFloat(document.getElementById('partHeight').value);
+                const gap = parseFloat(document.getElementById('gap').value);
+                
+                if (!isValidInputs(sheetWidth, sheetHeight, partWidth, partHeight, gap)) {
+                    alert('请输入有效的数字（大于0）');
+                    return;
+                }
+                
+                // 更新板材尺寸信息
+                sheetSizeInfoElement.textContent = `板材尺寸: ${sheetWidth} x ${sheetHeight} mm`;
+                
+                // 计算三种排料方式
+                layoutMethod1 = calculateLayoutMethod1(sheetWidth, sheetHeight, partWidth + gap, partHeight + gap);
+                layoutMethod2 = calculateLayoutMethod2(sheetWidth, sheetHeight, partWidth + gap, partHeight + gap);
+                complexLayout = calculateComplexLayout(sheetWidth, sheetHeight, partWidth, partHeight, gap);
+                
+                // 计算最优方案
+                bestLayout = calculateBestLayout(layoutMethod1, layoutMethod2, complexLayout);
+                
+                // 更新按钮上的开料数量
+                updateButtonPieceCounts();
+                
+                // 更新计算结果摘要
+                resultCountElement.textContent = `${bestLayout.totalPieces} 个零件`;
+                
+                // 计算板材利用率
+                const sheetArea = sheetWidth * sheetHeight;
+                const partArea = partWidth * partHeight * bestLayout.totalPieces;
+                const utilization = (partArea / sheetArea * 100).toFixed(1);
+                resultUtilizationElement.textContent = `${utilization}%`;
+                
+                // 更新竖放和横放零件数量
+                if (bestLayout.method === 'complex') {
+                    verticalPiecesElement.textContent = `${complexLayout.verticalPieces} 个`;
+                    horizontalPiecesElement.textContent = `${complexLayout.horizontalPieces} 个`;
+                } else {
+                    verticalPiecesElement.textContent = '0 个';
+                    horizontalPiecesElement.textContent = '0 个';
+                }
+                
+                // 渲染最优方案
+                renderLayout(sheetWidth, sheetHeight, partWidth + gap, partHeight + gap, 'best');
+            }
+            
+            function updateButtonPieceCounts() {
+                const method1Btn = document.querySelector('.method-btn[data-method="1"]');
+                const method2Btn = document.querySelector('.method-btn[data-method="2"]');
+                const complexBtn = document.querySelector('.method-btn[data-method="complex"]');
+                const bestBtn = document.querySelector('.method-btn[data-method="best"]');
+                
+                if (layoutMethod1) {
+                    method1Btn.querySelector('.piece-count').textContent = `(${layoutMethod1.totalPieces}片)`;
+                }
+                
+                if (layoutMethod2) {
+                    method2Btn.querySelector('.piece-count').textContent = `(${layoutMethod2.totalPieces}片)`;
+                }
+                
+                if (complexLayout) {
+                    complexBtn.querySelector('.piece-count').textContent = `(${complexLayout.totalPieces}片)`;
+                }
+                
+                if (bestLayout) {
+                    bestBtn.querySelector('.piece-count').textContent = `(${bestLayout.totalPieces}片)`;
+                }
+            }
+            
+            function calculateBestLayout(layout1, layout2, complexLayout) {
+                let best = layout1;
+                let bestMethod = 1;
+                
+                if (layout2.totalPieces > best.totalPieces) {
+                    best = layout2;
+                    bestMethod = 2;
+                }
+                
+                if (complexLayout.totalPieces > best.totalPieces) {
+                    best = complexLayout;
+                    bestMethod = 'complex';
+                }
+                
+                return {
+                    pieces: best.pieces,
+                    remnants: best.remnants,
+                    totalPieces: best.totalPieces,
+                    method: bestMethod,
+                    verticalPieces: best.verticalPieces || 0,
+                    horizontalPieces: best.horizontalPieces || 0
+                };
+            }
+            
+            // 复杂运算方案
+            function calculateComplexLayout(sheetWidth, sheetHeight, partWidth, partHeight, gap) {
+                let bestLayout = {
+                    totalPieces: 0,
+                    verticalColumns: 0,
+                    verticalRows: 0,
+                    horizontalColumns: 0,
+                    horizontalRows: 0,
+                    utilization: 0,
+                    verticalWidth: 0,
+                    horizontalWidth: 0,
+                    pieces: [],
+                    remnants: [],
+                    verticalPieces: 0,
+                    horizontalPieces: 0
+                };
+                
+                const partWidthGap = partWidth + gap;
+                const partHeightGap = partHeight + gap;
+                
+                // 计算最大可能的初始竖放列数
+                const maxVerticalColumns = Math.floor(sheetWidth / partWidthGap);
+                
+                // 尝试不同数量的初始竖放列
+                for (let verticalCols = 0; verticalCols <= maxVerticalColumns; verticalCols++) {
+                    // 计算竖放区域占用宽度
+                    const verticalWidth = verticalCols > 0 ? verticalCols * partWidthGap : 0;
+                    
+                    // 剩余宽度用于横放零件
+                    const remainingWidth = sheetWidth - verticalWidth;
+                    
+                    // 计算可放置的横放列数
+                    const horizontalCols = Math.floor(remainingWidth / partHeightGap);
+                    
+                    // 计算竖放区域可放置的行数
+                    const verticalRows = verticalCols > 0 ? Math.floor(sheetHeight / partHeightGap) : 0;
+                    
+                    // 计算横放区域可放置的行数
+                    const horizontalRows = horizontalCols > 0 ? Math.floor(sheetHeight / partWidthGap) : 0;
+                    
+                    // 计算总零件数
+                    const totalPieces = verticalCols * verticalRows + horizontalCols * horizontalRows;
+                    
+                    // 计算材料利用率
+                    const usedArea = totalPieces * partWidth * partHeight;
+                    const sheetArea = sheetWidth * sheetHeight;
+                    const utilization = (usedArea / sheetArea) * 100;
+                    
+                    // 更新最优方案
+                    if (totalPieces > bestLayout.totalPieces || 
+                        (totalPieces === bestLayout.totalPieces && utilization > bestLayout.utilization)) {
+                        bestLayout = {
+                            totalPieces,
+                            verticalColumns: verticalCols,
+                            verticalRows,
+                            horizontalColumns: horizontalCols,
+                            horizontalRows,
+                            utilization,
+                            verticalWidth,
+                            horizontalWidth: horizontalCols > 0 ? horizontalCols * partHeightGap : 0,
+                            pieces: [],
+                            remnants: [],
+                            verticalPieces: verticalCols * verticalRows,
+                            horizontalPieces: horizontalCols * horizontalRows
+                        };
+                    }
+                }
+                
+                // 生成零件位置
+                const pieces = [];
+                
+                // 创建竖放零件
+                for (let col = 0; col < bestLayout.verticalColumns; col++) {
+                    for (let row = 0; row < bestLayout.verticalRows; row++) {
+                        pieces.push({
+                            x: col * partWidthGap,
+                            y: row * partHeightGap,
+                            width: partWidthGap,
+                            height: partHeightGap,
+                            fromRemnant: false,
+                            isHorizontal: false,
+                            name: `V${col+1}-${row+1}`
+                        });
+                    }
+                }
+                
+                // 创建横放零件
+                for (let col = 0; col < bestLayout.horizontalColumns; col++) {
+                    for (let row = 0; row < bestLayout.horizontalRows; row++) {
+                        pieces.push({
+                            x: bestLayout.verticalWidth + col * partHeightGap,
+                            y: row * partWidthGap,
+                            width: partHeightGap,
+                            height: partWidthGap,
+                            fromRemnant: false,
+                            isHorizontal: true,
+                            name: `H${col+1}-${row+1}`
+                        });
+                    }
+                }
+                
+                bestLayout.pieces = pieces;
+                bestLayout.remnants = [];
+                
+                return bestLayout;
+            }
+            
+            function isValidInputs(...inputs) {
+                return inputs.every(input => !isNaN(input) && input > 0);
+            }
+            
+            function renderLayout(sheetWidth, sheetHeight, partWidthGap, partHeightGap, method) {
+                const visualizationArea = document.getElementById('visualizationArea');
+                visualizationArea.innerHTML = '';
+                
+                const scale = calculateScale(sheetWidth, sheetHeight, visualizationArea);
+                const scaledSheetWidth = sheetWidth * scale;
+                const scaledSheetHeight = sheetHeight * scale;
+                
+                const sheet = document.createElement('div');
+                sheet.className = 'sheet';
+                sheet.style.width = `${scaledSheetWidth}px`;
+                sheet.style.height = `${scaledSheetHeight}px`;
+                
+                let layoutData = null;
+                let methodName = '';
+                
+                if (method === '1') {
+                    layoutData = layoutMethod1;
+                    methodName = '排料方式 1';
+                } else if (method === '2') {
+                    layoutData = layoutMethod2;
+                    methodName = '排料方式 2';
+                } else if (method === 'complex') {
+                    layoutData = complexLayout;
+                    methodName = '复杂运算方案';
+                } else if (method === 'best') {
+                    layoutData = bestLayout;
+                    if (bestLayout.method === 1) {
+                        methodName = '最优方案（方式1）';
+                    } else if (bestLayout.method === 2) {
+                        methodName = '最优方案（方式2）';
+                    } else if (bestLayout.method === 'complex') {
+                        methodName = '最优方案（复杂运算）';
+                    }
+                }
+                
+                if (layoutData) {
+                    addPiecesToSheet(sheet, layoutData.pieces, scale);
+                    addRemnantsToSheet(sheet, layoutData.remnants, scale);
+                    layoutMethodTitleElement.textContent = `${methodName}：开料数量 ${layoutData.totalPieces} 片`;
+                }
+                
+                visualizationArea.appendChild(sheet);
+            }
+            
+            function calculateScale(sheetWidth, sheetHeight, container) {
+                const containerWidth = container.clientWidth - 40;
+                const containerHeight = container.clientHeight - 40;
+                
+                const scaleX = containerWidth / sheetWidth;
+                const scaleY = containerHeight / sheetHeight;
+                
+                return Math.min(scaleX, scaleY, 0.6);
+            }
+            
+            function calculateLayoutMethod1(sheetWidth, sheetHeight, partWidthGap, partHeightGap) {
+                // 方式1：横切纵切（先切宽度方向，再切高度方向）
+                const cols = Math.floor(sheetWidth / partHeightGap);
+                const rows = Math.floor(sheetHeight / partWidthGap);
+                const mainPieces = cols * rows;
+                
+                // 剩余部分1：切完高度方向后剩下的部分
+                const remnant1 = {
+                    x: 0,
+                    y: rows * partWidthGap,
+                    width: cols * partHeightGap,
+                    height: sheetHeight - rows * partWidthGap
+                };
+                
+                // 剩余部分2：切完宽度方向后剩下的部分
+                const remnant2 = {
+                    x: cols * partHeightGap,
+                    y: 0,
+                    width: sheetWidth - cols * partHeightGap,
+                    height: sheetHeight
+                };
+                
+                // 在剩余部分中尝试开料
+                const piecesFromRemnant1 = calculateRemnantPieces(remnant1, partWidthGap, partHeightGap);
+                const piecesFromRemnant2 = calculateRemnantPieces(remnant2, partWidthGap, partHeightGap);
+                
+                const pieces = [];
+                
+                // 主区域零件
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        pieces.push({
+                            x: c * partHeightGap,
+                            y: r * partWidthGap,
+                            width: partHeightGap,
+                            height: partWidthGap,
+                            fromRemnant: false,
+                            isHorizontal: false,
+                            name: `P${r+1}-${c+1}`
+                        });
+                    }
+                }
+                
+                // 余料中切割出的零件
+                pieces.push(...piecesFromRemnant1, ...piecesFromRemnant2);
+                
+                // 记录余料信息
+                const remnants = [remnant1, remnant2];
+                
+                return {
+                    pieces: pieces,
+                    remnants: remnants,
+                    totalPieces: pieces.length,
+                    method: 1
+                };
+            }
+            
+            function calculateLayoutMethod2(sheetWidth, sheetHeight, partWidthGap, partHeightGap) {
+                // 方式2：纵切横切（先切高度方向，再切宽度方向）
+                const cols = Math.floor(sheetWidth / partWidthGap);
+                const rows = Math.floor(sheetHeight / partHeightGap);
+                const mainPieces = cols * rows;
+                
+                // 剩余部分1：切完宽度方向后剩下的部分
+                const remnant1 = {
+                    x: cols * partWidthGap,
+                    y: 0,
+                    width: sheetWidth - cols * partWidthGap,
+                    height: sheetHeight
+                };
+                
+                // 剩余部分2：切完高度方向后剩下的部分
+                const remnant2 = {
+                    x: 0,
+                    y: rows * partHeightGap,
+                    width: sheetWidth,
+                    height: sheetHeight - rows * partHeightGap
+                };
+                
+                // 在剩余部分中尝试开料
+                const piecesFromRemnant1 = calculateRemnantPieces(remnant1, partWidthGap, partHeightGap);
+                const piecesFromRemnant2 = calculateRemnantPieces(remnant2, partWidthGap, partHeightGap);
+                
+                const pieces = [];
+                
+                // 主区域零件
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        pieces.push({
+                            x: c * partWidthGap,
+                            y: r * partHeightGap,
+                            width: partWidthGap,
+                            height: partHeightGap,
+                            fromRemnant: false,
+                            isHorizontal: false,
+                            name: `P${r+1}-${c+1}`
+                        });
+                    }
+                }
+                
+                // 余料中切割出的零件
+                pieces.push(...piecesFromRemnant1, ...piecesFromRemnant2);
+                
+                // 记录余料信息
+                const remnants = [remnant1, remnant2];
+                
+                return {
+                    pieces: pieces,
+                    remnants: remnants,
+                    totalPieces: pieces.length,
+                    method: 2
+                };
+            }
+            
+            function calculateRemnantPieces(remnant, partWidthGap, partHeightGap) {
+                const pieces = [];
+                
+                // 在剩余材料中尝试两种不同的开料方向
+                // 方向1：零件正常方向
+                const rows1 = Math.floor(remnant.width / partWidthGap);
+                const cols1 = Math.floor(remnant.height / partHeightGap);
+                const count1 = rows1 * cols1;
+                
+                // 方向2：零件旋转90度
+                const rows2 = Math.floor(remnant.width / partHeightGap);
+                const cols2 = Math.floor(remnant.height / partWidthGap);
+                const count2 = rows2 * cols2;
+                
+                // 选择数量多的开料方式
+                if (count1 >= count2 && count1 > 0) {
+                    for (let r = 0; r < rows1; r++) {
+                        for (let c = 0; c < cols1; c++) {
+                            pieces.push({
+                                x: remnant.x + r * partWidthGap,
+                                y: remnant.y + c * partHeightGap,
+                                width: partWidthGap,
+                                height: partHeightGap,
+                                fromRemnant: true,
+                                isHorizontal: false,
+                                name: `R${r+1}-${c+1}`
+                            });
+                        }
+                    }
+                } else if (count2 > 0) {
+                    for (let r = 0; r < rows2; r++) {
+                        for (let c = 0; c < cols2; c++) {
+                            pieces.push({
+                                x: remnant.x + r * partHeightGap,
+                                y: remnant.y + c * partWidthGap,
+                                width: partHeightGap,
+                                height: partWidthGap,
+                                fromRemnant: true,
+                                isHorizontal: true,
+                                name: `R${r+1}-${c+1}`
+                            });
+                        }
+                    }
+                }
+                
+                return pieces;
+            }
+            
+            function addPiecesToSheet(sheet, pieces, scale) {
+                pieces.forEach(piece => {
+                    const partElement = document.createElement('div');
+                    let className = 'part';
+                    if (piece.fromRemnant) {
+                        className += ' remnant-piece';
+                    } else if (piece.isHorizontal) {
+                        className += ' horizontal';
+                    }
+                    partElement.className = className;
+                    
+                    partElement.style.left = `${piece.x * scale}px`;
+                    partElement.style.top = `${piece.y * scale}px`;
+                    partElement.style.width = `${piece.width * scale}px`;
+                    partElement.style.height = `${piece.height * scale}px`;
+                    
+                    // 添加零件文本标签
+                    if (piece.width > 50 && piece.height > 30) {
+                        partElement.textContent = piece.name;
+                    }
+                    
+                    sheet.appendChild(partElement);
+                });
+            }
+            
+            function addRemnantsToSheet(sheet, remnants, scale) {
+                remnants.forEach((remnant, index) => {
+                    if (remnant.width > 0 && remnant.height > 0) {
+                        const remnantElement = document.createElement('div');
+                        remnantElement.className = 'remnant';
+                        
+                        remnantElement.style.position = 'absolute';
+                        remnantElement.style.left = `${remnant.x * scale}px`;
+                        remnantElement.style.top = `${remnant.y * scale}px`;
+                        remnantElement.style.width = `${remnant.width * scale}px`;
+                        remnantElement.style.height = `${remnant.height * scale}px`;
+                        
+                        remnantElement.style.backgroundColor = 'rgba(241, 196, 15, 0.2)';
+                        remnantElement.style.border = '1px dashed #f1c40f';
+                        
+                        // 添加余料标签
+                        const label = document.createElement('div');
+                        label.className = 'info-marker';
+                        label.textContent = `${remnant.width.toFixed(0)}x${remnant.height.toFixed(0)}`;
+                        label.style.top = '4px';
+                        label.style.left = '4px';
+                        remnantElement.appendChild(label);
+                        
+                        sheet.appendChild(remnantElement);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

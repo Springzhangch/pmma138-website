@@ -8,10 +8,24 @@ export const site = {
     "专注亚克力、有机玻璃展示用品研发与生产，为品牌零售、珠宝钟表、化妆品、办公家居与礼品包装提供定制展示解决方案。",
 };
 
-export const navItems = [
+export interface NavItem {
+  label: string;
+  href?: string;
+  children?: { label: string; href: string }[];
+}
+
+export const navItems: NavItem[] = [
   { label: "首页", href: "/" },
   { label: "关于", href: "/about" },
   { label: "产品", href: "/products" },
+  {
+    label: "计算",
+    children: [
+      { label: "成本计算表", href: "/cost-calculator.html" },
+      { label: "报价大师", href: "/quote-master.html" },
+      { label: "板材排料", href: "/sheet-nesting-calculator.html" },
+    ],
+  },
   { label: "联系", href: "/contact" },
 ];
 
