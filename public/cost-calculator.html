@@ -174,159 +174,145 @@
             }
         }
 
-        /* ===== 手机端自适应 (≤640px) — 卡片式布局 ===== */
+        /* ===== 手机端 (≤640px) —— 可折叠分区 + 横向滚表 + 底部固定操作栏 ===== */
         @media (max-width: 640px) {
-            body { margin: 0; background: #f0f2f5; }
-            .container { padding: 10px; border-radius: 0; box-shadow: none; }
-            h1 { font-size: 1.15rem; margin-bottom: 12px; padding-bottom: 8px; }
+            body { margin: 0; padding-bottom: 80px; background: #f0f2f5; }
+            .container { padding: 10px; border-radius: 0; box-shadow: none; max-width: 100%; }
+            h1 { font-size: 1.1rem; margin-bottom: 10px; padding-bottom: 8px; text-align: center; }
 
-            /* 卡片式表格：隐藏表头，每行变卡片 */
-            table.card-table,
-            table.card-table thead,
-            table.card-table tbody,
-            table.card-table th,
-            table.card-table td,
-            table.card-table tr { display: block; }
-
-            table.card-table { width: 100%; }
-            table.card-table thead { display: none; }
-
-            table.card-table tbody tr {
-                background: #fff;
-                border-radius: 10px;
-                padding: 4px 0;
-                margin-bottom: 10px;
-                box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            }
-            table.card-table td {
+            /* === 可折叠分区标题 === */
+            .section-header {
                 display: flex;
                 align-items: center;
-                padding: 9px 14px;
-                border: none;
-                border-bottom: 1px solid #f2f2f2;
-                font-size: 14px;
-                text-align: left;
-            }
-            table.card-table td:last-child { border-bottom: none; }
-
-            /* 卡片左侧标签 */
-            table.card-table td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #555;
-                min-width: 80px;
-                flex-shrink: 0;
-                font-size: 12px;
-                margin-right: 10px;
-            }
-
-            /* 卡片内输入框自适应 */
-            table.card-table td input[type="number"],
-            table.card-table td input[type="text"],
-            table.card-table td select {
-                width: auto;
-                flex: 1;
-                padding: 7px 8px;
+                justify-content: space-between;
+                cursor: pointer;
+                user-select: none;
+                padding: 12px 14px;
+                margin: 10px 0 4px;
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
                 font-size: 15px;
-                border-radius: 6px;
-                border: 1px solid #ddd;
+                font-weight: 600;
+                color: #1a1a2e;
+                transition: background 0.2s;
             }
-            table.card-table td input[readonly] { background: #f5f5f5; color: #333; font-weight: 500; }
+            .section-header:active { background: #e8e8e8; }
+            .section-header .arrow {
+                display: inline-block;
+                transition: transform 0.25s;
+                font-size: 12px;
+                color: #888;
+            }
+            .section-header.collapsed .arrow { transform: rotate(-90deg); }
+            .section-body { overflow: hidden; transition: max-height 0.3s ease; }
+            .section-body.collapsed { max-height: 0 !important; }
 
-            /* 工序选择区 */
+            /* 折叠目标元素 */
+            .material-cost-section.collapsed > :not(.section-header),
+            #basic-info-table.collapsed,
+            .table-scroll.collapsed,
+            #cost-summary-table.collapsed { display: none; }
+            /* 材料成本区折叠时隐藏新增按钮 */
+            .material-cost-section.collapsed > table,
+            .material-cost-section.collapsed > .add-btn { display: none; }
+
+            /* === 表格容器：横向滚动 === */
+            .table-scroll {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 6px 0 12px;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                background: #fff;
+                /* 滚动提示阴影 */
+                background-image:
+                    linear-gradient(to right, #fff 30%, rgba(255,255,255,0)),
+                    linear-gradient(to right, rgba(255,255,255,0), #fff 70%) 100% 0,
+                    linear-gradient(to right, rgba(0,0,0,0.08), rgba(255,255,255,0)),
+                    linear-gradient(to left, rgba(0,0,0,0.08), rgba(255,255,255,0)) 100% 0;
+                background-repeat: no-repeat;
+                background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+                background-attachment: local, local, scroll, scroll;
+            }
+            .table-scroll table { min-width: 600px; margin: 0; border-collapse: collapse; }
+            .table-scroll td,
+            .table-scroll th { padding: 8px 10px; font-size: 13px; white-space: nowrap; border-bottom: 1px solid #eee; }
+            .table-scroll td input[type="number"],
+            .table-scroll td input[type="text"],
+            .table-scroll td select { padding: 7px 8px; font-size: 15px; border-radius: 6px; border: 1px solid #ddd; max-width: 120px; }
+            .table-scroll td input[readonly] { background: #f5f5f5; color: #333; font-weight: 500; border-style: dashed; }
+
+            /* === 工序选择区 === */
             .process-selection td {
                 display: flex !important;
                 flex-wrap: wrap;
-                gap: 6px 8px;
-                padding: 12px !important;
+                gap: 4px 10px;
+                padding: 10px !important;
                 white-space: normal;
             }
-            .process-item { margin: 0; display: flex; align-items: center; gap: 4px; }
-            .process-item label { font-size: 13px; color: #333; }
-            .process-checkbox { width: 18px; height: 18px; margin: 0; transform: none; }
+            .process-item { margin: 0; display: flex; align-items: center; gap: 3px; }
+            .process-item label { font-size: 13px; color: #333; white-space: nowrap; }
+            .process-checkbox { width: 17px; height: 17px; margin: 0; accent-color: #007bff; }
 
-            /* 合计/汇总行保持突出 */
-            .summary-row td,
-            .total-material-cost-row td {
-                font-weight: 700;
-                color: #2c3e50;
-                font-size: 14px;
-            }
-            .total-material-cost-row td::before { color: #2c3e50; }
+            /* === 汇总表（无需滚动，居中紧凑） === */
+            #cost-summary-table { min-width: unset !important; }
+            #cost-summary-table td,
+            #cost-summary-table th { white-space: normal !important; font-size: 13px; padding: 8px 8px; }
+            .cost-summary { padding: 10px; margin-top: 8px; border-radius: 8px; }
+            .cost-summary h2 { font-size: 0.95rem; padding-bottom: 6px; text-align: center; }
 
-            /* 按钮区 */
+            /* === 底部固定操作栏 === */
             .btn-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
                 display: flex;
-                flex-wrap: wrap;
                 gap: 8px;
-                justify-content: center;
+                padding: 10px 12px;
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                background: #fff;
+                border-top: 1px solid #e0e0e0;
+                box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+                z-index: 999;
             }
             .btn-container button {
-                flex: 1 1 calc(50% - 4px);
+                flex: 1;
                 min-width: 0;
-                padding: 12px 8px;
+                padding: 13px 6px;
                 font-size: 14px;
+                font-weight: 600;
                 border-radius: 8px;
-            }
-
-            /* 成本汇总区 */
-            .cost-summary { padding: 14px; margin-top: 14px; border-radius: 10px; }
-            .cost-summary h2 { font-size: 1rem; padding-bottom: 8px; }
-
-            /* 材料成本区 */
-            .material-cost-section { margin-bottom: 14px; }
-            .add-btn { width: 100%; padding: 10px; font-size: 14px; margin-top: 8px; border-radius: 8px; }
-            .delete-btn { padding: 8px 14px; font-size: 13px; border-radius: 6px; flex-shrink: 0; }
-
-            /* 隐藏工序行保持 display:none 优先级 */
-            .hidden-process { display: none !important; }
-
-            /* 特殊行：section-title 变全宽标题栏 */
-            table.card-table tr.section-title {
-                display: block !important;
-                padding: 0;
-                margin: 14px 0 8px;
-                box-shadow: none;
-                background: transparent;
-            }
-            table.card-table tr.section-title th {
-                display: block;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 700;
-                color: #555;
-                background: #e8e8e8;
                 border: none;
+                cursor: pointer;
             }
-            table.card-table tr.section-title th::before { display: none; }
+            #calculate-btn { background: #007bff; color: #fff; }
+            #reset-btn { background: #6c757d; color: #fff; }
+            #show-formulas-btn { background: #17a2b8; color: #fff; font-size: 12px; }
+            #hide-formulas-btn { background: #17a2b8; color: #fff; font-size: 12px; }
 
-            /* 材料合计行：绿色高亮卡片 */
-            table.card-table tr.total-material-cost-row td {
-                display: flex !important;
-                background: #e8f5e9;
-                padding: 12px 14px;
-                font-weight: 700;
-                color: #2e7d32;
-                border-bottom: none;
-            }
+            /* === 小工具 === */
+            .add-btn { width: 100%; padding: 10px; font-size: 14px; margin-top: 6px; border-radius: 8px; background: #28a745; color: #fff; border: none; }
+            .delete-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; background: #dc3545; color: #fff; border: none; }
 
-            /* 汇总行：蓝色高亮 */
-            table.card-table tr.summary-row td {
-                background: #e3f2fd;
-                font-weight: 700;
-                color: #1565c0;
-            }
+            /* 基本信息表（窄表不需要滚动） */
+            #basic-info-table { min-width: unset !important; }
+            #basic-info-table td,
+            #basic-info-table th { white-space: normal !important; }
+            #basic-info-table td input { max-width: 100px; }
 
-            /* 板材成本行（第2行，第一个td有colspan）保持简洁 */
-            table.card-table .material-cost-table tbody tr:first-of-type td,
-            table.card-table .material-cost-table tbody tr:nth-child(2) td {
-                display: flex !important;
-            }
+            .hidden-process { display: none !important; }
+            .watermark { opacity: 0.025; }
+            .watermark-content { font-size: 13px; letter-spacing: 2px; }
 
-            /* 水印 */
-            .watermark { opacity: 0.03; }
-            .watermark-content { font-size: 14px; letter-spacing: 2px; }
+            .formula-note { font-size: 11px; white-space: normal; }
+            .unit { font-size: 11px; }
+            .total-material-cost-row td { font-weight: 700; color: #2e7d32; }
+            .summary-row td { font-weight: 700; background: #e3f2fd; color: #1565c0; }
+            .section-title th { font-size: 12px; padding: 8px 10px; }
         }
         /* 新增材料成本区域样式 */
         .material-cost-section {
@@ -766,32 +752,48 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ===== 手机端表格→卡片布局 =====
-            window.mobileCardInit = function() {
-                if (window.innerWidth > 640) return;
-                var tableDefs = [
-                    { sel: '.material-cost-table tbody tr:not(.section-title)', labels: ['序号','配件','数量/套','单价','总价','操作','备注'] },
-                    { sel: '#basic-info-table tbody tr', labels: ['项目','数值','单位','说明'] },
-                    { sel: '#process-capacity-table tbody tr:not(.process-selection):not(.summary-row)', labels: ['工序','时产能(套/h)','总产能','人工','耗时(h)','备注'] },
-                    { sel: '#cost-summary-table tbody tr', labels: ['成本项目','计算方式','金额','占比'] }
+            // ===== 手机端增强：滚动容器 + 可折叠分区 =====
+            if (window.innerWidth <= 640) {
+                // 1. 宽表包入横向滚动容器
+                document.querySelectorAll('.material-cost-table, #process-capacity-table').forEach(function(t) {
+                    var w = document.createElement('div');
+                    w.className = 'table-scroll';
+                    t.parentNode.insertBefore(w, t);
+                    w.appendChild(t);
+                });
+
+                // 2. 可折叠分区
+                var sections = [
+                    { head: '.material-cost-section .section-title th', body: '.material-cost-section' },
+                    { head: '#basic-info-table .section-title th', body: '#basic-info-table' },
+                    { head: '#process-capacity-table .section-title th', body: null },
+                    { head: '.cost-summary h2', body: '#cost-summary-table' }
                 ];
-                tableDefs.forEach(function(def) {
-                    document.querySelectorAll(def.sel).forEach(function(row) {
-                        var cells = row.querySelectorAll('td, th');
-                        cells.forEach(function(cell, i) {
-                            if (def.labels[i] && !cell.hasAttribute('data-label')) {
-                                cell.setAttribute('data-label', def.labels[i]);
-                            }
-                        });
+                sections.forEach(function(s) {
+                    var hd = document.querySelector(s.head);
+                    var bd;
+                    if (!hd) return;
+                    if (s.body) {
+                        bd = document.querySelector(s.body);
+                    } else {
+                        // 工序表：折叠包裹它的 .table-scroll
+                        bd = hd.closest('.table-scroll');
+                    }
+                    if (!bd) return;
+                    hd.style.cursor = 'pointer';
+                    hd.classList.add('section-header');
+                    hd.innerHTML += ' <span class="arrow">▼</span>';
+                    hd.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var clp = bd.classList.toggle('collapsed');
+                        hd.classList.toggle('collapsed', clp);
+                        var arr = hd.querySelector('.arrow');
+                        if (arr) arr.textContent = clp ? '▶' : '▼';
                     });
                 });
-                document.querySelectorAll('.material-cost-table, #basic-info-table, #process-capacity-table, #cost-summary-table').forEach(function(t) {
-                    t.classList.add('card-table');
-                });
-            };
-            window.mobileCardInit();
+            }
 
-            // ========== 新增：材料成本相关元素 ==========
+            // ========== 材料成本相关元素 ==========
             const boardQuantity = document.getElementById('board_quantity');
             const boardPrice = document.getElementById('board_price');
             const boardTotal = document.getElementById('board_total');
@@ -924,8 +926,6 @@
                 
                 // 绑定事件
                 bindAccessoryEvents(newRow);
-                // 为新行设置卡片标签
-                if (window.mobileCardInit) window.mobileCardInit();
                 
                 // 重新排序序号
                 reorderAccessoryRows();
