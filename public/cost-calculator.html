@@ -174,67 +174,159 @@
             }
         }
 
-        /* ===== 手机端自适应 (≤640px) ===== */
+        /* ===== 手机端自适应 (≤640px) — 卡片式布局 ===== */
         @media (max-width: 640px) {
-            body { margin: 6px; }
-            .container { padding: 12px; border-radius: 4px; }
-            h1 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 10px; }
+            body { margin: 0; background: #f0f2f5; }
+            .container { padding: 10px; border-radius: 0; box-shadow: none; }
+            h1 { font-size: 1.15rem; margin-bottom: 12px; padding-bottom: 8px; }
 
-            /* 表格横向滚动 */
-            .material-cost-table,
-            #basic-info-table,
-            #process-capacity-table,
-            #cost-summary-table {
-                display: block;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                white-space: nowrap;
+            /* 卡片式表格：隐藏表头，每行变卡片 */
+            table.card-table,
+            table.card-table thead,
+            table.card-table tbody,
+            table.card-table th,
+            table.card-table td,
+            table.card-table tr { display: block; }
+
+            table.card-table { width: 100%; }
+            table.card-table thead { display: none; }
+
+            table.card-table tbody tr {
+                background: #fff;
+                border-radius: 10px;
+                padding: 4px 0;
+                margin-bottom: 10px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.06);
             }
-            .material-cost-table tr,
-            #basic-info-table tr,
-            #process-capacity-table tr,
-            #cost-summary-table tr {
-                display: table-row;
+            table.card-table td {
+                display: flex;
+                align-items: center;
+                padding: 9px 14px;
+                border: none;
+                border-bottom: 1px solid #f2f2f2;
+                font-size: 14px;
+                text-align: left;
+            }
+            table.card-table td:last-child { border-bottom: none; }
+
+            /* 卡片左侧标签 */
+            table.card-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #555;
+                min-width: 80px;
+                flex-shrink: 0;
+                font-size: 12px;
+                margin-right: 10px;
             }
 
-            th, td { padding: 6px 8px; font-size: 0.8rem; }
-            input[type="number"], input[type="text"], select { padding: 8px; font-size: 16px; }
+            /* 卡片内输入框自适应 */
+            table.card-table td input[type="number"],
+            table.card-table td input[type="text"],
+            table.card-table td select {
+                width: auto;
+                flex: 1;
+                padding: 7px 8px;
+                font-size: 15px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+            }
+            table.card-table td input[readonly] { background: #f5f5f5; color: #333; font-weight: 500; }
 
-            /* 工序选择区换行 */
+            /* 工序选择区 */
             .process-selection td {
                 display: flex !important;
                 flex-wrap: wrap;
-                gap: 4px 6px;
+                gap: 6px 8px;
+                padding: 12px !important;
                 white-space: normal;
             }
-            .process-item { margin-right: 4px; }
-            .process-item label { font-size: 0.78rem; }
-            .process-checkbox { transform: scale(1); }
+            .process-item { margin: 0; display: flex; align-items: center; gap: 4px; }
+            .process-item label { font-size: 13px; color: #333; }
+            .process-checkbox { width: 18px; height: 18px; margin: 0; transform: none; }
 
-            /* 按钮 */
-            .btn-container { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-            .btn-container button { flex: 1 1 auto; min-width: calc(50% - 6px); padding: 10px; font-size: 13px; }
+            /* 合计/汇总行保持突出 */
+            .summary-row td,
+            .total-material-cost-row td {
+                font-weight: 700;
+                color: #2c3e50;
+                font-size: 14px;
+            }
+            .total-material-cost-row td::before { color: #2c3e50; }
 
-            /* 成本汇总 */
-            .cost-summary { padding: 10px; margin-top: 14px; }
-            .cost-summary h2 { font-size: 1rem; }
+            /* 按钮区 */
+            .btn-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: center;
+            }
+            .btn-container button {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                padding: 12px 8px;
+                font-size: 14px;
+                border-radius: 8px;
+            }
 
-            /* 材料成本区域 */
-            .material-cost-section { margin-bottom: 16px; }
-            .add-btn, .delete-btn { font-size: 12px; padding: 6px 10px; }
+            /* 成本汇总区 */
+            .cost-summary { padding: 14px; margin-top: 14px; border-radius: 10px; }
+            .cost-summary h2 { font-size: 1rem; padding-bottom: 8px; }
 
-            /* 合计行 */
-            .total-material-cost-row td { font-size: 0.78rem; }
-            .summary-row td { font-size: 0.8rem; }
+            /* 材料成本区 */
+            .material-cost-section { margin-bottom: 14px; }
+            .add-btn { width: 100%; padding: 10px; font-size: 14px; margin-top: 8px; border-radius: 8px; }
+            .delete-btn { padding: 8px 14px; font-size: 13px; border-radius: 6px; flex-shrink: 0; }
 
-            /* 配件备注列 white-space 恢复正常 */
-            .accessory-note-cell { white-space: normal; min-width: 120px; }
-            .accessory-note, .accessory-note-input { font-size: 0.75rem; }
+            /* 隐藏工序行保持 display:none 优先级 */
+            .hidden-process { display: none !important; }
 
-            /* 公式说明 */
-            .formula-note { font-size: 0.7rem; white-space: normal; }
+            /* 特殊行：section-title 变全宽标题栏 */
+            table.card-table tr.section-title {
+                display: block !important;
+                padding: 0;
+                margin: 14px 0 8px;
+                box-shadow: none;
+                background: transparent;
+            }
+            table.card-table tr.section-title th {
+                display: block;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 700;
+                color: #555;
+                background: #e8e8e8;
+                border: none;
+            }
+            table.card-table tr.section-title th::before { display: none; }
 
-            .unit { font-size: 0.7rem; margin-left: 2px; }
+            /* 材料合计行：绿色高亮卡片 */
+            table.card-table tr.total-material-cost-row td {
+                display: flex !important;
+                background: #e8f5e9;
+                padding: 12px 14px;
+                font-weight: 700;
+                color: #2e7d32;
+                border-bottom: none;
+            }
+
+            /* 汇总行：蓝色高亮 */
+            table.card-table tr.summary-row td {
+                background: #e3f2fd;
+                font-weight: 700;
+                color: #1565c0;
+            }
+
+            /* 板材成本行（第2行，第一个td有colspan）保持简洁 */
+            table.card-table .material-cost-table tbody tr:first-of-type td,
+            table.card-table .material-cost-table tbody tr:nth-child(2) td {
+                display: flex !important;
+            }
+
+            /* 水印 */
+            .watermark { opacity: 0.03; }
+            .watermark-content { font-size: 14px; letter-spacing: 2px; }
         }
         /* 新增材料成本区域样式 */
         .material-cost-section {
@@ -674,6 +766,31 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ===== 手机端表格→卡片布局 =====
+            window.mobileCardInit = function() {
+                if (window.innerWidth > 640) return;
+                var tableDefs = [
+                    { sel: '.material-cost-table tbody tr:not(.section-title)', labels: ['序号','配件','数量/套','单价','总价','操作','备注'] },
+                    { sel: '#basic-info-table tbody tr', labels: ['项目','数值','单位','说明'] },
+                    { sel: '#process-capacity-table tbody tr:not(.process-selection):not(.summary-row)', labels: ['工序','时产能(套/h)','总产能','人工','耗时(h)','备注'] },
+                    { sel: '#cost-summary-table tbody tr', labels: ['成本项目','计算方式','金额','占比'] }
+                ];
+                tableDefs.forEach(function(def) {
+                    document.querySelectorAll(def.sel).forEach(function(row) {
+                        var cells = row.querySelectorAll('td, th');
+                        cells.forEach(function(cell, i) {
+                            if (def.labels[i] && !cell.hasAttribute('data-label')) {
+                                cell.setAttribute('data-label', def.labels[i]);
+                            }
+                        });
+                    });
+                });
+                document.querySelectorAll('.material-cost-table, #basic-info-table, #process-capacity-table, #cost-summary-table').forEach(function(t) {
+                    t.classList.add('card-table');
+                });
+            };
+            window.mobileCardInit();
+
             // ========== 新增：材料成本相关元素 ==========
             const boardQuantity = document.getElementById('board_quantity');
             const boardPrice = document.getElementById('board_price');
@@ -807,6 +924,8 @@
                 
                 // 绑定事件
                 bindAccessoryEvents(newRow);
+                // 为新行设置卡片标签
+                if (window.mobileCardInit) window.mobileCardInit();
                 
                 // 重新排序序号
                 reorderAccessoryRows();
