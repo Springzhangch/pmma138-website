@@ -14,9 +14,13 @@ export function Footer() {
         <div>
           <p className="font-semibold text-neutral-950">快速链接</p>
           <div className="mt-3 grid gap-2">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-black">
-                {item.label}
+            {navItems.flatMap((item) =>
+              item.children
+                ? item.children.map((child) => ({ label: child.label, href: child.href }))
+                : [{ label: item.label, href: item.href! }]
+            ).map((link) => (
+              <Link key={link.href} href={link.href} className="hover:text-black">
+                {link.label}
               </Link>
             ))}
             <Link href="/privacy" className="hover:text-black">
