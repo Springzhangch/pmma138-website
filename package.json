@@ -13,6 +13,7 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "sharp": "^0.35.3",
     "tailwindcss": "latest"
   },
   "devDependencies": {
