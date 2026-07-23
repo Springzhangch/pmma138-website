@@ -17,6 +17,7 @@
     "tailwindcss": "latest"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@eslint/eslintrc": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
