@@ -324,7 +324,37 @@
 .light-gray-color {
     background-color: rgba(200, 200, 200, 0.5); /* 浅灰色 */
 }
-                </style>
+
+/* ===== 手机端自适应 ===== */
+@media (max-width: 640px) {
+    body { padding: 6px; }
+    .container { border-radius: 8px; }
+    header { padding: 16px 14px; }
+    h1 { font-size: 1.3rem; }
+    .subtitle { font-size: 0.8rem; }
+    .main-content { flex-direction: column; gap: 12px; padding: 10px; }
+    .input-section, .visualization-section { padding: 12px; min-width: unset; }
+    h2 { font-size: 1.1rem; margin-bottom: 10px; padding-bottom: 8px; }
+    .input-group { margin-bottom: 12px; }
+    label { font-size: 0.85rem; margin-bottom: 4px; }
+    input { padding: 10px 12px; font-size: 16px; }
+    button { padding: 12px; font-size: 0.95rem; letter-spacing: 0; }
+    .result-summary { padding: 12px; margin-top: 8px; }
+    .summary-content { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .result-item { padding: 10px; }
+    .result-item h4 { font-size: 0.8rem; margin-bottom: 4px; }
+    .result-item p { font-size: 0.9rem; }
+    .method-selector { flex-wrap: wrap; gap: 6px; }
+    .method-btn { flex: 1 1 calc(50% - 3px); min-width: 0; padding: 8px 6px; font-size: 0.78rem; border-radius: 4px; }
+    .method-btn .piece-count { font-size: 0.7rem; }
+    .visualization-area { min-height: 260px; padding: 8px; overflow-x: auto; }
+    .visualization-header { padding: 10px; font-size: 0.8rem; flex-direction: column; gap: 4px; align-items: flex-start; }
+    .legend { flex-wrap: wrap; gap: 8px; padding: 8px; font-size: 0.75rem; }
+    .instructions { padding: 10px; margin-top: 14px; }
+    .instructions h3 { font-size: 0.9rem; }
+    .instructions ul { padding-left: 14px; font-size: 0.8rem; }
+    footer { padding: 12px; font-size: 0.75rem; }
+}
 <style>
 .watermark {
     position: fixed;

@@ -173,6 +173,69 @@
                 letter-spacing: 3px;
             }
         }
+
+        /* ===== 手机端自适应 (≤640px) ===== */
+        @media (max-width: 640px) {
+            body { margin: 6px; }
+            .container { padding: 12px; border-radius: 4px; }
+            h1 { font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 10px; }
+
+            /* 表格横向滚动 */
+            .material-cost-table,
+            #basic-info-table,
+            #process-capacity-table,
+            #cost-summary-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+            }
+            .material-cost-table tr,
+            #basic-info-table tr,
+            #process-capacity-table tr,
+            #cost-summary-table tr {
+                display: table-row;
+            }
+
+            th, td { padding: 6px 8px; font-size: 0.8rem; }
+            input[type="number"], input[type="text"], select { padding: 8px; font-size: 16px; }
+
+            /* 工序选择区换行 */
+            .process-selection td {
+                display: flex !important;
+                flex-wrap: wrap;
+                gap: 4px 6px;
+                white-space: normal;
+            }
+            .process-item { margin-right: 4px; }
+            .process-item label { font-size: 0.78rem; }
+            .process-checkbox { transform: scale(1); }
+
+            /* 按钮 */
+            .btn-container { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+            .btn-container button { flex: 1 1 auto; min-width: calc(50% - 6px); padding: 10px; font-size: 13px; }
+
+            /* 成本汇总 */
+            .cost-summary { padding: 10px; margin-top: 14px; }
+            .cost-summary h2 { font-size: 1rem; }
+
+            /* 材料成本区域 */
+            .material-cost-section { margin-bottom: 16px; }
+            .add-btn, .delete-btn { font-size: 12px; padding: 6px 10px; }
+
+            /* 合计行 */
+            .total-material-cost-row td { font-size: 0.78rem; }
+            .summary-row td { font-size: 0.8rem; }
+
+            /* 配件备注列 white-space 恢复正常 */
+            .accessory-note-cell { white-space: normal; min-width: 120px; }
+            .accessory-note, .accessory-note-input { font-size: 0.75rem; }
+
+            /* 公式说明 */
+            .formula-note { font-size: 0.7rem; white-space: normal; }
+
+            .unit { font-size: 0.7rem; margin-left: 2px; }
+        }
         /* 新增材料成本区域样式 */
         .material-cost-section {
             margin-bottom: 30px;

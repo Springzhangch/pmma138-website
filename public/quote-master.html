@@ -290,8 +290,8 @@
         /* 响应式优化（苹果移动端适配） */
         @media (max-width: 768px) {
             body {
-                padding: 16px;
-                gap: 16px;
+                padding: 12px;
+                gap: 14px;
             }
 
             .quote-section {
@@ -312,8 +312,48 @@
             .watermark-content {
                 font-size: 16px;
                 letter-spacing: 3px;
-                transform: translate(-50%, -50%) rotate(-25deg); /* 保持-25°倾斜 */
+                transform: translate(-50%, -50%) rotate(-25deg);
             }
+        }
+
+        /* === 小屏手机 (<480px) === */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+                gap: 12px;
+            }
+            h1 { font-size: 18px; top: 12px; }
+            .quote-section {
+                margin-top: 50px;
+                padding: 14px;
+                min-width: unset;
+                border-radius: 12px;
+            }
+            .quote-section h2 { font-size: 16px; }
+            h2 { font-size: 16px; }
+            label { font-size: 14px; }
+            select, input[type="number"] {
+                padding: 10px 12px;
+                font-size: 16px;
+                margin-bottom: 14px;
+            }
+            button {
+                padding: 12px;
+                font-size: 15px;
+            }
+            #summary-section {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            #summary { font-size: 14px; }
+            #note, #note2, #note3,
+            #calculation-process, #calculation-process2, #calculation-process3,
+            #result, #result2, #result3,
+            #total-cost, #total-cost2, #total-cost3 {
+                padding: 10px;
+                font-size: 13px;
+            }
+            .center-text { font-size: 16px; margin-bottom: 16px; }
         }
     </style>
 </head>
