@@ -1169,18 +1169,20 @@
                 // D~J 说明：默认空，可编辑（tds[3] 为合并后的说明格）
                 cells[3].textContent = '';
 
-                // K 数量：默认 1，可修改
+                // K 数量：默认 1，可修改（清除旧合计标记，防止 updateSummaryRow 清掉）
                 const cellK = cells[10];
                 cellK.textContent = '1';
-                cellK.classList.remove('locked');
+                cellK.classList.remove('locked','summary-label','summary-total');
                 cellK.removeAttribute('data-locked');
+                delete cellK.dataset.summary;
                 cellK.setAttribute('contenteditable', 'true');
 
                 // L 该工序单套单价：默认空，可修改，两位小数
                 const cellL = cells[11];
                 cellL.textContent = '';
-                cellL.classList.remove('locked');
+                cellL.classList.remove('locked','summary-label','summary-total');
                 cellL.removeAttribute('data-locked');
+                delete cellL.dataset.summary;
                 cellL.setAttribute('contenteditable', 'true');
             },
             // recalcRow：单价由用户手填，只需刷新合计行
@@ -1397,15 +1399,18 @@
 
                 // B~C 配件名称：默认空，可编辑
                 cells[1].textContent = '';
+                cells[1].classList.remove('locked','summary-label','summary-total');
+                delete cells[1].dataset.summary;
 
                 // D~G 规格和尺寸：默认空，可编辑
                 cells[3].textContent = '';
 
-                // H 数量：默认空，可编辑，限数字两位小数
+                // H 数量：默认 1，可编辑，限数字两位小数
                 const cellH = cells[7];
-                cellH.textContent = '';
-                cellH.classList.remove('locked');
+                cellH.textContent = '1';
+                cellH.classList.remove('locked','summary-label','summary-total');
                 cellH.removeAttribute('data-locked');
+                delete cellH.dataset.summary;
                 cellH.setAttribute('contenteditable', 'true');
 
                 // I 单位：下拉框 pcs/kg/g/件/套
@@ -1425,13 +1430,16 @@
                 // J 单价：默认空，可编辑，限数字两位小数
                 const cellJ = cells[9];
                 cellJ.textContent = '';
-                cellJ.classList.remove('locked');
+                cellJ.classList.remove('locked','summary-label','summary-total');
                 cellJ.removeAttribute('data-locked');
+                delete cellJ.dataset.summary;
                 cellJ.setAttribute('contenteditable', 'true');
 
                 // K 合计：自动计算（数量×单价），锁定
                 const cellK = cells[10];
                 cellK.textContent = '';
+                cellK.classList.remove('summary-label','summary-total');
+                delete cellK.dataset.summary;
                 cellK.classList.add('locked');
                 cellK.dataset.locked = '1';
                 cellK.setAttribute('contenteditable', 'false');
@@ -1446,13 +1454,18 @@
         partTable.build();
         // 默认已有一条配件（不追加物理行，复用初始3行内的空行）
         partTable.addItem(false);
+        // 初始配件：名称默认"纸箱"，数量已在 onAddItem 中默认 1
+        partTable.getCell(1, 1).textContent = '纸箱';
         // 默认已有三条工序：开料、钻石刨、精雕（不追加物理行，复用初始6行内的空行）
         procTable.addItem(false);
         procTable.getCell(1, 2).querySelector('select').value = '开料';
+        procTable.getCell(1, 10).textContent = '1';
         procTable.addItem(false);
         procTable.getCell(2, 2).querySelector('select').value = '钻石刨';
+        procTable.getCell(2, 10).textContent = '1';
         procTable.addItem(false);
         procTable.getCell(3, 2).querySelector('select').value = '精雕';
+        procTable.getCell(3, 10).textContent = '1';
         procTable.updateSummaryRow();
 
         // ============================================================
