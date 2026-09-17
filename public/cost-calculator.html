@@ -852,7 +852,7 @@
                 const cellC = cells[2];
                 cellC.innerHTML = '';
                 const sel = document.createElement('select');
-                ['底板', '侧板', '盖板', '隔板', '其他'].forEach(optText => {
+                ['底板', '左侧', '右侧', '前侧', '后侧', '盖板', '顶板', '隔板', '其他', '独立'].forEach(optText => {
                     const opt = document.createElement('option');
                     opt.innerText = optText;
                     sel.appendChild(opt);
