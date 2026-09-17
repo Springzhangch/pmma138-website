@@ -680,7 +680,7 @@
                     const srcR = itemRows[newPos];
                     const destR = newPos + 1;
                     this.getCell(destR, 0).dataset[this.itemMarker] = '1';
-                    this.copyRowContent(srcR, destR);
+                    if (srcR !== destR) this.copyRowContent(srcR, destR);
                 }
                 const clearStart = itemRows.length + 1;
                 for (let r = clearStart; r < this.rowCount; r++) this.clearWholeRow(r);
@@ -1034,7 +1034,20 @@
                         const mTd = this.getCell(r, 12);
                         if (mTd) {
                             const txt = mTd.textContent.trim();
-                            if (txt !== '') { const v = parseFloat(txt); if (!isNaN(v)) { sumSingleCost += v; hasSumSingle = true; } }
+                            if (txt !== '') {
+                                const price = parseFloat(txt);
+                                if (!isNaN(price)) {
+                                    // 单套材料成本 = Σ(单套用量 K × 单片价格 M)，用量为空按1计
+                                    const kTd = this.getCell(r, 10);
+                                    let qty = 1;
+                                    if (kTd && !kTd.querySelector('.placeholder-text')) {
+                                        const kv = parseFloat(kTd.textContent.trim());
+                                        if (!isNaN(kv)) qty = kv;
+                                    }
+                                    sumSingleCost += qty * price;
+                                    hasSumSingle = true;
+                                }
+                            }
                         }
                     }
                 }
