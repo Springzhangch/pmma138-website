@@ -60,6 +60,10 @@
             border-color:#0071e3;
             box-shadow:0 0 0 2px rgba(0,113,227,0.15);
         }
+        #inpTopQty, #inpBiz{
+            width:88px;
+            min-width:88px;
+        }
         .toolbar {
             display: flex;
             align-items: center;
@@ -377,6 +381,9 @@
             color:#1d1d1f;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="app">
@@ -401,6 +408,10 @@
             <div class="info-item">
                 <label>客户类型：</label>
                 <input type="text" id="inpCustType"/>
+            </div>
+            <div class="info-item">
+                <button id="btnExport" style="padding:6px 16px;background:#34C759;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">导出表格</button>
+                <button id="btnExportPDF" style="margin-left:8px;padding:6px 16px;background:#0071e3;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">导出PDF</button>
             </div>
         </div>
         <!-- 全局工具栏：单元格地址 + 内容编辑框，服务当前活动表格 -->
@@ -1500,11 +1511,10 @@
             thead.appendChild(headRow);
             table.appendChild(thead);
             // 汇总字段标签：第2行 A~G
-            const summaryLabels = ['材料成本','工序成本','配件成本','成本总和','利润率','出厂单价','美金价格'];
+            const summaryLabels = ['材料成本','工序成本','配件成本','成本总和','利润率','出厂单价','美元汇率','美元价格','数量','总价','美元总价'];
             const tbody = document.createElement('tbody');
             for (let r = 0; r < rows; r++) {
                 const tr = document.createElement('tr');
-                // 补一个空 td 对应 thead 的 corner，保证 A~Z 列对齐
                 const leadTd = document.createElement('td');
                 leadTd.className = 'row-num';
                 tr.appendChild(leadTd);
@@ -1512,18 +1522,27 @@
                     const td = document.createElement('td');
                     td.dataset.row = r;
                     td.dataset.col = c;
-                    // 第1行(r=0) A~G 列填入字段标签，锁定不可编辑
                     if (r === 0 && c < summaryLabels.length) {
+                        // 标签行
                         td.textContent = summaryLabels[c];
                         td.classList.add('locked');
                         td.dataset.locked = '1';
                         td.setAttribute('contenteditable', 'false');
-                    }
-                    // 第2行(r=1) A~D 列：材料成本/工序成本/配件成本/成本总和，锁定，由联动自动填入
-                    else if (r === 1 && c <= 3) {
+                    } else if (r >= 1 && c <= 3) {
+                        // A~D 成本列：锁定，联动填入
                         td.classList.add('locked','summary-total');
                         td.dataset.locked = '1';
                         td.setAttribute('contenteditable', 'false');
+                    } else if (r >= 1 && (c === 5 || c === 7 || c === 9 || c === 10)) {
+                        // F 出厂单价、H 美元价格、J 总价、K 美元总价：锁定，自动计算
+                        td.classList.add('locked');
+                        td.dataset.locked = '1';
+                        td.setAttribute('contenteditable', 'false');
+                    } else if (r >= 1 && c === 4) {
+                        // 利润率：每行默认值 0.35 / 0.30 / 0.25 / 空
+                        const defaults = ['0.35', '0.30', '0.25', '0.20'];
+                        td.textContent = defaults[r - 1] || '';
+                        td.setAttribute('contenteditable', 'true');
                     } else {
                         td.setAttribute('contenteditable', 'true');
                     }
@@ -1534,6 +1553,60 @@
             table.appendChild(tbody);
         }
         buildSummaryTable(5);
+
+        // 汇总表格 E(利润率) 和 G(美元汇率) 输入监听 → 重算（所有数据行）
+        (function() {
+            const grid = document.getElementById('gridSummary');
+            const dataRows = grid.querySelectorAll('tbody tr');
+            dataRows.forEach(function(tr) {
+                const eCell = tr.querySelector('td[data-col="4"][contenteditable="true"]');
+                const gCell = tr.querySelector('td[data-col="6"]');
+                function onInput(cell) {
+                    cell.dataset.userEdited = '1';
+                    updateSummaryTable();
+                }
+                function onBlur(cell, isProfit) {
+                    const txt = cell.textContent.trim();
+                    if (txt !== '' && !/^\d+(\.\d{1,2})?$/.test(txt)) {
+                        cell.textContent = isProfit ? '0.35' : '';
+                    }
+                    updateSummaryTable();
+                }
+                if (eCell) {
+                    eCell.addEventListener('input', function() { onInput(this); });
+                    eCell.addEventListener('blur', function() { onBlur(this, true); });
+                }
+                if (gCell) {
+                    gCell.addEventListener('input', function() {
+                        this.dataset.userEdited = '1';
+                        // 美元汇率全行同步：填一个，所有行都一样
+                        const val = this.textContent.trim();
+                        grid.querySelectorAll('tbody tr').forEach(function(otherTr) {
+                            const otherG = otherTr.querySelector('td[data-col="6"]');
+                            // 跳过标签行（locked 的不覆盖）
+                            if (otherG && otherG !== gCell && otherG.dataset.locked !== '1') {
+                                otherG.textContent = val;
+                                otherG.dataset.userEdited = '1';
+                            }
+                        });
+                        updateSummaryTable();
+                    });
+                    gCell.addEventListener('blur', function() { onBlur(this, false); });
+                }
+                // I 数量输入监听 → 重算 J 总价、K 美元总价
+                const iCell = tr.querySelector('td[data-col="8"][contenteditable="true"]');
+                if (iCell) {
+                    iCell.addEventListener('input', function() { updateSummaryTable(); });
+                    iCell.addEventListener('blur', function() {
+                        const txt = this.textContent.trim();
+                        if (txt !== '' && !/^\d+(\.\d{1,2})?$/.test(txt)) {
+                            this.textContent = '';
+                        }
+                        updateSummaryTable();
+                    });
+                }
+            });
+        })();
 
         // 联动：从片/工序/配件表格合计行取值，填入汇总表格第2行
         function getSummaryValue(table, labelCol, labelText, valueCol) {
@@ -1561,29 +1634,92 @@
 
         function updateSummaryTable() {
             const grid = document.getElementById('gridSummary');
-            // 汇总表格尚未构建时直接返回（避免初始化阶段报错中断脚本）
             if (!grid || !grid.querySelector('td[data-row="1"]')) return;
-            const getSumCell = (col) => grid.querySelector(`td[data-row="1"][data-col="${col}"]`);
-            const matCell = getSumCell(0); // A 材料成本
-            const procCell = getSumCell(1); // B 工序成本
-            const partCell = getSumCell(2); // C 配件成本
-            const totalCell = getSumCell(3); // D 成本总和
 
             const matVal = getSummaryValue(pieceTable, 11, '单套材料成本', 12);
             const procVal = getSummaryValue(procTable, 10, '单套工序总价', 11);
             const partVal = getSummaryValue(partTable, 9, '单套配件成本', 10);
 
-            matCell.textContent = matVal !== null ? fmtNum(matVal) : '';
-            procCell.textContent = procVal !== null ? fmtNum(procVal) : '';
-            partCell.textContent = partVal !== null ? fmtNum(partVal) : '';
-
             const vals = [matVal, procVal, partVal].filter(v => v !== null);
-            if (vals.length > 0) {
-                const total = vals.reduce((a, b) => a + b, 0);
-                totalCell.textContent = fmtNum(total);
-            } else {
-                totalCell.textContent = '';
-            }
+            const totalNum = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) : NaN;
+
+            // 遍历所有数据行（r>=1），每行独立计算利润率/出厂单价/美元价格
+            const dataRows = grid.querySelectorAll('tbody tr');
+            dataRows.forEach(function(tr) {
+                const r = tr.querySelector('td[data-col="0"]');
+                if (!r) return;
+                const rowIdx = parseInt(r.dataset.row);
+                if (rowIdx < 1) return; // 跳过标签行
+
+                const getCell = (col) => tr.querySelector(`td[data-col="${col}"]`);
+                const matCell = getCell(0);
+                const procCell = getCell(1);
+                const partCell = getCell(2);
+                const totalCell = getCell(3);
+                const profitCell = getCell(4);
+                const priceCell = getCell(5);
+                const exRateCell = getCell(6);
+                const usdCell = getCell(7);
+
+                // A~D 成本列：每行都填入相同值
+                matCell.textContent = matVal !== null ? fmtNum(matVal) : '';
+                procCell.textContent = procVal !== null ? fmtNum(procVal) : '';
+                partCell.textContent = partVal !== null ? fmtNum(partVal) : '';
+                totalCell.textContent = !isNaN(totalNum) ? fmtNum(totalNum) : '';
+
+                // E 利润率：用户未编辑时恢复默认 0.35 / 0.30 / 0.25 / 空
+                if (!profitCell.dataset.userEdited) {
+                    const defaults = ['0.35', '0.30', '0.25', '0.20'];
+                    profitCell.textContent = defaults[rowIdx - 1] || '';
+                }
+
+                if (!isNaN(totalNum) && totalNum > 0) {
+                    let profitRate = NaN;
+                    const pTxt = profitCell.textContent.trim();
+                    if (pTxt !== '') profitRate = parseFloat(pTxt);
+                    if (isNaN(profitRate)) {
+                        const defaults = [0.35, 0.30, 0.25, 0.20];
+                        profitRate = defaults[rowIdx - 1] || 0;
+                    }
+
+                    // F 出厂单价 = 成本总和 × (1 + 利润率)
+                    const factoryPrice = totalNum * (1 + profitRate);
+                    priceCell.textContent = fmtNum(factoryPrice);
+
+                    // H 美元价格 = 出厂单价 / 美元汇率
+                    const exRateText = exRateCell ? exRateCell.textContent.trim() : '';
+                    const exRate = exRateText !== '' ? parseFloat(exRateText) : NaN;
+                    if (!isNaN(exRate) && exRate > 0) {
+                        usdCell.textContent = fmtNum(factoryPrice / exRate);
+                    } else {
+                        usdCell.textContent = '';
+                    }
+
+                    // J 总价 = 出厂单价 × 数量
+                    const qtyCell = getCell(8);
+                    const totalPriceCell = getCell(9);
+                    const usdTotalCell = getCell(10);
+                    const qtyText = qtyCell ? qtyCell.textContent.trim() : '';
+                    const qty = qtyText !== '' ? parseFloat(qtyText) : NaN;
+                    if (!isNaN(qty) && qty > 0) {
+                        totalPriceCell.textContent = fmtNum(factoryPrice * qty);
+                        // K 美元总价 = 美元单价 × 数量
+                        const usdText = usdCell.textContent.trim();
+                        const usdVal = usdText !== '' ? parseFloat(usdText) : NaN;
+                        if (!isNaN(usdVal)) {
+                            usdTotalCell.textContent = fmtNum(usdVal * qty);
+                        } else {
+                            usdTotalCell.textContent = '';
+                        }
+                    } else {
+                        totalPriceCell.textContent = '';
+                        usdTotalCell.textContent = '';
+                    }
+                } else {
+                    priceCell.textContent = '';
+                    usdCell.textContent = '';
+                }
+            });
         }
 
         document.getElementById('inpTopQty').addEventListener('input', refreshAllPieceRows);
@@ -1603,6 +1739,262 @@
 
         // 初始联动一次
         updateSummaryTable();
+
+        // ============================================================
+        // 导出 Excel：把四个表格的内容输出到一个工作表，纵向排列，带样式
+        // ============================================================
+        function getCellText(td) {
+            if (!td) return '';
+            const sel = td.querySelector('select');
+            if (sel) return sel.value;
+            const ph = td.querySelector('.placeholder-text');
+            if (ph) return '';
+            return td.textContent.trim();
+        }
+
+        function collectTableData(gridId, hasRowNums) {
+            const tbl = document.getElementById(gridId);
+            if (!tbl) return { headers: [], rows: [] };
+            const ths = tbl.querySelectorAll('thead th');
+            const headers = [];
+            ths.forEach((th, i) => {
+                if (hasRowNums && i === 0) return;
+                headers.push(th.textContent.trim());
+            });
+            const rows = [];
+            const trs = tbl.querySelectorAll('tbody tr');
+            trs.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                const rowData = [];
+                let isSummary = false;
+                tds.forEach((td, i) => {
+                    if (hasRowNums && i === 0) return;
+                    if (td.style.display === 'none') return;
+                    if (td.classList.contains('summary-label') || td.classList.contains('summary-label2') ||
+                        td.classList.contains('summary-total') || td.classList.contains('summary-total2')) {
+                        isSummary = true;
+                    }
+                    rowData.push(getCellText(td));
+                });
+                if (rowData.some(v => v !== '')) {
+                    rows.push({ data: rowData, isSummary });
+                }
+            });
+            return { headers, rows };
+        }
+
+        // 样式常量 — 颜色对齐页面 CSS
+        const ST = {
+            // 表格标题行：品牌蓝 #0071e3
+            title: { font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '0071E3' } }, alignment: { horizontal: 'center', vertical: 'center' } },
+            // 表头行：thead th 背景 #eef1f5，文字 #1d1d1f，边框 #c9cdd3
+            header: { font: { bold: true, sz: 10, color: { rgb: '1D1D1F' } }, fill: { fgColor: { rgb: 'EEF1F5' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: { top:{style:'thin',color:{rgb:'C9CDD3'}},bottom:{style:'thin',color:{rgb:'C9CDD3'}},left:{style:'thin',color:{rgb:'C9CDD3'}},right:{style:'thin',color:{rgb:'C9CDD3'}} } },
+            // 数据行：白底，文字 #1d1d1f，边框 #c9cdd3
+            cell: { font: { sz: 10, color: { rgb: '1D1D1F' } }, fill: { fgColor: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', wrapText: false }, border: { top:{style:'thin',color:{rgb:'C9CDD3'}},bottom:{style:'thin',color:{rgb:'C9CDD3'}},left:{style:'thin',color:{rgb:'C9CDD3'}},right:{style:'thin',color:{rgb:'C9CDD3'}} } },
+            // 合计行标签：locked 背景 #f6f7f9，文字 #3a3a3c
+            summaryLabel: { font: { bold: true, sz: 10, color: { rgb: '3A3A3C' } }, fill: { fgColor: { rgb: 'F6F7F9' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top:{style:'thin',color:{rgb:'C9CDD3'}},bottom:{style:'thin',color:{rgb:'C9CDD3'}},left:{style:'thin',color:{rgb:'C9CDD3'}},right:{style:'thin',color:{rgb:'C9CDD3'}} } },
+            // 合计行数值：summary-total 背景 #ABCD03，白字
+            summaryTotal: { font: { bold: true, sz: 10, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'ABCD03' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top:{style:'thin',color:{rgb:'C9CDD3'}},bottom:{style:'thin',color:{rgb:'C9CDD3'}},left:{style:'thin',color:{rgb:'C9CDD3'}},right:{style:'thin',color:{rgb:'C9CDD3'}} } },
+            // 信息栏标签：顶部信息栏背景 #f8f9fa
+            infoLabel: { font: { bold: true, sz: 10, color: { rgb: '1D1D1F' } }, fill: { fgColor: { rgb: 'F8F9FA' } }, alignment: { horizontal: 'right', vertical: 'center' }, border: { top:{style:'thin',color:{rgb:'D9DCE1'}},bottom:{style:'thin',color:{rgb:'D9DCE1'}},left:{style:'thin',color:{rgb:'D9DCE1'}},right:{style:'thin',color:{rgb:'D9DCE1'}} } },
+            // 信息栏数值：白底
+            infoValue: { font: { sz: 10, color: { rgb: '1D1D1F' } }, fill: { fgColor: { rgb: 'FFFFFF' } }, alignment: { horizontal: 'left', vertical: 'center' }, border: { top:{style:'thin',color:{rgb:'D9DCE1'}},bottom:{style:'thin',color:{rgb:'D9DCE1'}},left:{style:'thin',color:{rgb:'D9DCE1'}},right:{style:'thin',color:{rgb:'D9DCE1'}} } }
+        };
+
+        function exportToExcel() {
+            const infoFields = [
+                { label: '客户名称', id: 'inpCustomerName' },
+                { label: '日期', id: 'inpDate' },
+                { label: '数量', id: 'inpTopQty' },
+                { label: '业务', id: 'inpBiz' },
+                { label: '客户类型', id: 'inpCustType' }
+            ];
+
+            const tables = [
+                { title: '片表格', gridId: 'grid', hasRowNums: true },
+                { title: '工序表格', gridId: 'gridProc', hasRowNums: true },
+                { title: '配件表格', gridId: 'gridPart', hasRowNums: true },
+                { title: '汇总表格', gridId: 'gridSummary', hasRowNums: true }
+            ];
+
+            // 先收集所有表格数据，确定最大列数
+            const allTableData = tables.map(t => {
+                const d = collectTableData(t.gridId, t.hasRowNums);
+                return { ...t, ...d };
+            });
+            const maxCols = Math.max(...allTableData.map(t => t.headers.length || 1));
+
+            const aoa = [];
+            const styleMap = []; // 与 aoa 行号对应，记录每行样式信息
+
+            // 1) 信息栏：两列一组（label + value），每行一对
+            infoFields.forEach(f => {
+                const el = document.getElementById(f.id);
+                const row = [f.label, el ? el.value : ''];
+                // 补齐到 maxCols
+                while (row.length < maxCols) row.push('');
+                aoa.push(row);
+                styleMap.push({ type: 'info', cols: 2 }); // label 用 infoLabel， value 用 infoValue
+            });
+            aoa.push([]);
+            styleMap.push({ type: 'blank' });
+
+            // 2) 各表格
+            allTableData.forEach((t, idx) => {
+                // 标题行（合并整行）
+                const titleRow = new Array(maxCols).fill('');
+                titleRow[0] = t.title;
+                aoa.push(titleRow);
+                styleMap.push({ type: 'title' });
+
+                // 表头行
+                if (t.headers.length) {
+                    const hdrRow = [...t.headers];
+                    while (hdrRow.length < maxCols) hdrRow.push('');
+                    aoa.push(hdrRow);
+                    styleMap.push({ type: 'header', cols: t.headers.length });
+                }
+
+                // 数据行
+                t.rows.forEach(r => {
+                    const row = [...r.data];
+                    while (row.length < maxCols) row.push('');
+                    aoa.push(row);
+                    styleMap.push({ type: r.isSummary ? 'summary' : 'cell', cols: r.data.length });
+                });
+
+                if (idx < allTableData.length - 1) {
+                    aoa.push([]);
+                    styleMap.push({ type: 'blank' });
+                }
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // 应用样式
+            styleMap.forEach((s, rowIdx) => {
+                if (s.type === 'blank') return;
+                if (s.type === 'title') {
+                    // 合并整行
+                    if (!ws['!merges']) ws['!merges'] = [];
+                    ws['!merges'].push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: maxCols - 1 } });
+                    for (let c = 0; c < maxCols; c++) {
+                        const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        ws[addr].s = Object.assign({}, ST.title);
+                    }
+                } else if (s.type === 'header') {
+                    for (let c = 0; c < s.cols; c++) {
+                        const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        ws[addr].s = Object.assign({}, ST.header);
+                    }
+                } else if (s.type === 'info') {
+                    const a0 = XLSX.utils.encode_cell({ r: rowIdx, c: 0 });
+                    if (!ws[a0]) ws[a0] = { t: 's', v: '' };
+                    ws[a0].s = Object.assign({}, ST.infoLabel);
+                    const a1 = XLSX.utils.encode_cell({ r: rowIdx, c: 1 });
+                    if (!ws[a1]) ws[a1] = { t: 's', v: '' };
+                    ws[a1].s = Object.assign({}, ST.infoValue);
+                } else if (s.type === 'cell') {
+                    for (let c = 0; c < s.cols; c++) {
+                        const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        ws[addr].s = Object.assign({}, ST.cell);
+                    }
+                } else if (s.type === 'summary') {
+                    for (let c = 0; c < s.cols; c++) {
+                        const addr = XLSX.utils.encode_cell({ r: rowIdx, c });
+                        if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                        // 含 summary-total/total2 类的列用绿底，其他用灰底
+                        const cellText = ws[addr].v || '';
+                        // 检查是否是合计数值列（通常在表头"单片价格/合计/单套工序总价"等列下方）
+                        // 简单判断：数字用 summaryTotal，文字用 summaryLabel
+                        const isNumeric = cellText !== '' && !isNaN(parseFloat(cellText)) && isFinite(cellText);
+                        ws[addr].s = Object.assign({}, isNumeric ? ST.summaryTotal : ST.summaryLabel);
+                    }
+                }
+            });
+
+            // 列宽：按内容自适应，最小 8 最大 20
+            const colWidths = [];
+            for (let c = 0; c < maxCols; c++) {
+                let maxLen = 8;
+                for (let r = 0; r < aoa.length; r++) {
+                    const cell = aoa[r][c];
+                    if (cell !== undefined && cell !== null) {
+                        const len = String(cell).length;
+                        // 中文字符算 2
+                        const cnLen = String(cell).replace(/[^\x00-\xff]/g, 'xx').length;
+                        if (cnLen > maxLen) maxLen = Math.min(cnLen, 20);
+                    }
+                }
+                colWidths.push({ wch: maxLen + 2 });
+            }
+            ws['!cols'] = colWidths;
+
+            // 行高
+            ws['!rows'] = [];
+            styleMap.forEach((s, r) => {
+                if (s.type === 'title') ws['!rows'].push({ hpx: 28 });
+                else if (s.type === 'header') ws['!rows'].push({ hpx: 32 });
+                else if (s.type === 'blank') ws['!rows'].push({ hpx: 8 });
+                else ws['!rows'].push({ hpx: 20 });
+            });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '报价表');
+            XLSX.writeFile(wb, '报价表_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+        }
+
+        document.getElementById('btnExport').addEventListener('click', exportToExcel);
+
+        // 导出 PDF：把整个 .app 容器截图成一张图，缩放到一页 PDF
+        function exportToPDF() {
+            const target = document.querySelector('.app');
+            if (!target) return;
+            const btn = document.getElementById('btnExportPDF');
+            const oldText = btn.textContent;
+            btn.textContent = '导出中...';
+            btn.disabled = true;
+
+            html2canvas(target, {
+                scale: 2,
+                useCORS: true,
+                scrollY: -window.scrollY,
+                windowWidth: document.documentElement.scrollWidth,
+                windowHeight: document.documentElement.scrollHeight
+            }).then(function(canvas) {
+                const { jsPDF } = window.jspdf;
+                // 用 A3 横向，空间更大
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'pt',
+                    format: 'a3'
+                });
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const margin = 20;
+                // 同时按宽高约束缩放（contain 模式），确保内容完整显示在一页内
+                const maxW = pageW - margin * 2;
+                const maxH = pageH - margin * 2;
+                const scale = Math.min(maxW / canvas.width, maxH / canvas.height);
+                const imgW = canvas.width * scale;
+                const imgH = canvas.height * scale;
+                const imgData = canvas.toDataURL('image/png');
+                pdf.addImage(imgData, 'PNG', margin, margin, imgW, imgH);
+                pdf.save('报价表_' + new Date().toISOString().slice(0, 10) + '.pdf');
+                btn.textContent = oldText;
+                btn.disabled = false;
+            }).catch(function(err) {
+                console.error(err);
+                btn.textContent = oldText;
+                btn.disabled = false;
+                alert('导出失败：' + err.message);
+            });
+        }
+
+        document.getElementById('btnExportPDF').addEventListener('click', exportToPDF);
     </script>
 </body>
 </html>
