@@ -12,8 +12,8 @@
     --line-soft:#eef1f6;
     --text:#16191f;
     --sub:#78818e;
-    --primary:#2f6fed;
-    --primary-soft:#ecf2ff;
+    --primary:#009944;
+    --primary-soft:#e7f6ec;
     --danger:#e5342c;
     --danger-soft:#fdeeed;
   }
@@ -65,7 +65,7 @@
   .tb-field .ipt.narrow{width:104px}
   .tb-sum{margin-left:auto;display:flex;align-items:center;gap:10px}
   .tb-item{
-    display:flex;align-items:baseline;gap:6px;background:#f7f9fd;border:1px solid var(--line-soft);
+    display:flex;align-items:baseline;gap:6px;background:#f6faf7;border:1px solid var(--line-soft);
     border-radius:10px;padding:6px 14px;
   }
   .tb-item span{font-size:13px;color:var(--sub)}
@@ -79,7 +79,7 @@
     background:#fafbfc;padding:0 10px;font-size:14px;color:var(--text);
     font-family:inherit;outline:none;transition:.15s;appearance:none;
   }
-  .ipt:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(47,111,237,.10)}
+  .ipt:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(0,153,68,.12)}
   .ipt.over{color:var(--danger);border-color:var(--danger);background:var(--danger-soft);font-weight:700}
   .ipt.qbad{color:var(--danger);border-color:var(--danger);background:var(--danger-soft);font-weight:700}
   input[type=number]::-webkit-outer-spin-button,
@@ -92,7 +92,7 @@
   .row-inline .unit{font-size:13px;color:var(--sub);margin-left:-3px}
   .ipt.strong{
     width:62px;flex:none;height:34px;text-align:center;font-size:17px;font-weight:700;
-    color:var(--primary);border-color:#c3d5f7;background:#f4f8ff;
+    color:var(--primary);border-color:#a8dcbd;background:#f2fbf6;
   }
   .ipt.strong:focus{background:#fff;border-color:var(--primary)}
   .ipt.thick{
@@ -138,8 +138,8 @@
   }
   .mrow .icon-btn:hover{color:var(--danger);border-color:#f4c8c5;background:#fff7f6}
   .btn{
-    margin-top:10px;flex:none;height:36px;width:100%;border:1px dashed #c9d5ea;border-radius:9px;
-    background:#f7faff;color:var(--primary);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;
+    margin-top:10px;flex:none;height:36px;width:100%;border:1px dashed #b7dfc6;border-radius:9px;
+    background:#f4fcf7;color:var(--primary);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;
   }
   .btn:hover{background:var(--primary-soft);border-color:var(--primary)}
   .tip{margin:0 0 10px;font-size:12.5px;color:var(--sub);flex:none;line-height:1.6}
@@ -160,7 +160,7 @@
   /* ---------- 结果 ---------- */
   .note{margin:0 0 8px;font-size:12.5px;color:var(--sub);flex:none;line-height:1.55}
   .note.vbad{color:var(--danger);font-weight:600}
-  .note.vok{color:#2f8f4e}
+  .note.vok{color:#009944}
   .rlist{flex:1;min-height:0;overflow:auto}
   .li{padding:7px 0;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
   .li:last-child{border-bottom:0}
@@ -176,7 +176,7 @@
   .li .nm{font-size:14px;font-weight:600;white-space:nowrap;flex:none}
   .li .pos{font-size:11.5px;padding:2px 7px;border-radius:5px;background:#f2f4f7;color:#5c6675;flex:none}
   .li .base{font-size:11px;padding:2px 7px;border-radius:5px;font-weight:700;flex:none}
-  .li .base.i{background:#e8f0ff;color:var(--primary)}
+  .li .base.i{background:#e7f6ec;color:var(--primary)}
   .li .base.o{background:#fff3e2;color:#b7791f}
 
   /* ---------- 窄屏回退（可滚动单列） ---------- */
@@ -397,9 +397,9 @@ function lineEl(p1, p2, stroke, w){
 function chip(x, y, text){
   var w = 12 + textW(text), h = 17;
   return '<g><rect x="' + f(x - w / 2) + '" y="' + f(y - h / 2) + '" width="' + f(w) + '" height="' + h +
-    '" rx="5" fill="#ffffff" stroke="#dbe3ef"/>' +
+    '" rx="5" fill="#ffffff" stroke="#d3e7db"/>' +
     '<text x="' + f(x) + '" y="' + f(y) + '" text-anchor="middle" dominant-baseline="central" ' +
-    'font-size="11.5" font-weight="700" fill="#2f6fed" font-family="inherit">' + text + '</text></g>';
+    'font-size="11.5" font-weight="700" fill="#009944" font-family="inherit">' + text + '</text></g>';
 }
 /* 在边的外侧画尺寸线 + 端点短线 + 数值标签 */
 function dimMark(p1, p2, text, cx, cy){
@@ -410,11 +410,11 @@ function dimMark(p1, p2, text, cx, cy){
   var dx = b[0] - a[0], dy = b[1] - a[1], dl = Math.hypot(dx, dy) || 1;
   var tx = -dy / dl * 4.5, ty = dx / dl * 4.5;
   var s = '';
-  s += lineEl(p1, a, '#d3ddea', 1);
-  s += lineEl(p2, b, '#d3ddea', 1);
-  s += lineEl(a, b, '#2f6fed', 1.3);
-  s += lineEl([a[0] - tx, a[1] - ty], [a[0] + tx, a[1] + ty], '#2f6fed', 1.3);
-  s += lineEl([b[0] - tx, b[1] - ty], [b[0] + tx, b[1] + ty], '#2f6fed', 1.3);
+  s += lineEl(p1, a, '#d5e4da', 1);
+  s += lineEl(p2, b, '#d5e4da', 1);
+  s += lineEl(a, b, '#009944', 1.3);
+  s += lineEl([a[0] - tx, a[1] - ty], [a[0] + tx, a[1] + ty], '#009944', 1.3);
+  s += lineEl([b[0] - tx, b[1] - ty], [b[0] + tx, b[1] + ty], '#009944', 1.3);
   s += chip((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, text);
   return s;
 }
@@ -434,12 +434,12 @@ function boxSVG(o){
 
   function poly(pts, fill){
     return '<polygon points="' + pts.map(function(p){ return f(p[0]) + ',' + f(p[1]); }).join(' ') +
-           '" fill="' + fill + '" stroke="#a9bbd6" stroke-width="1.2" stroke-linejoin="round"/>';
+           '" fill="' + fill + '" stroke="#9fc4ad" stroke-width="1.2" stroke-linejoin="round"/>';
   }
   var svg = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="xMidYMid meet">';
-  svg += poly([B, G, F, C], '#e4ecfa');   // 右侧面
+  svg += poly([B, G, F, C], '#e6f3ea');   // 右侧面
   svg += poly([D, C, F, E], '#ffffff');   // 顶面
-  svg += poly([A, B, C, D], '#f3f7ff');   // 正面
+  svg += poly([A, B, C, D], '#f4faf6');   // 正面
   svg += dimMark(A, B, '长 ' + fmt(L) + 'mm', cx, cy);   // 底前边 = 长
   svg += dimMark(D, A, '高 ' + fmt(H) + 'mm', cx, cy);   // 左前竖边 = 高
   svg += dimMark(C, F, '宽 ' + fmt(W) + 'mm', cx, cy);   // 顶右后边 = 宽
@@ -672,21 +672,28 @@ function renderResults(){
     volEl.textContent = '填好内箱、外箱尺寸与每箱内箱数后，自动核算总体积是否装得下';
   }
 
-  /* 用量汇总：箱体本体 + 物料清单（四类均显示基数） */
-  var bIn = Number(fmt(perUnit));    // 内箱系列的基数 = 每箱内箱装入的产品数
-  var bOut = Number(fmt(perBox));    // 外箱系列的基数 = 每箱外箱装入的内箱数
+  /* 基数 = 该箱对应多少个「产品」
+     内箱：每箱装入产品数
+     外箱：每箱装入产品数 × 每箱装入内箱数（如 5 × 10 = 50） */
+  var bIn = Number(fmt(perUnit));
+  var bOut = Number(fmt(perUnit * perBox));
+  var bInTip = perUnit > 0 ? '1 个内箱 = ' + fmt(perUnit) + ' 个产品' : '';
+  var bOutTip = (perUnit > 0 && perBox > 0)
+    ? '1 个外箱 = ' + fmt(perBox) + ' 个内箱 × 每箱 ' + fmt(perUnit) + ' 个产品 = ' + fmt(perUnit * perBox) + ' 个产品'
+    : '';
+
   var html = '';
-  html += boxHTML('内箱本体', '内箱', '', S.inner, innerCount, bIn, 'i');
-  html += matHTML(S.innerMats, innerCount, '内箱', '', bIn, 'i');
+  html += boxHTML('内箱本体', '内箱', '', S.inner, innerCount, bIn, 'i', bInTip);
+  html += matHTML(S.innerMats, innerCount, '内箱', '', bIn, 'i', bInTip);
   if(on){
-    html += boxHTML('外箱本体', '外箱', ' o', S.outer, outerCount, bOut, 'o');
-    html += matHTML(S.outerMats, outerCount, '外箱', ' o', bOut, 'o');
+    html += boxHTML('外箱本体', '外箱', ' o', S.outer, outerCount, bOut, 'o', bOutTip);
+    html += matHTML(S.outerMats, outerCount, '外箱', ' o', bOut, 'o', bOutTip);
   }
   $('#rList').innerHTML = html;
 }
 
 /* 箱体本体条目：名称 + 外轮廓尺寸 + 数量（全部同一行） */
-function boxHTML(name, tagText, tagCls, box, count, base, bCls){
+function boxHTML(name, tagText, tagCls, box, count, base, bCls, bTip){
   var d = dimsOf(box);
   var meta = d.blank
     ? '尺寸未填写'
@@ -696,12 +703,12 @@ function boxHTML(name, tagText, tagCls, box, count, base, bCls){
     '<span class="nm">' + name + '</span>' +
     '<span class="meta">' + meta + '</span>' +
     '<span class="tot">总数 ' + fmt(count) + '</span>' +
-    '<span class="base ' + bCls + '">基数 ' + (base > 0 ? base : '—') + '</span>' +
+    '<span class="base ' + bCls + '"' + (bTip ? ' title="' + bTip + '"' : '') + '>基数 ' + (base > 0 ? base : '—') + '</span>' +
   '</div>';
 }
 
 /* 物料清单 */
-function matHTML(items, boxCount, tagText, tagCls, base, bCls){
+function matHTML(items, boxCount, tagText, tagCls, base, bCls, bTip){
   if(!items.length) return '<div class="empty">' + tagText + '未添加物料</div>';
   var box = (tagText === '内箱') ? S.inner : S.outer;
   var limit = limitOf(box);
@@ -727,7 +734,7 @@ function matHTML(items, boxCount, tagText, tagCls, base, bCls){
       '<span class="meta"' + (over ? ' style="color:var(--danger);font-weight:600"' : '') + '>' + meta + '</span>' +
       '<span class="tot">总数 ' + fmt(per * boxCount) + '</span>' +
       '<span class="per">单箱数量 ' + per + '</span>' +
-      '<span class="base ' + bCls + '">基数 ' + (base > 0 ? base : '—') + '</span>' +
+      '<span class="base ' + bCls + '"' + (bTip ? ' title="' + bTip + '"' : '') + '>基数 ' + (base > 0 ? base : '—') + '</span>' +
     '</div>';
   }).join('');
 }
