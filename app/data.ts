@@ -25,6 +25,7 @@ export const navItems: NavItem[] = [
       { label: "报价大师", href: "/quote-master.html" },
       { label: "板材排料", href: "/sheet-nesting-calculator.html" },
       { label: "包装计算", href: "/packaging.html" },
+      { label: "盒子设计", href: "/boxdesign.html" },
     ],
   },
   { label: "联系", href: "/contact" },

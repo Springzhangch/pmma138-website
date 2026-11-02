@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亚克力盒快速设计器</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --line:#e3e8ef; --text:#1f2d3d;
+    --muted:#7b8794; --accent:#009944; --accent2:#c0392b; --ok:#15a05a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+       background:var(--bg);color:var(--text);}
+  header{padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--line);}
+  header h1{margin:0;font-size:18px;font-weight:700;}
+  header p{margin:4px 0 0;font-size:12px;color:var(--muted);}
+  .wrap{display:flex;gap:12px;padding:12px;height:calc(100vh - 70px);align-items:stretch;}
+  .controls{width:230px;flex:0 0 230px;background:var(--panel);border:1px solid var(--line);
+            border-radius:12px;padding:14px;overflow:auto;}
+  .controls h2{font-size:13px;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;margin-bottom:6px;font-weight:600;}
+  .field input,.field select{width:100%;padding:8px 10px;border:1px solid var(--line);
+       border-radius:8px;font-size:14px;background:#fff;color:var(--text);}
+  .row{display:flex;gap:8px;}
+  .row .field{flex:1;}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px;}
+  .btns{display:flex;gap:8px;margin-top:6px;}
+  .btns button{flex:1;padding:9px;border:none;border-radius:8px;font-size:13px;cursor:pointer;
+       background:var(--accent);color:#fff;font-weight:600;}
+  .btns button.alt{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  .results{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0;}
+  .top{display:flex;gap:10px;flex:1.15;min-height:0;}
+  .views{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;min-height:0;}
+  .info-row{display:flex;gap:14px;flex:1;min-height:0;}
+  .info-row>div{flex:1;min-width:0;overflow:auto;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;
+        display:flex;flex-direction:column;min-height:0;min-width:0;}
+  .card h3{margin:0 0 6px;font-size:13px;flex:0 0 auto;}
+  .top > .card{flex:1;min-width:0;}
+  .view-box{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:4px;
+            flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
+  .view-svg{display:block;width:100%;height:100%;}
+  #infoCard{overflow:auto;}
+  table.parts{font-size:12px;}
+  table.parts th,table.parts td{padding:4px 6px;}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .sum-item{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .sum-item .k{font-size:12px;color:var(--muted);}
+  .sum-item .v{font-size:15px;font-weight:700;margin-top:2px;}
+  .warn{color:var(--accent2);font-size:12px;margin-top:8px;}
+  table.parts{width:100%;border-collapse:collapse;font-size:13px;}
+  table.parts th,table.parts td{border:1px solid var(--line);padding:7px 10px;text-align:left;}
+  table.parts th{background:#f0f4fa;font-weight:600;}
+  .badge{display:inline-block;background:#e8f5ee;color:var(--accent);font-size:11px;
+         padding:2px 8px;border-radius:20px;margin-left:6px;}
+  .radio{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;flex:1;cursor:pointer;}
+  .radio input{width:16px!important;height:16px;flex:0 0 auto;accent-color:var(--accent);}
+  .joint-banner{font-size:15px;font-weight:700;padding:9px 12px;border:2px solid var(--accent);
+         border-radius:10px;background:#e8f5ee;color:var(--accent);}
+  .joint-banner.warnj{border-color:var(--accent2);background:#fdecea;color:var(--accent2);}
+  /* 打印默认横版，尽量把信息都打印全 */
+  @page{
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  @media print{
+    html,body{height:auto!important;background:#fff!important;}
+    .controls{display:none!important;}
+    .wrap{display:block!important;height:auto!important;padding:0!important;}
+    header{padding:6px 0 8px;border-bottom:1px solid var(--line);}
+    header p{display:none;}            /* 打印时省略副标题，节省空间 */
+    .results{display:block!important;gap:8px!important;min-height:0!important;}
+    .top{display:block!important;flex:none!important;margin-bottom:8px;}
+    #infoCard{overflow:visible!important;}
+    .info-row{display:flex!important;gap:14px;}
+    .info-row>div{flex:1;overflow:visible!important;}
+    .views{display:grid!important;grid-template-columns:repeat(4,1fr)!important;
+           gap:6px!important;flex:none!important;min-height:0!important;}
+    .card{border:1px solid var(--line)!important;padding:6px!important;break-inside:avoid;}
+    .card h3{font-size:12px;}
+    .view-box{border:1px solid var(--line);flex:none!important;min-height:0!important;}
+    .view-svg{width:100%!important;height:auto!important;}
+    table.parts{font-size:11px;}
+    .joint-banner{font-size:18px!important;padding:6px 10px!important;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>粤丰展示盒型设计</h1>
+  <p>选盒型 · 填外长/宽/高 · 选板厚 → 自动反推内尺寸，含四视图（俯/正/侧/斜侧），正侧视图同高</p>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <h2>参数设置</h2>
+    <div class="field">
+      <label>盒型</label>
+      <select id="boxType">
+        <option value="closed">六面带盖盒（封闭）</option>
+        <option value="open" selected>五面开口盒（无盖）</option>
+        <option value="tiandi">天地盖盒（底+盖）</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>板厚 t（mm）</label>
+      <div class="row">
+        <select id="thickSel">
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="custom">自定义…</option>
+        </select>
+        <input id="thick" type="number" min="0.5" max="50" step="0.5" placeholder="输入厚度" style="display:none">
+      </div>
+      <div class="hint">默认 3，可下拉选 2~10；选「自定义…」可填任意值。整盒统一用此厚度</div>
+    </div>
+    <div class="field">
+      <label>外尺寸（长 × 宽 × 高，mm）</label>
+      <div class="row">
+        <div class="field"><input id="L" type="number" min="1" value="120"><div class="hint">长 L</div></div>
+        <div class="field"><input id="W" type="number" min="1" value="90"><div class="hint">宽 W</div></div>
+        <div class="field"><input id="H" type="number" min="1" value="70"><div class="hint">高 H</div></div>
+      </div>
+      <div class="hint">统一板厚 t 自动反推内尺寸（内 = 外 − 2t，开口/顶方向只 −1t）</div>
+    </div>
+    <div class="field" id="lidField" style="display:none;">
+      <label>盖高 Hl（mm）</label>
+      <input id="Hl" type="number" min="1" value="25">
+      <div class="hint">天地盖：盖比底大一圈（各大 1×t）可套入</div>
+    </div>
+    <div class="field">
+      <label>拼接方式（必选）</label>
+      <div class="row">
+        <label class="radio"><input type="radio" name="joint" value="90"> 90° 直角</label>
+        <label class="radio"><input type="radio" name="joint" value="45"> 45° 斜角</label>
+      </div>
+      <div class="hint">直角对接 / 斜角(45°)拼接；打印与导出前必须选择</div>
+    </div>
+    <div class="btns">
+      <button id="dlPng">下载 PNG</button>
+      <button id="prn" class="alt">打印</button>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="joint-banner warnj" id="jointBanner">⚠ 请选择拼接方式：90° 直角 或 45° 斜角（打印 / 导出前必须选择）</div>
+    <div class="top">
+      <div class="card" id="infoCard">
+        <h3>尺寸汇总 &amp; 下料清单<span class="badge">统一厚度 t</span></h3>
+        <div class="info-row">
+          <div id="sumBox"></div>
+          <div id="partsBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="views">
+      <div class="card"><h3>正视图（长×高）</h3><div class="view-box"><div id="viewFront"></div></div></div>
+      <div class="card"><h3>侧视图（宽×高）</h3><div class="view-box"><div id="viewSide"></div></div></div>
+      <div class="card"><h3>俯视图（长×宽）</h3><div class="view-box"><div id="viewTop"></div></div></div>
+      <div class="card"><h3>从上方斜侧视图</h3><div class="view-box"><div id="view3d"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const OUTER = '#1f2d3d', INNER = '#c0392b', THK = '#009944', FILL = 'rgba(140,205,235,0.10)';
+
+function readInputs(){
+  const sel = $('thickSel').value;
+  const t = (sel==='custom')
+    ? Math.max(0.5, parseFloat($('thick').value)||3)
+    : parseFloat(sel);
+  const L = Math.max(1, parseFloat($('L').value)||1);
+  const W = Math.max(1, parseFloat($('W').value)||1);
+  const H = Math.max(1, parseFloat($('H').value)||1);
+  const Hl = Math.max(1, parseFloat($('Hl').value)||1);
+  const type = $('boxType').value;
+  $('lidField').style.display = (type==='tiandi') ? 'block' : 'none';
+  return {t,L,W,H,Hl,type};
+}
+function getJoint(){
+  const el=document.querySelector('input[name="joint"]:checked');
+  return el ? el.value : null;
+}
+function updateJoint(){
+  const j=getJoint();
+  const b=$('jointBanner');
+  if(!j){
+    b.textContent='⚠ 请选择拼接方式：90° 直角 或 45° 斜角（打印 / 导出前必须选择）';
+    b.classList.add('warnj');
+  } else {
+    b.textContent='拼接方式：'+(j==='45'?'45° 拼接（斜角）':'90° 拼接（直角）');
+    b.classList.remove('warnj');
+  }
+}
+
+/* ---------- 3D 等轴测 ---------- */
+function project(p, scale, ox, oy){
+  const a = Math.PI/6;
+  const sx = (p[0]-p[1])*Math.cos(a);
+  const sy = (p[0]+p[1])*Math.sin(a) - p[2];
+  return [ox + sx*scale, oy + sy*scale];
+}
+function boxFaces(ox,oy,oz,w,d,h,omitTop,omitBottom){
+  const v=[[0,0,0],[w,0,0],[w,d,0],[0,d,0],[0,0,h],[w,0,h],[w,d,h],[0,d,h]]
+        .map(p=>[p[0]+ox,p[1]+oy,p[2]+oz]);
+  const F=[];
+  if(!omitBottom) F.push({i:[0,1,2,3]});
+  if(!omitTop)    F.push({i:[4,5,6,7]});
+  F.push({i:[0,1,5,4]}); // front y=0
+  F.push({i:[3,2,6,7]}); // back  y=d
+  F.push({i:[0,3,7,4]}); // left  x=0
+  F.push({i:[1,2,6,5]}); // right x=w
+  return F.map(f=>{
+    const pts=f.i.map(i=>v[i]);
+    const depth=pts.reduce((s,p)=>s+p[0]+p[1]+p[2],0)/4;
+    return {pts,depth};
+  });
+}
+function render3D(s){
+  let faces=[];
+  if(s.type==='closed')      faces=boxFaces(0,0,0,s.L,s.W,s.H,false,false);
+  else if(s.type==='open')   faces=boxFaces(0,0,0,s.L,s.W,s.H,true,false);
+  else { // tiandi
+    faces=boxFaces(0,0,0,s.L,s.W,s.H,true,false);                 // 底盒（开口朝上）
+    const lidGap = Math.max(s.t*2, (s.H+s.Hl)*0.1);               // 盖抬起，与底分离显示
+    faces=faces.concat(boxFaces(-s.t,-s.t, s.H+lidGap, s.L+2*s.t,s.W+2*s.t,s.Hl, false, true)); // 盖（开口朝下，悬浮于底之上）
+  }
+  // project with temp origin to compute bbox
+  let ptsAll=[];
+  faces.forEach(f=>f.pts.forEach(p=>ptsAll.push(project(p,1,0,0))));
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  ptsAll.forEach(p=>{minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);});
+  const spanX=maxX-minX, spanY=maxY-minY;
+  const scale=300/Math.max(spanX,spanY);
+  const ox=190-(minX+maxX)/2*scale, oy=200-(minY+maxY)/2*scale;
+  faces.sort((a,b)=>a.depth-b.depth);
+  let body='';
+  faces.forEach(f=>{
+    const pp=f.pts.map(p=>project(p,scale,ox,oy));
+    const poly=pp.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    body+=`<polygon points="${poly}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.3" stroke-linejoin="round"/>`;
+  });
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${body}</svg>`;
+}
+
+/* ---------- 尺寸标注辅助 ---------- */
+function hdim(x1,y,x2,text,color){
+  const mx=(x1+x2)/2;
+  return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" stroke="${color}" stroke-width="1.1"/>`
+       + `<text x="${mx}" y="${y-7}" font-size="12" fill="${color}" text-anchor="middle">${text}</text>`;
+}
+// side: 'left' 文字在竖线左侧中间； 'right' 文字在竖线右侧中间
+function vdim(x,y1,y2,text,color,side){
+  const top=Math.min(y1,y2), bot=Math.max(y1,y2);
+  const my=(top+bot)/2;
+  const txtX = (side==='left') ? (x-7) : (x+7);
+  const anchor = (side==='left') ? 'end' : 'start';
+  return `<line x1="${x}" y1="${top}" x2="${x}" y2="${bot}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x-4}" y1="${top}" x2="${x+4}" y2="${top}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x-4}" y1="${bot}" x2="${x+4}" y2="${bot}" stroke="${color}" stroke-width="1.1"/>`
+       + `<text x="${txtX}" y="${my+4}" font-size="12" fill="${color}" text-anchor="${anchor}">${text}</text>`;
+}
+
+/* ---------- 竖直视图（正/侧），统一比例保证“高”同像素 ---------- */
+// topOpen: 顶部开口则内高只减 1 个 t
+function vertView(hMm,vMm,t,topOpen,hName,scale){
+  const Wpx=hMm*scale, Hpx=vMm*scale, tpx=t*scale;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+18;
+  const iwpx=(hMm-2*t)*scale;
+  const ihpx=(topOpen?(vMm-t):(vMm-2*t))*scale;
+  const ix0=X0+tpx, iy0= topOpen? Y0 : Y0+tpx;
+  let g='';
+  g+=`<rect x="${X0}" y="${Y0}" width="${Wpx}" height="${Hpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  g+=`<rect x="${ix0}" y="${iy0}" width="${iwpx}" height="${ihpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+  // 外尺寸
+  g+=hdim(X0, Y0-26, X0+Wpx, hName+' '+hMm, OUTER);
+  g+=vdim(X0+Wpx+26, Y0, Y0+Hpx, '高 '+vMm, OUTER, 'right');
+  // 内尺寸
+  if(iwpx>0) g+=hdim(ix0, Y0+Hpx+24, ix0+iwpx, '内'+hName+' '+(hMm-2*t), INNER);
+  if(ihpx>0) g+=vdim(X0-26, iy0, iy0+ihpx, '内高 '+(topOpen?(vMm-t):(vMm-2*t)), INNER, 'left');
+  // 板厚角标
+  g+=`<text x="${X0+tpx+4}" y="${Y0+tpx+13}" font-size="11" fill="${THK}">t=${t}</text>`;
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
+}
+function tiandiVert(hMm,baseH,lidH,t,hName,scale){
+  const Wl=hMm+2*t;
+  const Wlpx=Wl*scale, Wbpx=hMm*scale, Hbpx=baseH*scale, Hlpx=lidH*scale, tpx=t*scale;
+  const gapPx=Math.max(tpx*2,(Hbpx+Hlpx)*0.1);   // 盖与底之间留可见间隙，表示“已分离”
+  const total=Hlpx+gapPx+Hbpx;
+  const X0=(380-Wlpx)/2, Y0=(380-total)/2+12;
+  const baseX=X0+tpx;            // 底盒居中于盖内
+  const lidY=Y0;                 // 盖顶
+  const baseY=Y0+Hlpx+gapPx;     // 底盒顶（盖底之下隔一个 gap）
+  let g='';
+  // 盖（开口朝下）
+  g+=`<rect x="${X0}" y="${lidY}" width="${Wlpx}" height="${Hlpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  g+=`<rect x="${X0+tpx}" y="${lidY}" width="${Wbpx}" height="${Hlpx-tpx}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="5 3"/>`;
+  g+=`<text x="${X0+5}" y="${lidY+15}" font-size="12" font-weight="700" fill="${OUTER}">盖</text>`;
+  // 底盒（开口朝上）
+  g+=`<rect x="${baseX}" y="${baseY}" width="${Wbpx}" height="${Hbpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  g+=`<rect x="${baseX+tpx}" y="${baseY}" width="${Wbpx-2*tpx}" height="${Hbpx-tpx}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="5 3"/>`;
+  g+=`<text x="${baseX+5}" y="${baseY+15}" font-size="12" font-weight="700" fill="${OUTER}">底</text>`;
+  // 外尺寸
+  g+=hdim(X0, lidY-26, X0+Wlpx, '外'+hName+'(盖) '+(hMm+2*t), OUTER);
+  g+=vdim(X0+Wlpx+28, lidY, lidY+Hlpx, '盖高 '+lidH, OUTER, 'right');
+  g+=vdim(baseX+Wbpx+28, baseY, baseY+Hbpx, '底高 '+baseH, OUTER, 'right');
+  // 内尺寸
+  if(Wbpx-2*tpx>0) g+=hdim(baseX, baseY+Hbpx+24, baseX+Wbpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
+  g+=vdim(baseX-26, baseY, baseY+Hbpx-tpx, '内高 '+(baseH-t), INNER, 'left');
+  g+=`<text x="${X0+tpx+4}" y="${lidY+tpx+13}" font-size="11" fill="${THK}">t=${t}</text>`;
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
+}
+
+/* ---------- 俯视图 ---------- */
+function topView(hMm,vMm,t,tiandi,hName,vName,scale){
+  const Wpx=hMm*scale, Dpx=vMm*scale, tpx=t*scale;
+  const X0=(380-Wpx)/2, Y0=(380-Dpx)/2;
+  let g='';
+  // 底盒外框 + 内框
+  g+=`<rect x="${X0}" y="${Y0}" width="${Wpx}" height="${Dpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  g+=`<rect x="${X0+tpx}" y="${Y0+tpx}" width="${Wpx-2*tpx}" height="${Dpx-2*tpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+  g+=`<text x="${X0+Wpx/2}" y="${Y0+Dpx/2+4}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">底</text>`;
+  if(tiandi){
+    // 盖外框（大一圈）
+    g+=`<rect x="${X0-tpx}" y="${Y0-tpx}" width="${Wpx+2*tpx}" height="${Dpx+2*tpx}" fill="none" stroke="${OUTER}" stroke-width="1.3" stroke-dasharray="6 4"/>`;
+    g+=`<text x="${X0-tpx+4}" y="${Y0-tpx+15}" font-size="12" font-weight="700" fill="${OUTER}">盖</text>`;
+    g+=hdim(X0-tpx, Y0-26, X0-tpx+Wpx+2*tpx, '盖外'+hName+' '+(hMm+2*t), OUTER);
+  } else {
+    g+=hdim(X0, Y0-26, X0+Wpx, hName+' '+hMm, OUTER);
+  }
+  g+=vdim(X0+Wpx+26, Y0, Y0+Dpx, vName+' '+vMm, OUTER, 'right');
+  if(Wpx-2*tpx>0) g+=hdim(X0+tpx, Y0+Dpx+24, X0+tpx+Wpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
+  if(Dpx-2*tpx>0) g+=vdim(X0-26, Y0+tpx, Y0+tpx+Dpx-2*tpx, '内'+vName+' '+(vMm-2*t), INNER, 'left');
+  g+=`<text x="${X0+tpx+4}" y="${Y0+tpx+13}" font-size="11" fill="${THK}">t=${t}</text>`;
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
+}
+
+/* ---------- 汇总 & 下料 ---------- */
+function renderSummary(s){
+  let iL,iW,iH,extra='';
+  if(s.type==='closed'){ iL=s.L-2*s.t; iW=s.W-2*s.t; iH=s.H-2*s.t; }
+  else if(s.type==='open'){ iL=s.L-2*s.t; iW=s.W-2*s.t; iH=s.H-s.t; }
+  else { iL=s.L-2*s.t; iW=s.W-2*s.t; iH=s.H-s.t;
+         extra=`<div class="sum-item"><div class="k">盖外尺寸</div><div class="v">${(s.L+2*s.t)} × ${(s.W+2*s.t)} × ${s.Hl}</div></div>
+                <div class="sum-item"><div class="k">盖内尺寸</div><div class="v">${s.L} × ${s.W} × ${s.Hl-s.t}</div></div>`; }
+  let warn='';
+  if(iL<=0||iW<=0||iH<=0) warn='<div class="warn">⚠ 板厚过大，内尺寸已≤0，请减小板厚或增大外尺寸。</div>';
+  $('sumBox').innerHTML =
+    `<div class="sum-item"><div class="k">外尺寸 (长×宽×高)</div><div class="v">${s.L} × ${s.W} × ${s.H}</div></div>
+     <div class="sum-item"><div class="k">内尺寸 (长×宽×高)</div><div class="v" style="color:var(--accent2)">${Math.max(0,iL).toFixed(1)} × ${Math.max(0,iW).toFixed(1)} × ${Math.max(0,iH).toFixed(1)}</div></div>
+     <div class="sum-item"><div class="k">板厚 t</div><div class="v">${s.t} mm</div></div>
+     ${extra}${warn}`;
+  // 下料清单
+  let rows=[];
+  if(s.type==='closed'){
+    rows=[['底板',1,`${s.L} × ${s.W}`],['盖板',1,`${s.L} × ${s.W}`],
+          ['长侧板',2,`${s.L} × ${s.H}`],['宽侧板',2,`${s.W} × ${s.H}`]];
+  } else if(s.type==='open'){
+    rows=[['底板',1,`${s.L} × ${s.W}`],
+          ['长侧板',2,`${s.L} × ${s.H}`],['宽侧板',2,`${s.W} × ${s.H}`]];
+  } else {
+    rows=[['底盒-底板',1,`${s.L} × ${s.W}`],
+          ['底盒-长侧',2,`${s.L} × ${s.H}`],['底盒-宽侧',2,`${s.W} × ${s.H}`],
+          ['盖盒-顶板',1,`${(s.L+2*s.t)} × ${(s.W+2*s.t)}`],
+          ['盖盒-长侧',2,`${(s.L+2*s.t)} × ${s.Hl}`],['盖盒-宽侧',2,`${(s.W+2*s.t)} × ${s.Hl}`]];
+  }
+  let html='<table class="parts"><tr><th>板件</th><th>数量</th><th>长 × 宽 (mm)</th></tr>';
+  rows.forEach(r=>html+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`);
+  html+='</table><div class="hint" style="margin-top:8px">全部板厚统一为 '+s.t+' mm</div>';
+  $('partsBox').innerHTML=html;
+}
+
+function render(){
+  const s=readInputs();
+  // 全局统一比例：保证正视图 / 侧视图的“高”在图纸上像素高度完全一致
+  let gmax = (s.type==='tiandi')
+      ? Math.max(s.L+2*s.t, s.W+2*s.t, s.H+s.Hl)
+      : Math.max(s.L, s.W, s.H);
+  const scale=(380-165)/gmax;
+
+  if(s.type==='closed'){
+    $('viewFront').innerHTML=vertView(s.L,s.H,s.t,false,'长',scale);
+    $('viewSide').innerHTML =vertView(s.W,s.H,s.t,false,'宽',scale);
+  } else if(s.type==='open'){
+    $('viewFront').innerHTML=vertView(s.L,s.H,s.t,true,'长',scale);
+    $('viewSide').innerHTML =vertView(s.W,s.H,s.t,true,'宽',scale);
+  } else {
+    $('viewFront').innerHTML=tiandiVert(s.L,s.H,s.Hl,s.t,'长',scale);
+    $('viewSide').innerHTML =tiandiVert(s.W,s.H,s.Hl,s.t,'宽',scale);
+  }
+  $('viewTop').innerHTML=topView(s.L,s.W,s.t, s.type==='tiandi','长','宽',scale);
+  $('view3d').innerHTML=render3D(s);
+  renderSummary(s);
+  updateJoint();
+}
+
+/* ---------- 导出 PNG ---------- */
+function svgToImage(svgEl){
+  return new Promise(res=>{
+    const xml=new XMLSerializer().serializeToString(svgEl);
+    const img=new Image();
+    img.onload=()=>res(img);
+    img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+  });
+}
+async function exportPNG(){
+  const joint=getJoint();
+  if(!joint){ alert('请先选择拼接方式（90° 或 45°）后再导出图片。'); return; }
+  const jointText = joint==='45' ? '45° 拼接（斜角）' : '90° 拼接（直角）';
+  // 导出布局顺序：左上=正视图，右上=侧视图，左下=俯视图，右下=从上方斜侧视图
+  const order=[
+    {id:'viewFront', cap:'正视图（长×高）',   pos:[24,96]},
+    {id:'viewSide',  cap:'侧视图（宽×高）',   pos:[424,96]},
+    {id:'viewTop',   cap:'俯视图（长×宽）',   pos:[24,506]},
+    {id:'view3d',    cap:'从上方斜侧视图',     pos:[424,506]},
+  ];
+  const svgs=order.map(o=>$(o.id).querySelector('.view-svg'));
+  const imgs=await Promise.all(svgs.map(svgToImage));
+  const cw=820, ch=1010;
+  const canvas=document.createElement('canvas');
+  canvas.width=cw; canvas.height=ch;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cw,ch);
+  ctx.fillStyle='#1f2d3d'; ctx.font='bold 22px sans-serif';
+  ctx.fillText('粤丰展示盒型设计图',24,34);
+  ctx.fillStyle='#009944'; ctx.font='bold 20px sans-serif';
+  ctx.fillText('拼接方式：'+jointText,24,66);
+  order.forEach((o,i)=>{
+    const img=imgs[i]; if(!img) return;
+    ctx.drawImage(img,o.pos[0],o.pos[1],380,380);
+    ctx.fillStyle='#1f2d3d'; ctx.font='14px sans-serif';
+    ctx.fillText(o.cap,o.pos[0],o.pos[1]+400);
+  });
+  const a=document.createElement('a');
+  a.download='acrylic_box.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+}
+
+['boxType','thick','L','W','H','Hl'].forEach(id=>$(id).addEventListener('input',render));
+document.querySelectorAll('input[name="joint"]').forEach(r=>r.addEventListener('change',()=>{updateJoint();}));
+$('thickSel').addEventListener('change',()=>{
+  const custom = $('thickSel').value==='custom';
+  $('thick').style.display = custom ? '' : 'none';
+  if(custom) $('thick').focus();
+  render();
+});
+$('dlPng').addEventListener('click',exportPNG);
+$('prn').addEventListener('click',()=>{
+  if(!getJoint()){ alert('请先选择拼接方式（90° 或 45°）后再打印。'); return; }
+  window.print();
+});
+
+render();
+</script>
+</body>
+</html>
