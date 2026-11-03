@@ -188,6 +188,7 @@
         <option value="tiandi">天地盖盒（底+盖）</option>
         <option value="block">亚克力块（实心方块）</option>
         <option value="frame">亚克力相夹（双板对吸）</option>
+        <option value="shape">简单几何图形（单板）</option>
       </select>
     </div>
     <div class="field" id="edgeField" style="display:none;">
@@ -248,12 +249,60 @@
         <input id="thick" type="number" min="0.5" max="50" step="0.5" placeholder="输入厚度" style="display:none">
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="dimField">
       <label id="dimLabel">外尺寸（长 × 宽 × 高，mm）</label>
-      <div class="row">
+      <div class="row" id="dimRow">
         <div class="field"><input id="L" type="number" min="1" value="120"><div class="hint">长 L</div></div>
         <div class="field"><input id="W" type="number" min="1" value="90"><div class="hint">宽 W</div></div>
         <div class="field" id="hField"><input id="H" type="number" min="1" value="70"><div class="hint">高 H</div></div>
+      </div>
+    </div>
+    <div class="field" id="shapeTypeField" style="display:none;">
+      <label>形状</label>
+      <div class="row">
+        <label class="radio"><input type="radio" name="shp" value="square" checked> 方形</label>
+        <label class="radio"><input type="radio" name="shp" value="triangle"> 三角形</label>
+        <label class="radio"><input type="radio" name="shp" value="circle"> 圆形</label>
+      </div>
+    </div>
+    <div class="field" id="circleField" style="display:none;">
+      <label>直径 Ø（mm）</label>
+      <input id="cirD" type="number" min="1" step="0.5" value="50">
+    </div>
+    <div class="field" id="triField" style="display:none;">
+      <label>三边尺寸（mm，底边 a 水平在下）</label>
+      <div class="row">
+        <div class="field"><input id="triA" type="number" min="1" step="0.5" value="30"><div class="hint">底边 a</div></div>
+        <div class="field"><input id="triB" type="number" min="1" step="0.5" value="30"><div class="hint">左边 b</div></div>
+        <div class="field"><input id="triC" type="number" min="1" step="0.5" value="30"><div class="hint">右边 c</div></div>
+      </div>
+      <div class="hint" id="triHint">三边需满足任意两边之和大于第三边，不符时自动修正</div>
+    </div>
+    <div class="field" id="shThickField" style="display:none;">
+      <label>板厚（mm）</label>
+      <div class="row">
+        <select id="shThickSel">
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+          <option value="custom">自定义…</option>
+        </select>
+        <input id="shThick" type="number" min="0.5" max="50" step="0.5" placeholder="输入厚度" style="display:none">
+      </div>
+    </div>
+    <div class="field" id="shapeHoleField" style="display:none;">
+      <label>中央圆孔（可选）</label>
+      <label class="radio"><input type="checkbox" id="shpHole"> 开孔</label>
+      <div id="shpHoleOpts" style="display:none;margin-top:5px;">
+        <div class="row">
+          <div class="field"><input id="shpHoleD" type="number" min="0.5" step="0.5" value="4"><div class="hint">孔径 Ø mm</div></div>
+          <div class="field"><input id="shpHoleDep" type="number" min="0.5" step="0.5" value="3"><div class="hint">孔深 mm</div></div>
+        </div>
+        <div class="hint" id="shpHoleHint">孔开在正中央；孔深 ≤ 板厚，超过按打通处理</div>
       </div>
     </div>
     <div class="field" id="plateField" style="display:none;">
@@ -386,7 +435,8 @@ const PRODUCTS = {
   openlid: {name:'五面盒带盖（板盖）',  family:'box'},
   tiandi : {name:'天地盖盒（底+盖）',   family:'box'},
   block  : {name:'亚克力块（实心方块）', family:'solid'},
-  frame  : {name:'亚克力相夹（双板对吸）', family:'frame'}
+  frame  : {name:'亚克力相夹（双板对吸）', family:'frame'},
+  shape  : {name:'简单几何图形（单板）', family:'shape'}
 };
 function familyOf(){
   const p = PRODUCTS[$('boxType').value];
@@ -394,6 +444,7 @@ function familyOf(){
 }
 function isSolidType(){ return familyOf()==='solid'; }
 function isFrameType(){ return familyOf()==='frame'; }
+function isShapeType(){ return familyOf()==='shape'; }
 
 function readInputs(){
   const sel = $('thickSel').value;
@@ -410,11 +461,35 @@ function readInputs(){
     : parseFloat(lidSel);
   const type = $('boxType').value;
   const fam = (PRODUCTS[type]||{}).family || 'box';
-  const solid = fam==='solid', frame = fam==='frame';
+  const solid = fam==='solid', frame = fam==='frame', shape = fam==='shape';
+
+  /* ---- 简单几何图形（单板）：方形 / 三角形 / 圆形 + 可选中央圆孔 ---- */
+  const shp = shape ? ((document.querySelector('input[name="shp"]:checked')||{value:'square'}).value) : null;
+  const shSel = $('shThickSel').value;
+  const shT = shape ? ((shSel==='custom')
+    ? Math.max(0.5, parseFloat($('shThick').value)||3)
+    : parseFloat(shSel)) : 3;
+  const cirD = shape ? Math.max(1, parseFloat($('cirD').value)||50) : 0;
+  let triA = Math.max(0.5, parseFloat($('triA').value)||30);
+  let triB = Math.max(0.5, parseFloat($('triB').value)||30);
+  let triC = Math.max(0.5, parseFloat($('triC').value)||30);
+  let triFixed = false;
+  if(shape && shp==='triangle'){
+    /* 三角不等式校验：不满足时把 c（再不行 a）夹回刚好合法的区间，并提示 */
+    const fix=()=>{ triC=Math.min(Math.max(triC, Math.abs(triA-triB)+0.5), triA+triB-0.5);
+                    triA=Math.min(Math.max(triA, Math.abs(triB-triC)+0.5), triB+triC-0.5); };
+    const g0=triGeom(triA,triB,triC);
+    if(!g0){ fix(); if(!triGeom(triA,triB,triC)){ triB=Math.max(triA,triC); fix(); } triFixed=true; }
+  }
+  /* 开孔：默认不开，勾选才开；Ø×深默认 4×3；孔深超过板厚按打通处理 */
+  const holeOn = shape && $('shpHole').checked;
+  const holeD = Math.max(0.5, parseFloat($('shpHoleD').value)||4);
+  const holeDepIn = Math.max(0.5, parseFloat($('shpHoleDep').value)||3);
 
   /* 亚克力块：棱边直角 / 圆角，R 上限 = 最短边的一半
      亚克力相夹：直角 / 圆角 R / C 角，R、C 上限 = 单板板厚
-     （两块板各削一半，合起来正好一条完整圆边 / 45° 倒角） */
+     （两块板各削一半，合起来正好一条完整圆边 / 45° 倒角）
+     简单几何图形：方形 R 上限 = 最短边一半；三角形 R 上限 = 内切圆半径 */
   const edgeEl = document.querySelector('input[name="edge"]:checked');
   const edge = edgeEl ? edgeEl.value : 'sharp';
   const rSel = $('rSel').value;
@@ -426,7 +501,13 @@ function readInputs(){
     ? Math.max(0.1, parseFloat($('cVal').value)||1)
     : (parseFloat(cSel)||1);
   const pt = Math.max(1, parseFloat($('plateTSel').value)||5);   // 单板板厚
-  const rMax = frame ? pt : Math.min(L,W,H)/2;
+  /* 三角形几何（底边水平在下）与内切圆半径（R 上限） */
+  const tri = (shape && shp==='triangle') ? triGeom(triA,triB,triC) : null;
+  const triRIn = tri ? (tri.a*tri.h/2)/((tri.a+tri.b+tri.c)/2) : 0;
+  const rMax = frame ? pt
+             : shape ? (shp==='triangle' ? triRIn : Math.min(L,W)/2)
+             : Math.min(L,W,H)/2;
+  const shapeEdgeOn = shape && shp!=='circle';      // 圆没有棱角
   const R = (edge==='round') ? Math.min(rIn, rMax) : 0;
   const C = (frame && edge==='cham') ? Math.min(cIn, pt) : 0;
 
@@ -447,28 +528,47 @@ function readInputs(){
     }
   }
 
-  /* 字段显隐：盒类看壁厚 / 拼接 / 磁铁，块类看棱边 / 圆角，相夹看板厚 / 棱边 / 磁铁 */
-  const notBox = solid || frame;
+  /* 字段显隐：盒类看壁厚 / 拼接 / 磁铁，块类看棱边 / 圆角，相夹看板厚 / 棱边 / 磁铁，
+     简单几何图形看形状 / 板厚 / 棱角（圆无棱角）/ 开孔 */
+  const notBox = solid || frame || shape;
   $('thickField').style.display    = notBox ? 'none' : 'block';
   $('jointField').style.display    = notBox ? 'none' : 'block';
   $('magField').style.display      = notBox ? 'none' : 'block';
-  $('edgeField').style.display     = notBox ? 'block' : 'none';
+  $('edgeField').style.display     = (notBox && shapeEdgeOn) ? 'block' : (!shape && notBox) ? 'block' : 'none';
   $('cEdgeLabel').style.display    = frame ? '' : 'none';
   $('plateField').style.display    = frame ? 'block' : 'none';
   $('frameMagField').style.display = frame ? 'block' : 'none';
-  $('hField').style.display        = frame ? 'none' : '';
-  $('rField').style.display        = (notBox && edge==='round') ? 'block' : 'none';
+  $('hField').style.display        = (frame || shape) ? 'none' : '';
+  $('rField').style.display        = (notBox && edge==='round' && (shapeEdgeOn || !shape)) ? 'block' : 'none';
   $('cField').style.display        = (frame && edge==='cham') ? 'block' : 'none';
+  $('shapeTypeField').style.display = shape ? 'block' : 'none';
+  $('circleField').style.display   = (shape && shp==='circle') ? 'block' : 'none';
+  $('triField').style.display      = (shape && shp==='triangle') ? 'block' : 'none';
+  $('shThickField').style.display  = shape ? 'block' : 'none';
+  $('shapeHoleField').style.display = shape ? 'block' : 'none';
+  $('shpHoleOpts').style.display   = holeOn ? 'block' : 'none';
+  $('dimRow').style.display        = (shape && shp!=='square') ? 'none' : '';
   $('lidField').style.display      = (type==='tiandi') ? 'block' : 'none';
   $('lidThickField').style.display = (type==='openlid') ? 'block' : 'none';
+  $('dimField').style.display     = (shape && shp!=='square') ? 'none' : '';
   $('dimLabel').textContent        = frame ? '单板尺寸（长 × 宽，mm）'
+                                   : shape ? '方形板尺寸（长 × 宽，mm）'
                                    : solid ? '产品尺寸（长 × 宽 × 高，mm）'
                                            : '外尺寸（长 × 宽 × 高，mm）';
   $('edgeHint').textContent = frame ? '板的外表面一圈棱边 + 平面四角同一种处理'
+                                    : shape ? '方形四角 / 三角形三角同一种 R'
                                     : '12 条棱 + 8 个角同一种处理';
   $('rHint').textContent = frame ? `R 不超过板厚（当前 ${pt} mm，两块板各削一半）`
+                                 : shape ? (shp==='triangle' ? `R 不超过内切圆半径（当前 ${triRIn.toFixed(1)} mm），超出自动取最大值`
+                                                             : 'R 不超过最短边的一半')
                                  : 'R 不超过最短边的一半';
   $('cHint').textContent = `C 不超过板厚（当前 ${pt} mm）`;
+  $('shpHoleHint').textContent = shp==='triangle'
+    ? '孔开在重心；孔深 ≤ 板厚，超过按打通处理'
+    : '孔开在正中央；孔深 ≤ 板厚，超过按打通处理';
+  $('triHint').textContent = tri && triRIn>0
+    ? `当前内切圆半径 ${triRIn.toFixed(1)} mm（R 角上限）`
+    : '三边需满足任意两边之和大于第三边，不符时自动修正';
   $('magLabel').textContent = (type==='open')
     ? '磁铁（4 个 · 圆磁 · 吸合独立盖板用）'
     : '磁铁（4 个 · 圆磁 · 吸合盖用）';
@@ -480,11 +580,23 @@ function readInputs(){
   const magD = +mparts[0], magTh = +mparts[1]; // 直径 / 厚
   const magDist = Math.max(0, parseFloat($('magDist').value)||20);
   const magOk = (t >= magD + 2);               // 盒体板厚需 ≥ 直径+2
-  const magOkLid = (lidT >= magD + 2);         // 板盖厚度需 ≥ 直径+2
+  /* 板盖磁铁不再做「直径+2 ≤ 盖厚」校验（用户要求删除）：盖薄时磁铁照样允许放置，
+     盒体磁铁的 magOk 校验保持不变 */
   $('magDistLabel').textContent = (magEdge==='L') ? '距宽边 (mm)' : '距长边 (mm)';
-  return {t,L,W,H,Hl,lidT,type,solid,frame,edge,R,C,pt,rIn,cIn,rMax,
+  /* 开孔装配校验：孔径相对板料是否放得下（余量 2mm 起评，只提示不强制改） */
+  let holeFits = true;
+  if(holeOn){
+    holeFits = (shp==='circle') ? (holeD <= cirD-2)
+             : (shp==='triangle') ? (tri ? holeD <= 2*triRIn-0.5 : false)
+             : (holeD <= Math.min(L,W)-2);
+  }
+  const holeDep = Math.min(holeDepIn, shT);
+  const holeThrough = holeDepIn >= shT;
+  return {t,L,W,H,Hl,lidT,type,solid,frame,shape,shp,edge,R,C,pt,rIn,cIn,rMax,
+          shT,cirD,triA,triB,triC,tri,triRIn,triFixed,shapeEdgeOn,
+          holeOn,holeD,holeDep,holeDepIn,holeThrough,holeFits,
           fMagD,fMagTh,magL,magW,magFit,useMag,
-          magEdge,magD,magTh,magDist,magOk,magOkLid};
+          magEdge,magD,magTh,magDist,magOk};
 }
 function getJoint(){
   const el=document.querySelector('input[name="joint"]:checked');
@@ -493,8 +605,8 @@ function getJoint(){
 function updateJoint(){
   const j=getJoint();
   const b=$('jointBanner');
-  if(isSolidType() || isFrameType()){
-    // 实心块 / 相夹没有拼接工艺，不显示拼接条（打印 / 导出版式相应上移）
+  if(isSolidType() || isFrameType() || isShapeType()){
+    // 实心块 / 相夹 / 简单图形没有拼接工艺，不显示拼接条（打印 / 导出版式相应上移）
     b.textContent='';
     b.style.display='none';
     return;
@@ -598,11 +710,10 @@ function render3D(s){
     magPlanCenters(s).forEach(p=>{
       const c=cIn(p);
       const pa=pj([c[0],c[1], zBox]);
-      if(s.type==='openlid'){                           // 板盖磁铁：与盒磁铁同平面位置、上下正对
+      if(s.type==='openlid'){                           // 板盖磁铁：与盒磁铁同平面位置、上下正对（不做盖厚校验，恒为正常色）
         const pb=pj([c[0],c[1], s.H+lidGap+s.lidT/2]);
-        const col=s.magOkLid?THK:INNER;
-        body+=`<line x1="${pa[0].toFixed(1)}" y1="${pa[1].toFixed(1)}" x2="${pb[0].toFixed(1)}" y2="${pb[1].toFixed(1)}" stroke="${col}" stroke-width="0.9" stroke-dasharray="2 2" opacity="0.75"/>`;
-        body+=magCircle(pb[0],pb[1],r,s.magOkLid);
+        body+=`<line x1="${pa[0].toFixed(1)}" y1="${pa[1].toFixed(1)}" x2="${pb[0].toFixed(1)}" y2="${pb[1].toFixed(1)}" stroke="${THK}" stroke-width="0.9" stroke-dasharray="2 2" opacity="0.75"/>`;
+        body+=magCircle(pb[0],pb[1],r,true);
       }
       body+=magCircle(pa[0],pa[1],r,s.magOk);
     });
@@ -694,15 +805,15 @@ function magPlanCenters(s){
 }
 /* 板盖磁铁平面位置 = 盒体磁铁平面位置（同一 (x,y)，才能上下正对吸合）。
    厚度方向的偏移由所属板件厚度决定，只影响高度、不影响平面坐标，故不复用壁厚。 */
-// 在竖直视图里画磁铁（Ytop = 该视图中 z=H 对应的像素 y；axis='x' 横向为长，'y' 横向为宽）
-// 正/侧视图磁铁画成圆柱体（矩形）；距边距离 d 仅在该视图水平轴正好是 d 所在边时标注
+// 在竖直视图里画磁铁（Ytop = 该视图中 z=H 对应的像素 y；axis 仅决定磁铁的横向位置取 x 还是 y）
+// 磁铁是竖直圆柱（轴向=高度方向，顶面与盒口齐平吸盖），无论正视图还是侧视图，
+// 看起来都一样：宽=直径（水平）、高=磁铁厚（竖直，往下嵌入壁厚）。
+// 此前侧视图误画成「宽=厚、高=直径」（相当于把磁铁横放 90°），已改正。
 function drawMagsVert(X0,Ytop,Wpx,tpx,scale,s,axis){
   if(!s.useMag) return '';
-  // 磁铁是嵌在板厚里的：厚度方向尺寸一律限制在板厚内，直径方向限制在盒体轮廓内，绝不越出板边
-  const thru=Math.min(s.magTh*scale, tpx);         // 沿板厚方向（最大不超过板厚）
-  const dia=s.magD*scale;                          // 直径方向
-  const w=(axis==='x') ? dia : thru;               // 正视图：宽=直径；侧视图：宽=板厚方向
-  const h=(axis==='x') ? thru : Math.min(dia, tpx);// 正视图：高=板厚方向；侧视图：高=直径（同样不超板厚）
+  const thru=Math.min(s.magTh*scale, tpx);         // 沿板厚（竖直）方向，最大不超过壁厚
+  const dia=s.magD*scale;                          // 直径（水平）方向
+  const w=dia, h=thru;
   const cy=Ytop + h/2;                             // 贴盒顶边（往下嵌入板厚内）
   const col=s.magOk?THK:INNER, dpx=s.magDist*scale;
   let g='', seen={};
@@ -818,12 +929,12 @@ function openLidVert(hMm, baseH, lidT, t, hName, scale, s, axis){
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
 // 板盖磁铁：紧贴板盖底面（朝上），与盒磁铁竖直对齐、对吸；不重复标注 d（与盒相同）
+// 同样是竖直圆柱：正/侧视图都画「宽=直径、高=磁铁厚」，与 drawMagsVert 保持一致
 function drawMagsLidVert(X0, lidBot, Wpx, lidTpx, scale, s, axis){
   if(!s.useMag) return '';
   const thru=Math.min(s.magTh*scale, lidTpx);        // 厚度方向限制在板盖厚度内
   const dia=s.magD*scale;
-  const w=(axis==='x') ? dia : thru;
-  const h=(axis==='x') ? thru : Math.min(dia, lidTpx);
+  const w=dia, h=thru;
   const cy=lidBot - h/2;                             // 贴板盖底面（朝下与盒口吸合）
   let g='', seen={};
   // 平面位置与盒体磁铁完全一致 → 正/侧视图里上下严格对齐
@@ -831,7 +942,7 @@ function drawMagsLidVert(X0, lidBot, Wpx, lidTpx, scale, s, axis){
     const hc=(axis==='x')?p[0]:p[1];
     if(seen[hc.toFixed(3)]) return; seen[hc.toFixed(3)]=1;
     const cx=clampC(X0+hc*scale, X0+w/2, X0+Wpx-w/2);
-    g+=magCyl(cx, cy, w, h, s.magOkLid);
+    g+=magCyl(cx, cy, w, h, true);
   });
   return g;
 }
@@ -1306,8 +1417,9 @@ function frameFront(s,scale){
   g+=hdim(X0, Y0-24, X0+Wpx, '长 '+s.L, OUTER);
   g+=vdim(X0+Wpx+22, Y0, Y0+Hpx, '宽 '+s.W, OUTER, 'right');
   /* 磁铁定位：距宽边 / 距长边两条尺寸线引到板外（延伸线穿过磁铁圆心），
-     数字标在尺寸线上，综合说明另起一行居中，避免左下角两行字互相压住 */
-  const dmY=Y0+Hpx+13, dmX=X0-16;
+     数字标在尺寸线上，综合说明另起一行居中，避免左下角两行字互相压住。
+     尺寸行离板底 22px（原来 13px 时数字顶部会被板的底边线穿过） */
+  const dmY=Y0+Hpx+22, dmX=X0-16;
   g+=`<line x1="${f2(PX(0))}" y1="${f2(Y0+Hpx)}" x2="${f2(PX(0))}" y2="${f2(dmY+4)}" stroke="${THK}" stroke-width="0.8"/>`
    + `<line x1="${f2(PX(s.magW))}" y1="${f2(PY(s.magL))}" x2="${f2(PX(s.magW))}" y2="${f2(dmY+4)}" stroke="${THK}" stroke-width="0.8"/>`
    + hdim(PX(0), dmY, PX(s.magW), dxfNum(s.magW), THK);
@@ -1322,10 +1434,11 @@ function frameFront(s,scale){
       g+=magCircle(PX(x),PY(z),mr,s.magFit);
     });
   });
-  /* 磁铁规格：右上角那颗引出 */
+  /* 磁铁规格：右上角那颗引出到板上方空白区（原来向右伸会压到「宽」的尺寸线） */
   const tx=PX(s.L-s.magW), tz=PY(s.W-s.magL);
-  g+=`<line x1="${f2(tx+mr*0.7)}" y1="${f2(tz-mr*0.7)}" x2="${f2(tx+mr*0.7+11)}" y2="${f2(tz-mr*0.7-11)}" stroke="${THK}" stroke-width="0.9"/>`
-   + `<text x="${f2(tx+mr*0.7+13)}" y="${f2(tz-mr*0.7-10)}" font-size="11" font-weight="700" fill="${THK}">Ø${md}×4</text>`;
+  const lx=tx+mr*0.7, ly=tz-mr*0.7, specY=Y0-9;
+  g+=`<line x1="${f2(lx)}" y1="${f2(ly)}" x2="${f2(lx+11)}" y2="${f2(specY+3)}" stroke="${THK}" stroke-width="0.9"/>`
+   + `<text x="${f2(lx+13)}" y="${f2(specY)}" font-size="11" font-weight="700" fill="${THK}">Ø${md}×${s.fMagTh}</text>`;
   /* 棱边处理标注：从左上角圆弧 45° 引出到板外，避开角上的磁铁 */
   if(pl.r>0){
     const rp=pl.r*scale, cx=X0+rp, cy=Y0+rp;
@@ -1380,6 +1493,239 @@ function frameProfileSvg(s,hMm,hName,scale,mode){
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
 
+/* ============================================================
+   简单几何图形（单板）：方形 / 三角形 / 圆形
+   一块板 + 可选中央圆孔（圆柱形：直径 × 深，默认 4×3）。
+   方形：长×宽×厚 + 可选四角 R；三角形：三边×厚 + 三角 R（上限=内切圆半径，
+   底边 a 水平在下）；圆形：直径×厚。
+   孔位：方形 / 圆形在正中心，三角形在重心。孔深超过板厚按打通处理。
+   ============================================================ */
+/* 三角形几何：底边 a 水平在下，A=(0,0) B=(a,0)，C 由 |CA|=b、|CB|=c 确定。
+   返回 null = 三边不构成三角形（调用方负责修正） */
+function triGeom(a,b,c){
+  const x=(a*a+b*b-c*c)/(2*a);
+  const h2=b*b-x*x;
+  if(!(h2>1e-6)) return null;
+  const h=Math.sqrt(h2);
+  return {a,b,c,x,h,verts:[[0,0],[a,0],[x,h]]};
+}
+/* 顶点集 + 圆角半径 → 轮廓。返回 {segs, poly, cut}：
+   segs 供 DXF（L=线段 / A=圆弧），poly 为采样闭合轮廓（SVG / 3D / 凸包用），
+   cut 为圆角切掉的面积之和（体积计算用） */
+function filletedOutline(verts,r,per){
+  const n=verts.length, segs=[], pts=[];
+  const sub=(p,q)=>[p[0]-q[0],p[1]-q[1]], addv=(p,q)=>[p[0]+q[0],p[1]+q[1]],
+        mulv=(p,k)=>[p[0]*k,p[1]*k], vlen=v=>Math.hypot(v[0],v[1]),
+        vnrm=v=>{ const l=vlen(v)||1; return [v[0]/l,v[1]/l]; };
+  const V=i=>verts[(i+n)%n];
+  const Tin=[], Tout=[], C=[], ths=[];
+  for(let i=0;i<n;i++){
+    const v=V(i), u=vnrm(sub(V(i-1),v)), w=vnrm(sub(V(i+1),v));
+    const th=Math.acos(Math.max(-1,Math.min(1,u[0]*w[0]+u[1]*w[1])));   // 内角
+    let d=(r>1e-6)? r/Math.tan(th/2) : 0;
+    d=Math.max(0, Math.min(d, vlen(sub(V(i-1),v))/2-1e-4, vlen(sub(V(i+1),v))/2-1e-4));
+    Tin[i]=addv(v,mulv(u,d)); Tout[i]=addv(v,mulv(w,d));
+    C[i]=(r>1e-6)? addv(v,mulv(vnrm(addv(u,w)), r/Math.sin(th/2))) : v;
+    ths[i]=th;
+  }
+  let cut=0;
+  for(let i=0;i<n;i++){
+    const prev=(i-1+n)%n;
+    segs.push({t:'L',a:Tout[prev],b:Tin[i]});                 // 角之间的直边
+    if(r>1e-6 && Tin[i]!==Tout[i]){
+      segs.push({t:'A',c:C[i],r,p0:Tin[i],p1:Tout[i]});
+      cut += (vlen(sub(Tin[i],V(i))))*r - 0.5*r*r*(Math.PI-ths[i]);
+      const a0=Math.atan2(Tin[i][1]-C[i][1], Tin[i][0]-C[i][0]);
+      const a1=Math.atan2(Tout[i][1]-C[i][1], Tout[i][0]-C[i][0]);
+      let dlt=a1-a0;
+      while(dlt>Math.PI) dlt-=2*Math.PI;
+      while(dlt<-Math.PI) dlt+=2*Math.PI;
+      const k=Math.max(4,per||12);
+      pts.push(Tout[prev], Tin[i]);
+      for(let j=1;j<k;j++){
+        const ang=a0+dlt*j/k;
+        pts.push([C[i][0]+r*Math.cos(ang), C[i][1]+r*Math.sin(ang)]);
+      }
+    } else {
+      pts.push(V(i));
+    }
+  }
+  /* 闭合轮廓去重（首尾 / 相邻重复点），供 SVG polygon 与 3D 使用 */
+  const ded=[];
+  pts.forEach(p=>{ const q=ded[ded.length-1];
+    if(!q || Math.hypot(p[0]-q[0],p[1]-q[1])>1e-6) ded.push(p); });
+  if(ded.length>2 && Math.hypot(ded[0][0]-ded[ded.length-1][0],ded[0][1]-ded[ded.length-1][1])<1e-6) ded.pop();
+  return {segs,poly:ded,cut};
+}
+/* 简单几何图形的统一几何描述（w/h = 轮廓实际包围盒；顶点过圆角后三角高会变小、
+   钝角三角形可能向负方向伸出，故统一平移到 (0,0) 起步，尺寸/视图都用实际包围盒） */
+function shapeGeom(s){
+  const norm=(o,extra)=>{
+    const xs=o.poly.map(p=>p[0]), ys=o.poly.map(p=>p[1]);
+    const mx=Math.min(...xs), my=Math.min(...ys);
+    const sh=p=>[p[0]-mx, p[1]-my];
+    const segs=o.segs.map(sg=>{
+      if(sg.t==='L') return {t:'L',a:sh(sg.a),b:sh(sg.b)};
+      if(sg.t==='C') return {t:'C',c:[sg.c[0]-mx,sg.c[1]-my],r:sg.r};
+      return {t:'A',c:[sg.c[0]-mx,sg.c[1]-my],r:sg.r,p0:sh(sg.p0),p1:sh(sg.p1)};
+    });
+    return Object.assign({}, o, {
+      poly:o.poly.map(sh), segs,
+      w:Math.max(...xs)-mx, h:Math.max(...ys)-my,
+      c:[o.c[0]-mx, o.c[1]-my]
+    }, extra ? {vertsT:extra.map(sh)} : {});
+  };
+  if(s.shp==='circle'){
+    const D=s.cirD, r=D/2, poly=[];
+    for(let i=0;i<72;i++){ const a=i/72*2*Math.PI; poly.push([r+r*Math.cos(a), r+r*Math.sin(a)]); }
+    return {kind:'circle',poly,segs:[{t:'C',c:[r,r],r}],w:D,h:D,
+            area:Math.PI*r*r,c:[r,r],r};
+  }
+  if(s.shp==='triangle' && s.tri){
+    const t=s.tri, R=Math.min(s.R||0, s.triRIn||0);
+    const o=filletedOutline(t.verts,R,14);
+    const cen=[(t.verts[0][0]+t.verts[1][0]+t.verts[2][0])/3,
+               (t.verts[0][1]+t.verts[1][1]+t.verts[2][1])/3];
+    return norm({kind:'triangle',poly:o.poly,segs:o.segs,
+                 area:t.a*t.h/2-o.cut,c:cen,rIn:s.triRIn,r:R}, t.verts);
+  }
+  const L=s.L, W=s.W, R=Math.min(s.R||0, Math.min(L,W)/2);
+  const o=filletedOutline([[0,0],[L,0],[L,W],[0,W]],R,12);
+  return norm({kind:'square',poly:o.poly,segs:o.segs,
+               area:L*W-o.cut,c:[L/2,W/2],r:R});
+}
+/* 正视图：形状轮廓 + 中央圆孔 + 尺寸 */
+function shapeFront(s,sc){
+  const G=shapeGeom(s);
+  const Wpx=G.w*sc, Hpx=G.h*sc;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+12;
+  const f2=v=>v.toFixed(1);
+  const P=p=>[X0+p[0]*sc, Y0+(G.h-p[1])*sc];        // mm y 向上 → 屏幕 y 向下
+  const fmt=v=>(Math.round(v*100)/100).toString();
+  let g='';
+  if(G.kind==='circle'){
+    const c=P(G.c);
+    g+=`<circle cx="${f2(c[0])}" cy="${f2(c[1])}" r="${f2(G.r*sc)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  } else {
+    g+=`<polygon points="${G.poly.map(p=>{const q=P(p);return f2(q[0])+','+f2(q[1]);}).join(' ')}"
+        fill="${FILL}" stroke="${OUTER}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  }
+  /* 中央圆孔：红虚线（同内腔约定）+ 十字定位标 */
+  if(s.holeOn){
+    const c=P(G.c), rp=Math.max(s.holeD/2*sc,2.2);
+    g+=`<circle cx="${f2(c[0])}" cy="${f2(c[1])}" r="${f2(rp)}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="4 3"/>`
+     + `<line x1="${f2(c[0]-5)}" y1="${f2(c[1])}" x2="${f2(c[0]+5)}" y2="${f2(c[1])}" stroke="${INNER}" stroke-width="0.7"/>`
+     + `<line x1="${f2(c[0])}" y1="${f2(c[1]-5)}" x2="${f2(c[0])}" y2="${f2(c[1]+5)}" stroke="${INNER}" stroke-width="0.7"/>`;
+  }
+  /* 尺寸：方形 长/宽，圆形 Ø，三角形 底边 a + 两腰 */
+  if(G.kind==='square'){
+    g+=hdim(X0, Y0-24, X0+Wpx, '长 '+fmt(s.L), OUTER);
+    g+=vdim(X0+Wpx+22, Y0, Y0+Hpx, '宽 '+fmt(s.W), OUTER, 'right');
+    g+=rMarkSvg(X0, Y0, G.r*sc, s.R);
+  } else if(G.kind==='circle'){
+    g+=`<line x1="${f2(X0)}" y1="${f2(Y0+Hpx/2)}" x2="${f2(X0+Wpx)}" y2="${f2(Y0+Hpx/2)}" stroke="${OUTER}" stroke-width="0.8"/>`
+     + `<text x="${f2(X0+Wpx/2)}" y="${f2(Y0+Hpx/2-6)}" font-size="11" font-weight="700" fill="${OUTER}" text-anchor="middle">Ø ${fmt(s.cirD)}</text>`;
+  } else {
+    g+=hdim(X0+G.vertsT[0][0]*sc, X0+G.vertsT[1][0]*sc, Y0+Hpx+18, 'a '+fmt(s.triA), OUTER);
+    /* 两腰标注：取轮廓上斜边中点向外推 */
+    const vs=G.vertsT.map(P);
+    const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+    const cen=P(G.c);
+    const lbl=(p,txt)=>{ const o=outward(p,cen,16);
+      return `<text x="${f2(o[0])}" y="${f2(o[1]+4)}" font-size="11" font-weight="700" fill="${OUTER}" text-anchor="middle">${txt}</text>`; };
+    g+=lbl(mid(vs[0],vs[2]),'b '+fmt(s.triB));
+    g+=lbl(mid(vs[1],vs[2]),'c '+fmt(s.triC));
+    /* R 引出：最高顶点的圆弧（R>0 时） */
+    if(s.R>0){
+      let best=null;
+      G.segs.forEach(sg=>{ if(sg.t!=='A') return;
+        const c=P(sg.c); if(!best || c[1]<best[1]) best=sg; });
+      if(best){
+        const c=P(best.c), o=outward(c,cen,best.r*sc+13);
+        g+=`<line x1="${f2(c[0])}" y1="${f2(c[1])}" x2="${f2(o[0])}" y2="${f2(o[1])}" stroke="${THK}" stroke-width="0.9"/>`
+         + `<text x="${f2(o[0])}" y="${f2(o[1]-4)}" font-size="11" font-weight="700" fill="${THK}" text-anchor="middle">R ${fmt(s.R)}</text>`;
+      }
+    }
+  }
+  /* 孔说明（底部） */
+  if(s.holeOn){
+    const posTxt=G.kind==='triangle'?'重心':'居中';
+    const by=(G.kind==='triangle')? Y0+Hpx+36 : Y0+Hpx+20;
+    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(by)}" font-size="11" font-weight="700" fill="${INNER}" text-anchor="middle">孔 Ø${fmt(s.holeD)} × 深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
+  }
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
+}
+/* 侧 / 俯视图：厚度条 + 孔深（虚线矩形，从正面往里挖）
+   side：竖向=高向 extent（方 W / 圆 Ø / 三角 h），厚度沿 x，正面在左；
+   top ：横向=长向 extent（方 L / 圆 Ø / 三角 a），厚度沿 y，正面在下 */
+function shapeProfileSvg(s,mode,sc){
+  const G=shapeGeom(s);
+  const ext=(mode==='top')?G.w:G.h;
+  const extName=(mode==='top')
+    ? (s.shp==='square'?'长':s.shp==='triangle'?'宽':'Ø')
+    : (s.shp==='square'?'宽':s.shp==='triangle'?'高':'Ø');
+  const fmt=v=>(Math.round(v*100)/100).toString();
+  const horiz=(mode==='top');
+  const Wpx=horiz?G.w*sc:s.shT*sc, Hpx=horiz?s.shT*sc:G.h*sc;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+10;
+  const f2=v=>v.toFixed(1);
+  let g=`<rect x="${f2(X0)}" y="${f2(Y0)}" width="${f2(Wpx)}" height="${f2(Hpx)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  if(s.holeOn){
+    const hw=Math.max(s.holeD/2*sc,2), dep=Math.max(s.holeDep*sc,1.5);
+    g+= horiz
+      ? `<rect x="${f2(X0+G.c[0]*sc-hw)}" y="${f2(Y0+Hpx-dep)}" width="${f2(2*hw)}" height="${f2(dep)}" fill="none" stroke="${INNER}" stroke-width="1" stroke-dasharray="3 2"/>`
+      : `<rect x="${f2(X0)}" y="${f2(Y0+(G.h-G.c[1])*sc-hw)}" width="${f2(dep)}" height="${f2(2*hw)}" fill="none" stroke="${INNER}" stroke-width="1" stroke-dasharray="3 2"/>`;
+  }
+  if(horiz){
+    g+=hdim(X0, Y0+Hpx+20, X0+Wpx, extName+' '+fmt(ext), OUTER);
+    g+=`<text x="${f2(X0-8)}" y="${f2(Y0+Hpx/2+4)}" font-size="11" font-weight="700" fill="#7b8794" text-anchor="end">厚 ${fmt(s.shT)}</text>`;
+  } else {
+    g+=vdim(X0-24, Y0, Y0+Hpx, extName+' '+fmt(ext), OUTER, 'left');
+    g+=`<text x="${f2(X0+Wpx+12)}" y="${f2(Y0+Hpx/2+4)}" font-size="11" font-weight="700" fill="${THK}">厚 ${fmt(s.shT)}</text>`;
+  }
+  if(s.holeOn){
+    const posTxt=s.shp==='triangle'?'重心':'居中';
+    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(horiz? Y0-10 : Y0+Hpx+34)}" font-size="11" font-weight="700" fill="${INNER}" text-anchor="middle">孔深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
+  }
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
+}
+/* 斜侧视图：轮廓沿厚度方向挤出（凸形体，连接棱全部可见，前面板最后画盖住内测线条） */
+function shape3D(s){
+  const G=shapeGeom(s);
+  const per=G.poly, n=per.length;
+  const T2=per.map(p=>[p[0],0,p[1]]), B2=per.map(p=>[p[0],s.shT,p[1]]);
+  const P0=T2.map(p=>bIsoP(p,1)), P1=B2.map(p=>bIsoP(p,1));
+  const all=P0.concat(P1);
+  const xs=all.map(p=>p[0]), ys=all.map(p=>p[1]);
+  const sc=300/Math.max(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
+  const ox=190-(Math.min(...xs)+Math.max(...xs))/2*sc;
+  const oy=195-(Math.min(...ys)+Math.max(...ys))/2*sc;
+  const T=p=>[ox+p[0]*sc, oy+p[1]*sc];
+  const f2=v=>v.toFixed(1);
+  const ring=P=>P.map(q=>{const w=T(q);return f2(w[0])+','+f2(w[1]);}).join(' ');
+  let body=`<polygon points="${ring(P1)}" fill="#dfeef8" stroke="${OUTER}" stroke-width="1" stroke-linejoin="round"/>`;
+  for(let i=0;i<n;i++){
+    const a=T(P0[i]), b=T(P1[i]);
+    body+=`<line x1="${f2(a[0])}" y1="${f2(a[1])}" x2="${f2(b[0])}" y2="${f2(b[1])}" stroke="${OUTER}" stroke-width="0.6" opacity="0.7"/>`;
+  }
+  body+=`<polygon points="${ring(P0)}" fill="rgba(150,205,232,0.5)" stroke="${OUTER}" stroke-width="1.6" stroke-linejoin="round"/>`;
+  if(s.holeOn){
+    const hp=[]; const hr=s.holeD/2, c=G.c;
+    for(let i=0;i<32;i++){ const a=i/32*2*Math.PI; hp.push([c[0]+hr*Math.cos(a),0,c[1]+hr*Math.sin(a)]); }
+    const d=hp.map(q=>{const w=T(bIsoP(q,1));return w[0].toFixed(1)+','+w[1].toFixed(1);}).join(' ');
+    body+=`<polygon points="${d}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="4 3"/>`;
+    if(s.holeThrough){
+      const hb=hp.map(q=>{const w=T(bIsoP([q[0],s.shT,q[2]],1));return w[0].toFixed(1)+','+w[1].toFixed(1);}).join(' ');
+      body+=`<polygon points="${hb}" fill="none" stroke="${INNER}" stroke-width="0.9" stroke-dasharray="3 2"/>`;
+    }
+  }
+  /* 标注：厚 T（右侧引出） */
+  const eIdx=per.reduce((bi,p,i)=>p[0]>per[bi][0]?i:bi,0);   // 最右轮廓点
+  const pe=T(P0[eIdx]);
+  body+=`<text x="${f2(pe[0]+14)}" y="${f2(pe[1]+4)}" font-size="12" font-weight="700" fill="${OUTER}">厚 ${s.shT}</text>`;
+  return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${body}</svg>`;
+}
+
 /* ---------- 汇总 & 下料 ---------- */
 /* 尺寸汇总的条目：屏幕、打印、PNG 导出共用同一份数据，保证三处内容完全一致 */
 function summaryItems(s){
@@ -1388,6 +1734,24 @@ function summaryItems(s){
     return [
       {k:'产品尺寸 长×宽×高', v:`${s.L} × ${s.W} × ${s.H}`},
       {k:'棱边 / 棱角', v: s.edge==='round' ? `圆角 R${s.R}` : '直角'},
+      {k:'体积', v:`${vol.toFixed(1)} cm³`, d:`约 ${weightTxt(vol)}（亚克力 1.19）`}
+    ];
+  }
+  if(s.shape){
+    const G=shapeGeom(s);
+    const fmt=v=>(Math.round(v*100)/100).toString();
+    const holeVol=s.holeOn? Math.PI*Math.pow(s.holeD/2,2)*s.holeDep : 0;
+    const vol=(G.area*s.shT-holeVol)/1000;                    // mm³ → cm³
+    const edgeTxt = s.shp==='circle' ? '—'
+                  : s.R>0 ? `圆角 R${fmt(s.R)}` : '直角';
+    const dimTxt = s.shp==='square' ? `${fmt(s.L)} × ${fmt(s.W)} × ${fmt(s.shT)}`
+                 : s.shp==='circle' ? `Ø${fmt(s.cirD)} × ${fmt(s.shT)}`
+                 : `a${fmt(s.triA)} · b${fmt(s.triB)} · c${fmt(s.triC)} × ${fmt(s.shT)}`;
+    return [
+      {k:'板尺寸', v:dimTxt, d: s.shp==='triangle'?'底边 a 水平在下':''},
+      {k:'棱角', v:edgeTxt, d: (s.shp==='triangle'&&s.R>0)?'三个角同 R':''},
+      {k:'开孔', v: s.holeOn?`Ø${fmt(s.holeD)} × 深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}`:'无',
+       d: s.holeOn?(s.shp==='triangle'?'位于重心':'位于正中心'):''},
       {k:'体积', v:`${vol.toFixed(1)} cm³`, d:`约 ${weightTxt(vol)}（亚克力 1.19）`}
     ];
   }
@@ -1417,9 +1781,23 @@ function summaryItems(s){
   }
   return items;
 }
-/* 告警：内尺寸越界 / 板厚不足以放磁铁 */
+/* 告警：内尺寸越界 / 板厚不足以放磁铁 / 简单几何图形的 R 与开孔校验 */
 function warningList(s){
   const warns=[];
+  if(s.shape){
+    const fmt=v=>(Math.round(v*100)/100).toString();
+    if(s.shp==='triangle' && s.triFixed)
+      warns.push('三边不构成三角形，已自动修正为 '+fmt(s.triA)+' / '+fmt(s.triB)+' / '+fmt(s.triC));
+    if(s.shp!=='circle' && s.edge==='round' && s.rIn>s.rMax+1e-6)
+      warns.push(`圆角 R${fmt(s.rIn)} 超过上限（${fmt(s.rMax)} mm），已按 R${fmt(s.R)} 出图`);
+    if(s.holeOn){
+      if(s.holeThrough)
+        warns.push(`孔深 ${fmt(s.holeDepIn)} mm 不小于板厚 ${fmt(s.shT)} mm，按打通孔处理`);
+      if(!s.holeFits)
+        warns.push('孔径太大，会切破板边 / 与圆角相接，请减小孔径或加大板');
+    }
+    return warns;
+  }
   if(s.solid){
     if(s.edge==='round' && s.rIn > s.rMax+1e-6)
       warns.push(`圆角 R${s.rIn} 超过最短边的一半（${(Math.round(s.rMax*100)/100)} mm），已按 R${s.R} 出图`);
@@ -1442,7 +1820,6 @@ function warningList(s){
   const iL=s.L-2*s.t, iW=s.W-2*s.t, iH=(s.type==='closed')?s.H-2*s.t:s.H-s.t;
   if(iL<=0||iW<=0||iH<=0) warns.push('板厚过大，内尺寸已 ≤ 0，请减小板厚或增大外尺寸');
   if(s.useMag && !s.magOk) warns.push('磁铁放不下：板厚 '+s.t+' mm ＜ 直径+2 = '+(s.magD+2)+' mm');
-  if(s.useMag && s.type==='openlid' && !s.magOkLid) warns.push('磁铁放不下：板盖厚 '+s.lidT+' mm ＜ 直径+2 = '+(s.magD+2)+' mm');
   return warns;
 }
 function renderSummary(s){
@@ -1471,11 +1848,14 @@ function syncNote(){
 
 function render(){
   const s=readInputs();
+  const G0 = s.shape ? shapeGeom(s) : null;   // 简单图形的实际轮廓包围盒（圆角/钝角会改变外接尺寸）
   // 全局统一比例：保证正视图 / 侧视图的“高”在图纸上像素高度完全一致
   let gmax = s.solid
       ? Math.max(s.L, s.W, s.H)
       : s.frame
       ? Math.max(s.L, s.W)
+      : s.shape
+      ? Math.max(G0.w, G0.h)
       : (s.type==='tiandi')
       ? Math.max(s.L+2*s.t, s.W+2*s.t, s.H+s.Hl)
       : (s.type==='openlid')
@@ -1493,6 +1873,16 @@ function render(){
     $('capFront').textContent='正视图（长×宽）';
     $('capSide').textContent ='侧视图（宽×厚）';
     $('capTop').textContent  ='俯视图（长×厚）';
+  } else if(s.shape){
+    $('viewFront').innerHTML=shapeFront(s,scale);
+    $('viewSide').innerHTML =shapeProfileSvg(s,'side',scale);
+    $('viewTop').innerHTML  =shapeProfileSvg(s,'top',scale);
+    $('capFront').textContent = s.shp==='square' ? '正视图（长×宽）'
+                              : s.shp==='triangle' ? '正视图（底边×高）' : '正视图（正面）';
+    $('capSide').textContent  = s.shp==='triangle' ? '侧视图（高×厚）'
+                              : s.shp==='square' ? '侧视图（宽×厚）' : '侧视图（Ø×厚）';
+    $('capTop').textContent   = s.shp==='triangle' ? '俯视图（底边×厚）'
+                              : s.shp==='square' ? '俯视图（长×厚）' : '俯视图（Ø×厚）';
   } else if(s.solid){
     $('viewFront').innerHTML=blockVert(s.L,s.H,s.R,'长',scale);
     $('viewSide').innerHTML =blockVert(s.W,s.H,s.R,'宽',scale);
@@ -1510,18 +1900,20 @@ function render(){
     $('viewFront').innerHTML=tiandiVert(s.L,s.H,s.Hl,s.t,'长',scale,s,'x');
     $('viewSide').innerHTML =tiandiVert(s.W,s.H,s.Hl,s.t,'宽',scale,s,'y');
   }
-  if(!s.frame){
+  if(!s.frame && !s.shape){
     $('capFront').textContent='正视图（长×高）';
     $('capSide').textContent ='侧视图（宽×高）';
     $('capTop').textContent  ='俯视图（长×宽）';
   }
-  if(!s.solid && !s.frame){
+  if(!s.solid && !s.frame && !s.shape){
     $('viewTop').innerHTML=topView(s.L,s.W,s.t, s.type==='tiandi','长','宽',scale,s);
   }
   $('view3d').innerHTML = s.frame ? frame3D(s)
-                        : s.solid ? block3D(s) : render3D(s);
+                        : s.solid ? block3D(s)
+                        : s.shape ? shape3D(s) : render3D(s);
   $('isoNote').textContent = s.frame ? '（两块板分开示意 · 四角圆磁对吸）'
                            : s.solid ? '（R 为圆角半径，12 条棱同 R）'
+                           : s.shape ? '（单板挤出示意 · 圆孔为虚线）'
                                      : '（虚线为内壁，内外间距即壁厚）';
   tightenViewBoxes();
   renderSummary(s);
@@ -1630,8 +2022,8 @@ function rasterSVG(svgEl,wCss,hCss,mult){
 async function exportPNG(){
   const s=readInputs();
   const joint=getJoint();
-  if(!s.solid && !s.frame && !joint){ alert('请先选择拼接方式（90° 或 45°）后再导出图片。'); return; }
-  const useBan = !s.solid && !s.frame && !!joint;   // 实心块 / 相夹没有拼接工艺，不出拼接条
+  if(!s.solid && !s.frame && !s.shape && !joint){ alert('请先选择拼接方式（90° 或 45°）后再导出图片。'); return; }
+  const useBan = !s.solid && !s.frame && !s.shape && !!joint;   // 实心块 / 相夹 / 简单图形没有拼接工艺，不出拼接条
   const jointText = joint==='45' ? '45° 拼接（斜角）' : '90° 拼接（直角）';
   const items=summaryItems(s), warns=warningList(s);
 
@@ -1790,6 +2182,14 @@ async function exportPNG(){
 }
 /* 产品与参数 → 文件名主干（PNG / DXF 共用） */
 function fileBase(s){
+  if(s.shape){
+    const sh = s.shp==='square' ? `方${s.L}x${s.W}`
+             : s.shp==='circle' ? `圆Ø${s.cirD}`
+             : `三角${s.triA}-${s.triB}-${s.triC}`;
+    const e = (s.shp!=='circle' && s.R>0) ? '_R'+s.R : '';
+    const h = s.holeOn ? `_孔Ø${s.holeD}x${s.holeDep}` : '';
+    return `简单几何_${sh}_厚${s.shT}${e}${h}`;
+  }
   if(s.solid){
     return `亚克力块_${s.L}x${s.W}x${s.H}_` + (s.edge==='round' ? 'R'+s.R : '直角');
   }
@@ -2030,16 +2430,39 @@ function dxfBuild(){
     }
     // 俯视图：磁铁圆心（展开坐标 y 向上，故取 W-y）
     if(b.mags) b.mags.forEach(p=>A.circle('MAGNET',[x0+p[0],y0+(h-p[1])],s.magD/2));
-    // 正/侧视图：磁铁嵌在板厚顶部，画成贴盒口的小圆；同一水平位置只画一次
+    // 正/侧视图：磁铁是竖直圆柱（顶面与盒口齐平），投影应为矩形 —— 宽=直径、高=磁铁厚；
+    // 同一水平位置只画一次（此前误画成圆，与侧视圆柱投影不符，已改正）。
+    // magFromBottom：板盖磁铁从板盖底面往上嵌（朝下吸合），盒体磁铁从顶面往下嵌。
     if(b.axis && s.useMag){
-      const r=s.magD/2, yc=y0+h-Math.min(r+1.4,h/2);
-      const seen={};
+      const D=s.magD, TH=Math.min(s.magTh,h), seen={};
+      const yA = b.magFromBottom ? y0 : y0+h;
+      const yB = b.magFromBottom ? y0+TH : y0+h-TH;
       magPlanCenters(s).forEach(p=>{
         const v=(b.axis==='x')?p[0]:p[1], key=v.toFixed(2);
         if(seen[key]) return; seen[key]=1;
-        const cx=Math.min(Math.max(x0+v,x0+r+0.4),x0+w-r-0.4);
-        A.circle('MAGNET',[cx,yc],r);
+        const cx=Math.min(Math.max(x0+v,x0+D/2+0.4),x0+w-D/2-0.4);
+        A.poly('MAGNET',[[cx-D/2,yA],[cx+D/2,yA],[cx+D/2,yB],[cx-D/2,yB]],true);
       });
+    }
+    // 磁铁规格 + 距边尺寸（俯视图专属）：距边尺寸从盒边引到磁铁圆心，规格文字放视图上方。
+    // 距宽边（磁铁在长边上）→ 横向尺寸放视图上方两侧；距长边（磁铁在宽边上）→
+    // 纵向尺寸放视图右侧（x=+22，与内宽标注 +11 错开，互不重叠）。
+    if(b.magDims && s.useMag && b.mags){
+      const d=s.magDist, spec='磁铁 Ø'+dxfNum(s.magD)+'×'+dxfNum(s.magTh)+'　4 颗';
+      if(s.magEdge==='L'){
+        const yd=y0+h+8;
+        A.line('DIM',[x0,y0+h],[x0,yd+2.2]);       A.line('DIM',[x0+d,y0+h],[x0+d,yd+2.2]);
+        dimH(x0,x0+d,yd,dxfNum(d));                                  // 左磁铁 距宽边
+        A.line('DIM',[x0+w,y0+h],[x0+w,yd+2.2]);   A.line('DIM',[x0+w-d,y0+h],[x0+w-d,yd+2.2]);
+        dimH(x0+w-d,x0+w,yd,dxfNum(d));                              // 右磁铁 距宽边
+      } else {
+        const xd=x0+w+22;
+        A.line('DIM',[x0+w,y0],[xd+2.2,y0]);       A.line('DIM',[x0+w,y0+d],[xd+2.2,y0+d]);
+        dimV(xd,y0,y0+d,dxfNum(d),'right');                          // 下磁铁 距长边
+        A.line('DIM',[x0+w,y0+h],[xd+2.2,y0+h]);   A.line('DIM',[x0+w,y0+h-d],[xd+2.2,y0+h-d]);
+        dimV(xd,y0+h-d,y0+h,dxfNum(d),'right');                      // 上磁铁 距长边
+      }
+      A.text('TEXT',[x0+w/2,y0+h+15.5],3.2,spec);
     }
     // 视图内的物体名称（如俯视图的「盒」）
     if(b.centerName && w>=26 && h>=26) A.text('TEXT',[x0+w/2,y0+h/2],5.2,b.centerName);
@@ -2065,16 +2488,19 @@ function dxfBuild(){
     const cw=vertical ? Math.max(...boxes.map(b=>b.w))
                       : boxes.reduce((a,b)=>a+b.w,0)+gap;
     const ch=vertical ? boxes.reduce((a,b)=>a+b.h,0)+gap*(boxes.length-1)
-                      : Math.max(...boxes.map(b=>b.h));
+                      : Math.max(...boxes.map(b=>b.h+(b.topPad||0)));
     cells.push({
       title, w:cw, h:ch,
       draw(x,y){
         if(vertical){
           let by=y;                       // boxes[0] 在下面，后面的往上叠
           boxes.forEach((b,bi)=>{
+            // 板盖盒（openlid）：盒体磁铁贴盒口（顶面往下嵌），板盖磁铁贴盖底面（往上嵌），
+            // 两处都要画 —— 此前只挂在盒体上，板盖磁铁在 DXF 里完全缺失
             viewBox(x+(cw-b.w)/2, by, b.w, b.h, {
               inner:b.inner, lbl:b.lbl, mags:b.mags, miter:b.miter,
-              axis:(axis && bi===0)?axis:null
+              axis:axis||null,
+              magFromBottom: bi>0
             });
             // 板盖很薄，尺寸线放不下，改用侧边文字标注「盖厚 5」
             if(b.sideLabel) A.text('TEXT',[x+cw+4, by+b.h/2],3.0,b.sideLabel,0,'l');
@@ -2084,9 +2510,11 @@ function dxfBuild(){
         }
         let bx=x;
         boxes.forEach((b,bi)=>{
-          viewBox(bx,y,b.w,b.h,{
+          const tp=b.topPad||0;           // 顶部留白：给磁铁距边尺寸 / 规格文字用
+          viewBox(bx,y+tp,b.w,b.h,{
             inner:b.inner, lbl:b.lbl, name:b.name, mags:b.mags,
             miter:b.miter, centerName:b.centerName,
+            magDims:b.magDims,
             axis:(axis && bi===0)?axis:null      // 磁铁只挂在主体那块（盖不重复画）
           });
           // 底/盖文字标注放在该块下方尺寸之外，一眼能分清两块
@@ -2187,16 +2615,31 @@ function dxfBuild(){
         .forEach(p=>A.circle('MAGNET',[x+p[0],y+p[1]],s.fMagD/2));
       dimH(x,x+s.L,y-24,'长 '+dxfNum(s.L));                 // 外形尺寸排在外圈
       dimV(x-24,y,y+s.W,'宽 '+dxfNum(s.W),'left');
-      /* 磁铁定位：8 mm 的小尺寸画在板外第二道，引圆心延伸线量取，避免被磁铁圆压住 */
-      A.line('DIM',[x,y],[x-15,y]);                          // 底边 → 距长边尺寸线
-      A.line('DIM',[x+s.magW,y+s.magL],[x-15,y+s.magL]);     // 磁铁圆心 → 距长边尺寸线
-      dimV(x-11,y,y+s.magL,dxfNum(s.magL),'left');           // 距长边
-      A.line('DIM',[x,y],[x,y-15]);                          // 左边 → 距宽边尺寸线
-      A.line('DIM',[x+s.magW,y+s.magL],[x+s.magW,y-15]);     // 磁铁圆心 → 距宽边尺寸线
-      dimH(x,x+s.magW,y-11,dxfNum(s.magW));                  // 距宽边
+      /* 磁铁定位：四颗磁铁各自标注「到自己最近两条边的距离」：
+         横向永远标到左/右宽边（左列标左边、右列标右边），
+         纵向永远标到下/上长边（下排标下边、上排标上边）。
+         线段画在板外、从磁铁圆心引延伸线量取；数值 = 线段实际长度
+         （此前右上/上方误标成了距左边的坐标值，已改为最近边距离）。 */
+      const mL=s.magW, mR=s.L-s.magW, mB=s.magL, mT=s.W-s.magL, E='DIM';
+      A.line(E,[x,y],[x,y-15]);                A.line(E,[x+mL,y+mB],[x+mL,y-15]);
+      dimH(x,x+mL,y-11,dxfNum(s.magW));                          // 左下磁铁 距左宽边
+      A.line(E,[x+s.L,y],[x+s.L,y-15]);        A.line(E,[x+mR,y+mB],[x+mR,y-15]);
+      dimH(x+mR,x+s.L,y-11,dxfNum(s.magW));                      // 右下磁铁 距右宽边
+      A.line(E,[x,y+s.W],[x,y+s.W+15]);        A.line(E,[x+mL,y+mT],[x+mL,y+s.W+15]);
+      dimH(x,x+mL,y+s.W+11,dxfNum(s.magW));                      // 左上磁铁 距左宽边
+      A.line(E,[x+s.L,y+s.W],[x+s.L,y+s.W+15]); A.line(E,[x+mR,y+mT],[x+mR,y+s.W+15]);
+      dimH(x+mR,x+s.L,y+s.W+11,dxfNum(s.magW));                  // 右上磁铁 距右宽边
+      A.line(E,[x,y],[x-15,y]);                A.line(E,[x+mL,y+mB],[x-15,y+mB]);
+      dimV(x-11,y,y+mB,dxfNum(s.magL),'left');                   // 左下磁铁 距下长边
+      A.line(E,[x,y+s.W],[x-15,y+s.W]);        A.line(E,[x+mL,y+mT],[x-15,y+mT]);
+      dimV(x-11,y+mT,y+s.W,dxfNum(s.magL),'left');               // 左上磁铁 距上长边
+      A.line(E,[x+s.L,y],[x+s.L+15,y]);        A.line(E,[x+mR,y+mB],[x+s.L+15,y+mB]);
+      dimV(x+s.L+11,y,y+mB,dxfNum(s.magL),'right');              // 右下磁铁 距下长边
+      A.line(E,[x+s.L,y+s.W],[x+s.L+15,y+s.W]); A.line(E,[x+mR,y+mT],[x+s.L+15,y+mT]);
+      dimV(x+s.L+11,y+mT,y+s.W,dxfNum(s.magL),'right');          // 右上磁铁 距上长边
       const tx=x+s.L-s.magW, ty=y+s.W-s.magL;
       A.line('DIM',[tx,ty],[tx-6,ty+6]);
-      A.text('TEXT',[tx-7.4,ty+7],2.8,'Ø'+dxfNum(s.fMagD)+'×4',0,'r');
+      A.text('TEXT',[tx-7.4,ty+7],2.8,'Ø'+dxfNum(s.fMagD)+'×'+dxfNum(s.fMagTh),0,'r');
       if(s.edge==='round' && c>0){
         const tyTxt=Math.min(y+c-6.4, y-4.4);          // 文字始终落在板下，不压轮廓线
         A.line('DIM',[x+c-c*0.7071,y+c*0.7071],[x+c+6.4,tyTxt+0.9]);
@@ -2268,6 +2711,105 @@ function dxfBuild(){
         A.text('TEXT',[c1[0],c1[1]-4],3.0,'两块板分开示意');
       }});
     }
+  } else if(s.shape){
+    /* 简单几何图形：正视图=形状轮廓（真圆弧）+ 中心孔；侧/俯=厚度条 + 孔深虚线；斜侧=挤出线框 */
+    const G=shapeGeom(s), T=s.shT, fmt=dxfNum;
+    const emitOutline=(x0,y0)=>{
+      G.segs.forEach(sg=>{
+        if(sg.t==='L') A.line('VIEW',[x0+sg.a[0],y0+sg.a[1]],[x0+sg.b[0],y0+sg.b[1]]);
+        else if(sg.t==='C') A.circle('VIEW',[x0+sg.c[0],y0+sg.c[1]],sg.r);
+        else{
+          const c=[x0+sg.c[0],y0+sg.c[1]];
+          const a0=Math.atan2(sg.p0[1]-sg.c[1],sg.p0[0]-sg.c[0])*180/Math.PI;
+          const a1=Math.atan2(sg.p1[1]-sg.c[1],sg.p1[0]-sg.c[0])*180/Math.PI;
+          const d=(((a1-a0)%360)+360)%360;
+          if(d<=180+1e-6) A.arc('VIEW',c,sg.r,a0,a1);
+          else A.arc('VIEW',c,sg.r,a1,a0);          // 劣弧从另一端逆时针画
+        }
+      });
+    };
+    const holePosTxt=s.shp==='triangle'?'重心':'居中';
+    cells.push({title:s.shp==='square'?'正视图（长×宽）':s.shp==='triangle'?'正视图（底边×高）':'正视图（正面）',
+                w:G.w, h:G.h, draw(x,y){
+      emitOutline(x,y);
+      if(s.holeOn) A.circle('VIEWIN',[x+G.c[0],y+G.c[1]],s.holeD/2);
+      if(s.shp==='square'){
+        dimH(x,x+s.L,y-11,'长 '+fmt(s.L));
+        dimV(x-11,y,y+s.W,'宽 '+fmt(s.W),'left');
+        if(s.R>0){
+          const cx=x+s.R, cy=y+s.W-s.R;
+          A.line('DIM',[cx-s.R*0.7071, cy+s.R*0.7071],[cx+6.4, cy-6.4]);
+          A.text('TEXT',[cx+8.4, cy-5.6],2.8,'R'+fmt(s.R),0,'l');
+        }
+      } else if(s.shp==='circle'){
+        dimH(x,x+s.cirD,y-11,'Ø '+fmt(s.cirD));
+      } else {
+        const tv=G.vertsT;
+        dimH(x+tv[0][0], x+tv[1][0], y-11, 'a '+fmt(s.triA));
+        const vs=tv.map(p=>[x+p[0],y+p[1]]);
+        const cen=[x+G.c[0],y+G.c[1]];
+        const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+        const lbl=(p,txt)=>{ const o=outward(p,cen,14); A.text('TEXT',o,2.8,txt); };
+        lbl(mid(vs[0],vs[2]),'b '+fmt(s.triB));
+        lbl(mid(vs[1],vs[2]),'c '+fmt(s.triC));
+        if(s.R>0){
+          let best=null;
+          G.segs.forEach(sg=>{ if(sg.t!=='A') return; if(!best||sg.c[1]>best.c[1]) best=sg; });
+          if(best){
+            const c=[x+best.c[0],y+best.c[1]], o=outward(c,cen,best.r+13);
+            A.line('DIM',c,o);
+            A.text('TEXT',[o[0],o[1]+3.4],2.8,'R'+fmt(s.R));
+          }
+        }
+      }
+      if(s.holeOn) A.text('TEXT',[x+G.w/2,y-22],2.8,
+        '孔 Ø'+fmt(s.holeD)+' × 深 '+fmt(s.holeDep)+(s.holeThrough?'（打通）':'')+'（'+holePosTxt+'）');
+    }});
+    const extH=G.h, extW=G.w;
+    const profLbl=(mode)=> mode==='side'
+      ? (s.shp==='square'?'宽':s.shp==='triangle'?'高':'Ø')+' '+fmt(extH)
+      : (s.shp==='square'?'长':s.shp==='triangle'?'宽':'Ø')+' '+fmt(extW);
+    cells.push({title:'侧视图（'+(s.shp==='square'?'宽':s.shp==='triangle'?'高':'Ø')+'×厚）', w:T, h:extH, draw(x,y){
+      A.rect('VIEW',x,y,x+T,y+extH);
+      if(s.holeOn){
+        const zc=G.c[1], hw=s.holeD/2;
+        A.poly('VIEWIN',[[x,y+zc-hw],[x+s.holeDep,y+zc-hw],[x+s.holeDep,y+zc+hw],[x,y+zc+hw]],true);
+      }
+      dimV(x-11,y,y+extH,profLbl('side'),'left');
+      A.text('TEXT',[x+T+4,y+extH/2],2.8,'厚 '+fmt(T),0,'l');
+    }});
+    cells.push({title:'俯视图（长×厚）', w:extW, h:T, draw(x,y){
+      A.rect('VIEW',x,y,x+extW,y+T);
+      if(s.holeOn){
+        const cx=G.c[0], hw=s.holeD/2;
+        A.poly('VIEWIN',[[x+cx-hw,y],[x+cx+hw,y],[x+cx+hw,y+s.holeDep],[x+cx-hw,y+s.holeDep]],true);
+      }
+      dimH(x,x+extW,y-11,profLbl('top'));
+      A.text('TEXT',[x+extW/2,y+T+5],2.8,'厚 '+fmt(T));
+    }});
+    {  /* 斜侧：轮廓沿厚度挤出（凸形体，连接棱全部可见） */
+      const iso=isoP;
+      const fpts=G.poly.map(p=>iso([p[0],0,p[1]]));
+      const bpts=G.poly.map(p=>iso([p[0],T,p[1]]));
+      const all=fpts.concat(bpts);
+      const bx0=Math.min(...all.map(p=>p[0])), bx1=Math.max(...all.map(p=>p[0]));
+      const by0=Math.min(...all.map(p=>p[1])), by1=Math.max(...all.map(p=>p[1]));
+      cells.push({title:'从上方斜侧视图（等轴测）', w:bx1-bx0, h:by1-by0, draw(x,y){
+        const Tp=p=>[x+p[0]-bx0, y+p[1]-by0];
+        A.poly('VIEW',bpts.map(Tp),true);
+        for(let i=0;i<G.poly.length;i++)
+          A.line('VIEW',Tp(fpts[i]),Tp(bpts[i]));
+        A.poly('VIEW',fpts.map(Tp),true);
+        if(s.holeOn){
+          const hr=s.holeD/2, c=G.c, hp=[];
+          for(let i=0;i<32;i++){ const a=i/32*2*Math.PI; hp.push([c[0]+hr*Math.cos(a),0,c[1]+hr*Math.sin(a)]); }
+          A.poly('VIEWIN',hp.map(p=>Tp(iso(p))),true);
+          if(s.holeThrough)
+            A.poly('VIEWIN',hp.map(p=>Tp(iso([p[0],T,p[2]]))),true);
+        }
+        A.text('TEXT',[x+ (bx1-bx0)/2, y-6],3.0,'厚 '+fmt(T));
+      }});
+    }
   } else if(s.type==='tiandi'){
     const L2=s.L+2*t, W2=s.W+2*t, Hl=s.Hl, Hs2=Math.max(1,Hl-t);
     addProj('正视图（长×高）',[
@@ -2283,7 +2825,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'底',miter:j45,
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts},
+       mags:magPts, topPad:s.useMag?19:0, magDims:true},
       {w:L2,h:W2,inner:{x:t,y:t,w:s.L,h:s.W},name:'盖',miter:j45,
        lbl:['外长 '+dxfNum(L2),'外宽 '+dxfNum(W2),'内长 '+dxfNum(s.L),'内宽 '+dxfNum(s.W)],
        // 盖的磁铁与底盒磁铁上下正对：盖原点在 -t,-t，故平面坐标整体平移 +t
@@ -2302,7 +2844,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},miter:j45,centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts}]);
+       mags:magPts, topPad:s.useMag?19:0, magDims:true}]);
   } else {
     addProj('正视图（长×高）',[
       {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},name:'',
@@ -2313,7 +2855,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'',miter:j45,centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts}]);
+       mags:magPts, topPad:s.useMag?19:0, magDims:true}]);
   }
 
   // 从上方斜侧视图（等轴测，1:1）
@@ -2351,7 +2893,7 @@ function dxfBuild(){
         }
       }
     });
-  } else if(!s.frame){          // 相夹的斜侧视图已在上面的分支里画好，这里只处理盒类
+  } else if(!s.frame && !s.shape){          // 相夹 / 简单图形的斜侧视图已在上面的分支里画好，这里只处理盒类
     const segs=isoAllSegs(s);
     const pts=[];
     const proj=segs.map(([a,b,l])=>{
@@ -2377,12 +2919,12 @@ function dxfBuild(){
   }
 
   /* ---------- 2×2 网格排布（左上正视图 / 右上侧视图 / 左下俯视图 / 右下斜侧视图） ---------- */
-  const PAD_L=(s.frame?38:26), PAD_R=(s.frame?30:26), PAD_B=(s.solid?18:36), PAD_T=14;
+  const PAD_L=(s.frame?38:26), PAD_R=(s.frame?30:26), PAD_B=((s.solid||s.shape)?18:36), PAD_T=14;
   const colW=[Math.max(cells[0].w,cells[2].w)+PAD_L+PAD_R,
               Math.max(cells[1].w,cells[3].w)+PAD_L+PAD_R];
   const rowH=[Math.max(cells[0].h,cells[1].h)+PAD_B+PAD_T,
               Math.max(cells[2].h,cells[3].h)+PAD_B+PAD_T];
-  const rowGap=((s.solid||s.frame)?12:DXF_CELL_GAP);   // 实心块 / 相夹没有底/盖文字，行距可收紧
+  const rowGap=((s.solid||s.frame||s.shape)?12:DXF_CELL_GAP);   // 实心块 / 相夹 / 简单图形没有底/盖文字，行距可收紧
   const rowBase=[-rowH[0], -rowH[0]-rowGap-rowH[1]];
   cells.forEach((c,i)=>{
     const col=i%2, row=(i/2)|0;
@@ -2431,6 +2973,24 @@ function dxfBuild(){
       `磁铁：φ${dxfNum(s.fMagD)}×${dxfNum(s.fMagTh)}　四角各 1（共 4 颗）　圆心距长边 ${dxfNum(s.magL)} mm、距宽边 ${dxfNum(s.magW)} mm`,
       note ? `备注：${note}` : '',
       '图例：实线=可见轮廓(VIEW)　虚线=外表面倒边落线 / 磁铁孔(VIEWIN)　圆=磁铁(MAGNET)　两板分开为示意',
+      `导出：${today}　　粤丰展示产品设计`
+    ].filter(Boolean);
+  } else if(s.shape){
+    const G2=shapeGeom(s);
+    const fmt2=dxfNum;
+    const holeVol=s.holeOn? Math.PI*Math.pow(s.holeD/2,2)*s.holeDep : 0;
+    const vol2=(G2.area*s.shT-holeVol)/1000;
+    const shTxt = s.shp==='square' ? `方形板 ${fmt2(s.L)} × ${fmt2(s.W)} × ${fmt2(s.shT)} mm`
+                : s.shp==='circle' ? `圆形板 Ø${fmt2(s.cirD)} × ${fmt2(s.shT)} mm`
+                : `三角形板 a${fmt2(s.triA)} / b${fmt2(s.triB)} / c${fmt2(s.triC)} × ${fmt2(s.shT)} mm`;
+    const edgeTxt2 = s.shp==='circle' ? '—'
+                   : s.R>0 ? `圆角 R${fmt2(s.R)}（${s.shp==='triangle'?'三个角':'四角'}同 R）` : '直角';
+    lines=[
+      `产品：${TYPE_NAME}　｜　${shTxt}　｜　棱角：${edgeTxt2}`,
+      `开孔：${s.holeOn?`Ø${fmt2(s.holeD)} × 深 ${fmt2(s.holeDep)}${s.holeThrough?'（打通）':''}，位于${s.shp==='triangle'?'重心':'正中心'}`:'无'}`,
+      `体积 ${vol2.toFixed(1)} 立方厘米　｜　参考重量 ${weightTxt(vol2)}（亚克力 1.19）`,
+      note ? `备注：${note}` : '',
+      '图例：实线=可见轮廓(VIEW)　虚线=圆孔及孔深(VIEWIN)',
       `导出：${today}　　粤丰展示产品设计`
     ].filter(Boolean);
   } else {
@@ -2552,7 +3112,7 @@ function gbkBytes(str){
 }
 
 function exportDXF(){
-  if(!isSolidType() && !isFrameType() && !getJoint()){ alert('请先选择拼接方式（90° 或 45°）后再导出 DXF。'); return; }
+  if(!isSolidType() && !isFrameType() && !isShapeType() && !getJoint()){ alert('请先选择拼接方式（90° 或 45°）后再导出 DXF。'); return; }
   let out;
   try{ out=dxfBuild(); }
   catch(err){ alert('DXF 生成失败：'+err.message); console.error(err); return; }
@@ -2571,7 +3131,22 @@ function exportDXF(){
 $('fMagSize').innerHTML=$('magSize').innerHTML;
 $('fMagSize').value='3,3';
 
-['boxType','thick','lidThick','L','W','H','Hl','magDist','rVal','cVal','fMagL','fMagW'].forEach(id=>$(id).addEventListener('input',render));
+['boxType','thick','lidThick','L','W','H','Hl','magDist','rVal','cVal','fMagL','fMagW',
+ 'cirD','triA','triB','triC','shThick','shpHoleD','shpHoleDep'].forEach(id=>$(id).addEventListener('input',render));
+$('shThickSel').addEventListener('change',()=>{
+  const custom = $('shThickSel').value==='custom';
+  $('shThick').style.display = custom ? '' : 'none';
+  if(custom) $('shThick').focus();
+  render();
+});
+$('shpHole').addEventListener('change',()=>{
+  $('shpHoleOpts').style.display=$('shpHole').checked?'block':'none';
+  render();
+});
+document.querySelectorAll('input[name="shp"]').forEach(r=>r.addEventListener('change',()=>{
+  /* 切形状时把 R 恢复成该形状的默认直角（圆无棱角），避免上一形状的 R 残留 */
+  render();
+}));
 $('plateTSel').addEventListener('change',render);
 $('fMagSize').addEventListener('change',render);
 $('cSel').addEventListener('change',()=>{
@@ -2624,7 +3199,7 @@ $('note').addEventListener('paste',e=>{            // 粘贴转纯文本，免�
 // 打印前再同步一次，防止空内容的行占位
 window.addEventListener('beforeprint',syncNote);
 $('prn').addEventListener('click',()=>{
-  if(!isSolidType() && !isFrameType() && !getJoint()){ alert('请先选择拼接方式（90° 或 45°）后再打印。'); return; }
+  if(!isSolidType() && !isFrameType() && !isShapeType() && !getJoint()){ alert('请先选择拼接方式（90° 或 45°）后再打印。'); return; }
   window.print();
 });
 
