@@ -116,7 +116,7 @@
     .wrap{display:block!important;height:auto!important;padding:0!important;min-height:0!important;}
     header{padding:1px 0 2px!important;border-bottom:1px solid var(--line);}
     .hd-actions{display:none!important;}
-    header h1{font-size:13px!important;margin:0!important;}
+    header h1{font-size:15px!important;margin:0!important;}
     header p{display:none;}
     .results{display:block!important;height:auto!important;min-height:0!important;}
     .top{display:block!important;margin:0 0 2px 0!important;}
@@ -126,25 +126,25 @@
     /* 备注为空时整行不占位，打印版式与原来的单行汇总一致 */
     #infoCard:not(.has-note) .info-note{display:none!important;}
     .info-note{gap:2mm!important;}
-    .info-note .nt-k{font-size:11px!important;line-height:1.4!important;padding:0!important;font-weight:400!important;}
+    .info-note .nt-k{font-size:11.5px!important;line-height:1.4!important;padding:0!important;font-weight:400!important;}
     #note{display:block!important;flex:1 1 auto!important;min-width:0!important;min-height:0!important;
-          font-size:12px!important;line-height:1.35!important;padding:0!important;
+          font-size:13px!important;line-height:1.35!important;padding:0!important;
           background:none!important;border:none!important;box-shadow:none!important;
           max-height:calc(1.35em * 2)!important;overflow:hidden!important;}
     #note:empty::before{content:''!important;}
     /* 提示语只在屏幕上出现，不参与打印 */
     .note-tip{display:none!important;}
-    #infoCard h3{position:static!important;font-size:11px!important;margin:0!important;padding:0!important;
+    #infoCard h3{position:static!important;font-size:11.5px!important;margin:0!important;padding:0!important;
                  background:none!important;border-radius:0!important;flex:0 0 auto!important;color:var(--muted)!important;}
     #infoCard #sumBox{flex:0 1 auto!important;min-width:0!important;}
     #infoCard #warnBox{flex:0 0 auto!important;margin-left:auto!important;}
-    .joint-banner{font-size:12px!important;padding:3px 8px!important;margin:0 0 2px 0!important;}
+    .joint-banner{font-size:13px!important;padding:3px 8px!important;margin:0 0 2px 0!important;}
     .sum-box{padding:3px 8px!important;border-radius:6px!important;}
     /* 打印时汇总字号略放大（磁铁规格也要看得清），间距收紧确保整行放下 */
-    .sum-box .k{font-size:11px!important;}
-    .sum-box .v{font-size:13.5px!important;}
+    .sum-box .k{font-size:12px!important;}
+    .sum-box .v{font-size:15px!important;}
     .sum-box .row2{gap:2px 22px!important;justify-content:flex-start!important;}
-    .warn{font-size:11px!important;margin-top:2px!important;}
+    .warn{font-size:11.5px!important;margin-top:2px!important;}
     /* 2×2 固定两排，每张卡固定 80mm，SVG 填满卡片内框 —— 不依赖 flex 高度链，确保一页 */
     .views{display:grid!important;grid-template-columns:1fr 1fr!important;
            grid-template-rows:80mm 80mm!important;gap:3mm!important;
@@ -154,7 +154,7 @@
           display:flex!important;flex-direction:column!important;position:relative!important;}
     /* 打印时标题浮在卡片左上角（白底压住少量空白区），把整块高度留给图形 */
     .card h3{position:absolute!important;top:1mm!important;left:1.5mm!important;z-index:3!important;
-             font-size:9px!important;margin:0!important;padding:0 1mm!important;
+             font-size:11px!important;margin:0!important;padding:0 1mm!important;
              background:rgba(255,255,255,.92)!important;border-radius:1mm!important;line-height:1.25!important;}
     .view-box{border:1px solid var(--line)!important;flex:1 1 auto!important;min-height:0!important;
               display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;padding:1px!important;}
@@ -425,6 +425,17 @@
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 const OUTER = '#1f2d3d', INNER = '#c0392b', THK = '#009944', FILL = 'rgba(140,205,235,0.10)';
+
+/* ===== 图纸字号 =====
+   TF 是全局字号倍数：主字号 12 → 12×TF，次字号 11 → 11×TF（页面 / PNG / 打印共用）。
+   与文字相关的偏移（尺寸线离板边的距离、文字离尺寸线的距离）也按同一倍数放大，
+   这样放大后各标注之间的相对间距不变，不会互相压字。只想整体再大/再小就改这一个数。 */
+const TF = 1.4;
+const F_MAIN = (12*TF).toFixed(1);   // 主字号：长/宽/高、尺寸数字
+const F_SUB  = (11*TF).toFixed(1);   // 次字号：板厚 t=、说明文字
+/* DXF 图内字号倍数：文字高度在 dxfNew().text() 里统一乘上，标注间距同倍数放大。
+   1:1 mm 下尺寸字 3.4mm → 约 4.6mm，A3/A2 出图更好读。 */
+const DXF_TF = 1.35;
 
 /* 产品登记表：family 决定走哪一套参数与出图逻辑
    box   盒类（壁厚 / 拼接 / 磁铁 / 内腔虚线）
@@ -723,10 +734,10 @@ function render3D(s){
   const pW=project([0,s.W/2,0], scale, ox, oy);
   const pH=project([0,0,s.H/2], scale, ox, oy);
   const pT=project([s.L,s.W/2,0], scale, ox, oy);
-  body+=`<text x="${pL[0].toFixed(1)}" y="${(pL[1]+16).toFixed(1)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">长 ${s.L}</text>`;
-  body+=`<text x="${(pW[0]-14).toFixed(1)}" y="${(pW[1]+8).toFixed(1)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="end">宽 ${s.W}</text>`;
-  body+=`<text x="${(pH[0]-14).toFixed(1)}" y="${pH[1].toFixed(1)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="end">高 ${s.H}</text>`;
-  body+=`<text x="${(pT[0]+14).toFixed(1)}" y="${(pT[1]+8).toFixed(1)}" font-size="11" fill="${THK}" text-anchor="start">t=${s.t}</text>`;
+  body+=`<text x="${pL[0].toFixed(1)}" y="${(pL[1]+16*TF).toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">长 ${s.L}</text>`;
+  body+=`<text x="${(pW[0]-14*TF).toFixed(1)}" y="${(pW[1]+8*TF).toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="end">宽 ${s.W}</text>`;
+  body+=`<text x="${(pH[0]-14*TF).toFixed(1)}" y="${pH[1].toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="end">高 ${s.H}</text>`;
+  body+=`<text x="${(pT[0]+14*TF).toFixed(1)}" y="${(pT[1]+8*TF).toFixed(1)}" font-size="${F_SUB}" fill="${THK}" text-anchor="start">t=${s.t}</text>`;
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${body}</svg>`;
 }
 
@@ -734,20 +745,20 @@ function render3D(s){
 function hdim(x1,y,x2,text,color,tx){
   const mx=(tx===undefined)?(x1+x2)/2:tx;
   return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1.1"/>`
-       + `<line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" stroke="${color}" stroke-width="1.1"/>`
-       + `<line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" stroke="${color}" stroke-width="1.1"/>`
-       + `<text x="${mx}" y="${y-7}" font-size="12" fill="${color}" text-anchor="middle">${text}</text>`;
+       + `<line x1="${x1}" y1="${y-4*TF}" x2="${x1}" y2="${y+4*TF}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x2}" y1="${y-4*TF}" x2="${x2}" y2="${y+4*TF}" stroke="${color}" stroke-width="1.1"/>`
+       + `<text x="${mx}" y="${y-7*TF}" font-size="${F_MAIN}" fill="${color}" text-anchor="middle">${text}</text>`;
 }
 // side: 'left' 文字在竖线左侧中间； 'right' 文字在竖线右侧中间
 function vdim(x,y1,y2,text,color,side){
   const top=Math.min(y1,y2), bot=Math.max(y1,y2);
   const my=(top+bot)/2;
-  const txtX = (side==='left') ? (x-7) : (x+7);
+  const txtX = (side==='left') ? (x-7*TF) : (x+7*TF);
   const anchor = (side==='left') ? 'end' : 'start';
   return `<line x1="${x}" y1="${top}" x2="${x}" y2="${bot}" stroke="${color}" stroke-width="1.1"/>`
-       + `<line x1="${x-4}" y1="${top}" x2="${x+4}" y2="${top}" stroke="${color}" stroke-width="1.1"/>`
-       + `<line x1="${x-4}" y1="${bot}" x2="${x+4}" y2="${bot}" stroke="${color}" stroke-width="1.1"/>`
-       + `<text x="${txtX}" y="${my+4}" font-size="12" fill="${color}" text-anchor="${anchor}">${text}</text>`;
+       + `<line x1="${x-4*TF}" y1="${top}" x2="${x+4*TF}" y2="${top}" stroke="${color}" stroke-width="1.1"/>`
+       + `<line x1="${x-4*TF}" y1="${bot}" x2="${x+4*TF}" y2="${bot}" stroke="${color}" stroke-width="1.1"/>`
+       + `<text x="${txtX}" y="${my+4*TF}" font-size="${F_MAIN}" fill="${color}" text-anchor="${anchor}">${text}</text>`;
 }
 // 竖直尺寸线（只画线与端点短线），文字位置由调用方指定；文字带描边，叠线处仍清晰
 function vdimIn(x,y1,y2,text,color,tx,ty,anchor){
@@ -755,7 +766,7 @@ function vdimIn(x,y1,y2,text,color,tx,ty,anchor){
   return `<line x1="${x.toFixed(1)}" y1="${top.toFixed(1)}" x2="${x.toFixed(1)}" y2="${bot.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`
        + `<line x1="${(x-4).toFixed(1)}" y1="${top.toFixed(1)}" x2="${(x+4).toFixed(1)}" y2="${top.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`
        + `<line x1="${(x-4).toFixed(1)}" y1="${bot.toFixed(1)}" x2="${(x+4).toFixed(1)}" y2="${bot.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`
-       + `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="12" fill="${color}" text-anchor="${anchor}" stroke="#fbfdfe" stroke-width="3" paint-order="stroke" stroke-linejoin="round">${text}</text>`;
+       + `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="${F_MAIN}" fill="${color}" text-anchor="${anchor}" stroke="#fbfdfe" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">${text}</text>`;
 }
 // 竖直尺寸线 + 竖排文字（文字旋转 -90°，读数方向自下而上）：
 // 外侧只剩很窄的一条通道、横排文字必然压住相邻尺寸线时使用。
@@ -766,14 +777,14 @@ function vdimRot(x,y1,y2,text,color,tx,myOpt){
   // 文字居中处把尺寸线断开（工程制图惯例），文字正好落在断口里，不压线
   // 断口按文字实际长度留：字号 12 的数字约 7px/字，再留 6px 余量；
   // 但不能超过线长本身，否则断口吃满整条线。
-  const gap=Math.min(String(text).length*7+6, Math.max(12,(bot-top)-8));
+  const gap=Math.min(String(text).length*7*TF+6*TF, Math.max(12*TF,(bot-top)-8*TF));
   const yA=my-gap/2, yB=my+gap/2;
   let g='';
   if(yA>top) g+=`<line x1="${x.toFixed(1)}" y1="${top.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yA.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`;
   if(yB<bot) g+=`<line x1="${x.toFixed(1)}" y1="${yB.toFixed(1)}" x2="${x.toFixed(1)}" y2="${bot.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`;
   g+=`<line x1="${(x-4).toFixed(1)}" y1="${top.toFixed(1)}" x2="${(x+4).toFixed(1)}" y2="${top.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`
    + `<line x1="${(x-4).toFixed(1)}" y1="${bot.toFixed(1)}" x2="${(x+4).toFixed(1)}" y2="${bot.toFixed(1)}" stroke="${color}" stroke-width="1.1"/>`
-   + `<text transform="translate(${tx.toFixed(1)},${my.toFixed(1)}) rotate(-90)" font-size="12" fill="${color}" text-anchor="middle" stroke="#ffffff" stroke-width="2.6" paint-order="stroke" stroke-linejoin="round">${text}</text>`;
+   + `<text transform="translate(${tx.toFixed(1)},${my.toFixed(1)}) rotate(-90)" font-size="${F_MAIN}" fill="${color}" text-anchor="middle" stroke="#ffffff" stroke-width="${2.6*TF}" paint-order="stroke" stroke-linejoin="round">${text}</text>`;
   return g;
 }
 
@@ -821,9 +832,9 @@ function drawMagsVert(X0,Ytop,Wpx,tpx,scale,s,axis){
   if(showDim){ // 距边尺寸 d：紧贴盒顶上方一行（在盒与盖之间的空隙），不压住外尺寸与盖板标注
     // d 很小时尺寸线比文字还短，文字按原位置居中会越出盒体左/右边界、压到旁边的
     // 「盖」标记或盖厚标注，因此文字位置夹在盒体轮廓内。
-    const yd=Ytop-10;
-    g+=hdim(X0, yd, X0+dpx, String(s.magDist), col, Math.max(X0+dpx/2, X0+11));
-    g+=hdim(X0+Wpx, yd, X0+Wpx-dpx, String(s.magDist), col, Math.min(X0+Wpx-dpx/2, X0+Wpx-11));
+    const yd=Ytop-10*TF;
+    g+=hdim(X0, yd, X0+dpx, String(s.magDist), col, Math.max(X0+dpx/2, X0+11*TF));
+    g+=hdim(X0+Wpx, yd, X0+Wpx-dpx, String(s.magDist), col, Math.min(X0+Wpx-dpx/2, X0+Wpx-11*TF));
   }
   magPlanCenters(s).forEach(p=>{
     const hc = (axis==='x') ? p[0] : p[1];
@@ -842,7 +853,7 @@ function clampC(v,lo,hi){ return hi<lo ? (lo+hi)/2 : Math.min(Math.max(v,lo),hi)
 // topOpen: 顶部开口则内高只减 1 个 t
 function vertView(hMm,vMm,t,topOpen,hName,scale,s,axis){
   const Wpx=hMm*scale, Hpx=vMm*scale, tpx=t*scale;
-  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+18;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+18*TF;
   const iwpx=(hMm-2*t)*scale;
   const ihpx=(topOpen?(vMm-t):(vMm-2*t))*scale;
   const ix0=X0+tpx, iy0= topOpen? Y0 : Y0+tpx;
@@ -850,22 +861,22 @@ function vertView(hMm,vMm,t,topOpen,hName,scale,s,axis){
   g+=`<rect x="${X0}" y="${Y0}" width="${Wpx}" height="${Hpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${ix0}" y="${iy0}" width="${iwpx}" height="${ihpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   // 外尺寸
-  g+=hdim(X0, Y0-40, X0+Wpx, hName+' '+hMm, OUTER);
-  g+=vdim(X0+Wpx+26, Y0, Y0+Hpx, '高 '+vMm, OUTER, 'right');
+  g+=hdim(X0, Y0-40*TF, X0+Wpx, hName+' '+hMm, OUTER);
+  g+=vdim(X0+Wpx+26*TF, Y0, Y0+Hpx, '高 '+vMm, OUTER, 'right');
   // 内尺寸
-  if(iwpx>0) g+=hdim(ix0, Y0+Hpx+24, ix0+iwpx, '内'+hName+' '+(hMm-2*t), INNER);
-  if(ihpx>0) g+=vdim(X0-26, iy0, iy0+ihpx, '内高 '+(topOpen?(vMm-t):(vMm-2*t)), INNER, 'left');
+  if(iwpx>0) g+=hdim(ix0, Y0+Hpx+24*TF, ix0+iwpx, '内'+hName+' '+(hMm-2*t), INNER);
+  if(ihpx>0) g+=vdim(X0-26*TF, iy0, iy0+ihpx, '内高 '+(topOpen?(vMm-t):(vMm-2*t)), INNER, 'left');
   // 板厚角标：置于盒内左下角，避开顶部磁铁与距边尺寸标注
-  g+=`<text x="${X0+tpx+4}" y="${Y0+Hpx-6}" font-size="11" fill="${THK}">t=${t}</text>`;
+  g+=`<text x="${X0+tpx+4}" y="${Y0+Hpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
   g+=drawMagsVert(X0, Y0, Wpx, tpx, scale, s, axis);
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
 function tiandiVert(hMm,baseH,lidH,t,hName,scale,s,axis){
   const Wl=hMm+2*t;
   const Wlpx=Wl*scale, Wbpx=hMm*scale, Hbpx=baseH*scale, Hlpx=lidH*scale, tpx=t*scale;
-  const gapPx=Math.max(30,tpx*2,(Hbpx+Hlpx)*0.12);   // 盖与底之间留可见间隙；下限 30 保证能放下距边尺寸 d
+  const gapPx=Math.max(30*TF,tpx*2,(Hbpx+Hlpx)*0.12);   // 盖与底之间留可见间隙；下限 30 保证能放下距边尺寸 d
   const total=Hlpx+gapPx+Hbpx;
-  const X0=(380-Wlpx)/2, Y0=(380-total)/2+12;
+  const X0=(380-Wlpx)/2, Y0=(380-total)/2+12*TF;
   const baseX=X0+tpx;            // 底盒居中于盖内
   const lidY=Y0;                 // 盖顶
   const baseY=Y0+Hlpx+gapPx;     // 底盒顶（盖底之下隔一个 gap）
@@ -874,20 +885,20 @@ function tiandiVert(hMm,baseH,lidH,t,hName,scale,s,axis){
   g+=`<rect x="${X0}" y="${lidY}" width="${Wlpx}" height="${Hlpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${X0+tpx}" y="${lidY}" width="${Wbpx}" height="${Hlpx-tpx}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="5 3"/>`;
   // “盖”标签置于盖体左侧外：盖往往很薄，写在盖内会越过盖底、被盒口的距边尺寸 d 压住
-  g+=`<text x="${X0-6}" y="${lidY+12}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="end">盖</text>`;
+  g+=`<text x="${X0-6}" y="${lidY+12}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="end" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">盖</text>`;
   // 底盒（开口朝上）
   g+=`<rect x="${baseX}" y="${baseY}" width="${Wbpx}" height="${Hbpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${baseX+tpx}" y="${baseY}" width="${Wbpx-2*tpx}" height="${Hbpx-tpx}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="5 3"/>`;
-  g+=`<text x="${baseX+5}" y="${baseY+15}" font-size="12" font-weight="700" fill="${OUTER}">底</text>`;
+  g+=`<text x="${baseX+5}" y="${baseY+15}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">底</text>`;
   // 外尺寸
-  g+=hdim(X0, lidY-26, X0+Wlpx, '外'+hName+'(盖) '+(hMm+2*t), OUTER);
-  g+=vdim(X0+Wlpx+28, lidY, lidY+Hlpx, '盖高 '+lidH, OUTER, 'right');
-  g+=vdim(baseX+Wbpx+28, baseY, baseY+Hbpx, '底高 '+baseH, OUTER, 'right');
+  g+=hdim(X0, lidY-26*TF, X0+Wlpx, '外'+hName+'(盖) '+(hMm+2*t), OUTER);
+  g+=vdim(X0+Wlpx+28*TF, lidY, lidY+Hlpx, '盖高 '+lidH, OUTER, 'right');
+  g+=vdim(baseX+Wbpx+28*TF, baseY, baseY+Hbpx, '底高 '+baseH, OUTER, 'right');
   // 内尺寸
-  if(Wbpx-2*tpx>0) g+=hdim(baseX, baseY+Hbpx+24, baseX+Wbpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
-  g+=vdim(baseX-26, baseY, baseY+Hbpx-tpx, '内高 '+(baseH-t), INNER, 'left');
+  if(Wbpx-2*tpx>0) g+=hdim(baseX, baseY+Hbpx+24*TF, baseX+Wbpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
+  g+=vdim(baseX-26*TF, baseY, baseY+Hbpx-tpx, '内高 '+(baseH-t), INNER, 'left');
   // 板厚角标：底盒内左下角（盖与底同厚 t，盖板厚度已由汇总/右侧标注体现）
-  g+=`<text x="${baseX+tpx+4}" y="${baseY+Hbpx-6}" font-size="11" fill="${THK}">t=${t}</text>`;
+  g+=`<text x="${baseX+tpx+4}" y="${baseY+Hbpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
   g+=drawMagsVert(baseX, baseY, Wbpx, tpx, scale, s, axis);
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -896,13 +907,13 @@ function tiandiVert(hMm,baseH,lidH,t,hName,scale,s,axis){
 // 下半：五面开口盒（开口朝上）；上半：平盖板盖（长宽=盒外长宽，厚 lidT），与盒分离显示
 function openLidVert(hMm, baseH, lidT, t, hName, scale, s, axis){
   const Wpx=hMm*scale, Hpx=baseH*scale, tpx=t*scale, lidTpx=lidT*scale;
-  const gapPx=Math.max(30, tpx*2.5);            // 板盖与盒口的分离间隙，留足标注空间
+  const gapPx=Math.max(30*TF, tpx*2.5);            // 板盖与盒口的分离间隙，留足标注空间
   const X0=(380-Wpx)/2;
-  const outerY=22;                              // 外尺寸标注所在 y（最上方）
-  const lidTop=outerY+26;
+  const outerY=22*TF;                              // 外尺寸标注所在 y（最上方）
+  const lidTop=outerY+26*TF;
   const lidBot=lidTop+lidTpx;
   const Y0=lidBot+gapPx;                         // 盒顶（开口顶边）
-  const contentBot=Y0+Hpx+26;
+  const contentBot=Y0+Hpx+26*TF;
   const off=Math.max(0,(380-contentBot)/2);      // 整体垂直居中
   const OY=outerY+off, LT=lidTop+off, LB=lidBot+off, YT=Y0+off;
   const iwpx=(hMm-2*t)*scale, ihpx=(baseH-t)*scale, ix0=X0+tpx;
@@ -910,19 +921,19 @@ function openLidVert(hMm, baseH, lidT, t, hName, scale, s, axis){
   // 五面开口盒
   g+=`<rect x="${X0}" y="${YT}" width="${Wpx}" height="${Hpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${ix0}" y="${YT}" width="${iwpx}" height="${ihpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-  g+=`<text x="${X0+Wpx/2}" y="${YT+Hpx/2+4}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">盒</text>`;
+  g+=`<text x="${X0+Wpx/2}" y="${YT+Hpx/2+4}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">盒</text>`;
   // 平盖板盖（平板）
   g+=`<rect x="${X0}" y="${LT}" width="${Wpx}" height="${lidTpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   // “盖”标签置于盒体左侧外（避开顶部磁铁与距边尺寸）
-  g+=`<text x="${X0-6}" y="${LB+3}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="end">盖</text>`;
+  g+=`<text x="${X0-6}" y="${LB+3}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="end" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">盖</text>`;
   // 外尺寸（长/宽）整体顶部
   g+=hdim(X0, OY, X0+Wpx, hName+' '+hMm, OUTER);
   // 盒高 / 板盖厚 / 内高
-  g+=vdim(X0+Wpx+26, YT, YT+Hpx, '高 '+baseH, OUTER, 'right');
-  g+=vdim(X0+Wpx+26, LT, LT+lidTpx, '盖厚 '+lidT, OUTER, 'right');
-  g+=vdim(X0-26, YT, YT+ihpx, '内高 '+(baseH-t), INNER, 'left');
+  g+=vdim(X0+Wpx+26*TF, YT, YT+Hpx, '高 '+baseH, OUTER, 'right');
+  g+=vdim(X0+Wpx+26*TF, LT, LT+lidTpx, '盖厚 '+lidT, OUTER, 'right');
+  g+=vdim(X0-26*TF, YT, YT+ihpx, '内高 '+(baseH-t), INNER, 'left');
   // 盒体板厚角标：置于盒内左下角，避开顶部磁铁
-  g+=`<text x="${X0+tpx+4}" y="${YT+Hpx-6}" font-size="11" fill="${THK}">t=${t}</text>`;
+  g+=`<text x="${X0+tpx+4}" y="${YT+Hpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
   // 磁铁：盒顶（朝下） + 板盖（朝上），平面位置对应
   g+=drawMagsVert(X0, YT, Wpx, tpx, scale, s, axis);
   g+=drawMagsLidVert(X0, LB, Wpx, lidTpx, scale, s, axis);
@@ -954,11 +965,11 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
   let sc=scale;                   // 俯视缩放：openlid 时单独适配，避免盒+盖上下排溢出
   // 俯视图统一按盒体居中显示：五面盒带盖（板盖）不再画那个分离的板盖虚线框
   Wpx=hMm*scale; Dpx=vMm*scale; tpx=t*scale; X0=(380-Wpx)/2; Ybox=(380-Dpx)/2;
-  YtopDim=Ybox-40;
+  YtopDim=Ybox-40*TF;
   // 盒体（底盒）外框 + 内框
   g+=`<rect x="${X0}" y="${Ybox}" width="${Wpx}" height="${Dpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${X0+tpx}" y="${Ybox+tpx}" width="${Wpx-2*tpx}" height="${Dpx-2*tpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-  g+=`<text x="${X0+Wpx/2}" y="${Ybox+Dpx/2+4}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">${s.type==='tiandi'?'底':'盒'}</text>`;
+  g+=`<text x="${X0+Wpx/2}" y="${Ybox+Dpx/2+4}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">${s.type==='tiandi'?'底':'盒'}</text>`;
   // 外尺寸
   if(s.type==='openlid'){
     g+=hdim(X0, YtopDim, X0+Wpx, hName+' '+hMm, OUTER);
@@ -966,41 +977,41 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
     // 盖外框（大一圈）
     g+=`<rect x="${X0-tpx}" y="${Ybox-tpx}" width="${Wpx+2*tpx}" height="${Dpx+2*tpx}" fill="none" stroke="${OUTER}" stroke-width="1.3" stroke-dasharray="6 4"/>`;
     // “盖”标签放在盖外框顶边中段（左右两端被磁铁距边尺寸占用），描白边保证压线也能读
-    g+=`<text x="${X0+Wpx/2}" y="${Ybox-tpx-3}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#fff" stroke-width="3" paint-order="stroke">盖</text>`;
-    g+=hdim(X0-tpx, Ybox-40, X0-tpx+Wpx+2*tpx, '盖外'+hName+' '+(hMm+2*t), OUTER);
+    g+=`<text x="${X0+Wpx/2}" y="${Ybox-tpx-3}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#fff" stroke-width="3" paint-order="stroke">盖</text>`;
+    g+=hdim(X0-tpx, Ybox-40*TF, X0-tpx+Wpx+2*tpx, '盖外'+hName+' '+(hMm+2*t), OUTER);
   } else {
-    g+=hdim(X0, Ybox-40, X0+Wpx, hName+' '+hMm, OUTER);
+    g+=hdim(X0, Ybox-40*TF, X0+Wpx, hName+' '+hMm, OUTER);
   }
-  g+=vdim(X0+Wpx+26, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
+  g+=vdim(X0+Wpx+26*TF, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
   /* 内长尺寸线：天地盖的「盖」比底大一圈（虚线在盒体下方 tpx 处），
      内长标注必须让到虚线外侧，否则 12px 的文字会被虚线穿过 */
-  const dimDrop = tiandi ? tpx + 24 : 24;
+  const dimDrop = tiandi ? tpx + 24*TF : 24*TF;
   if(Wpx-2*tpx>0) g+=hdim(X0+tpx, Ybox+Dpx+dimDrop, X0+tpx+Wpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
-  if(Dpx-2*tpx>0) g+=vdim(X0-26, Ybox+tpx, Ybox+tpx+Dpx-2*tpx, '内'+vName+' '+(vMm-2*t), INNER, 'left');
-  g+=`<text x="${X0+tpx+4}" y="${Ybox+tpx+13}" font-size="11" fill="${THK}">t=${t}</text>`;
+  if(Dpx-2*tpx>0) g+=vdim(X0-26*TF, Ybox+tpx, Ybox+tpx+Dpx-2*tpx, '内'+vName+' '+(vMm-2*t), INNER, 'left');
+  g+=`<text x="${X0+tpx+4}" y="${Ybox+tpx+13}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
   if(s.useMag){
     const r=(s.magD/2)*sc, col=s.magOk?THK:INNER, dpx=s.magDist*sc;
     // 距边距离 d：长边磁铁→在盒体上方水平标注；宽边磁铁→竖向标注
     if(s.magEdge==='L'){
-      g+=hdim(X0, Ybox-18, X0+dpx, String(s.magDist), col);
-      g+=hdim(X0+Wpx, Ybox-18, X0+Wpx-dpx, String(s.magDist), col);
+      g+=hdim(X0, Ybox-18*TF, X0+dpx, String(s.magDist), col);
+      g+=hdim(X0+Wpx, Ybox-18*TF, X0+Wpx-dpx, String(s.magDist), col);
     } else {
       // 宽边磁铁的 d 是竖向距离。盒子左右外侧只剩十几像素的窄缝（再往外就是
       // 「内宽」「宽」两条竖向尺寸），横排文字必然压线、左边还会被卡片边缘裁掉。
       if(s.type==='tiandi'){
         // 天地盖：盒外还有一圈「盖」的虚线框，把这条窄缝也占掉了，d 只能标进盒内。
         // 左上角要留给「t=」，所以左下一处（量下边到下方磁铁）、右上一处（量上边到上方磁铁）。
-        const xi=(tpx>14)?tpx+6:14;
+        const xi=(tpx>14*TF)?tpx+6*TF:14*TF;
         g+=vdimIn(X0+xi, Ybox+Dpx, Ybox+Dpx-dpx, String(s.magDist), col,
-                  X0+xi+6, Math.min(Ybox+Dpx-dpx/2, Ybox+Dpx-14)+4, 'start');
+                  X0+xi+6, Math.min(Ybox+Dpx-dpx/2, Ybox+Dpx-14*TF)+4, 'start');
         g+=vdimIn(X0+Wpx-xi, Ybox, Ybox+dpx, String(s.magDist), col,
-                  X0+Wpx-xi-6, Math.max(Ybox+dpx/2, Ybox+14)+4, 'end');
+                  X0+Wpx-xi-6, Math.max(Ybox+dpx/2, Ybox+14*TF)+4, 'end');
       } else {
         // 其余盒类产品：仍标在外侧，文字改竖排（旋转 -90°），只占 12px 宽，正好放进窄缝。
-        g+=vdimRot(X0-12, Ybox, Ybox+dpx, String(s.magDist), col, X0-12+4,
-                   Math.max(Ybox+dpx/2, Ybox+11));
-        g+=vdimRot(X0+Wpx+12, Ybox+Dpx, Ybox+Dpx-dpx, String(s.magDist), col, X0+Wpx+12+4,
-                   Math.min(Ybox+Dpx-dpx/2, Ybox+Dpx-11));
+        g+=vdimRot(X0-12*TF, Ybox, Ybox+dpx, String(s.magDist), col, X0-12*TF+4*TF,
+                   Math.max(Ybox+dpx/2, Ybox+11*TF));
+        g+=vdimRot(X0+Wpx+12*TF, Ybox+Dpx, Ybox+Dpx-dpx, String(s.magDist), col, X0+Wpx+12*TF+4*TF,
+                   Math.min(Ybox+Dpx-dpx/2, Ybox+Dpx-11*TF));
       }
     }
     // 盒磁铁（实心，用盒体板厚校验；圆心夹在盒体内，不越出边框）
@@ -1113,16 +1124,16 @@ function rMarkSvg(X0,Y0,rpx,R){
   const sx=cx-rpx*u, sy=cy-rpx*u;               // 弧上一点
   const ex=cx+9, ey=cy+9;                       // 穿过弧心再往外
   return `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${THK}" stroke-width="0.9"/>`
-       + `<text x="${(ex+3).toFixed(1)}" y="${(ey+4).toFixed(1)}" font-size="11" font-weight="700" fill="${THK}">R ${R}</text>`;
+       + `<text x="${(ex+3).toFixed(1)}" y="${(ey+4).toFixed(1)}" font-size="${F_SUB}" font-weight="700" fill="${THK}">R ${R}</text>`;
 }
 /* 正 / 侧视图：圆角矩形 + 外尺寸 */
 function blockVert(hMm,vMm,R,hName,scale){
   const Wpx=hMm*scale, Hpx=vMm*scale;
   const rpx=Math.min(R*scale, Wpx/2, Hpx/2);
-  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+18;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+18*TF;
   let g=`<rect x="${X0.toFixed(2)}" y="${Y0.toFixed(2)}" width="${Wpx.toFixed(2)}" height="${Hpx.toFixed(2)}" rx="${rpx.toFixed(2)}" ry="${rpx.toFixed(2)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
-  g+=hdim(X0, Y0-40, X0+Wpx, hName+' '+hMm, OUTER);
-  g+=vdim(X0+Wpx+26, Y0, Y0+Hpx, '高 '+vMm, OUTER, 'right');
+  g+=hdim(X0, Y0-40*TF, X0+Wpx, hName+' '+hMm, OUTER);
+  g+=vdim(X0+Wpx+26*TF, Y0, Y0+Hpx, '高 '+vMm, OUTER, 'right');
   g+=rMarkSvg(X0, Y0, rpx, R);
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1132,10 +1143,10 @@ function blockTop(hMm,vMm,R,hName,vName,scale){
   const rpx=Math.min(R*scale, Wpx/2, Dpx/2);
   const X0=(380-Wpx)/2, Ybox=(380-Dpx)/2;
   let g=`<rect x="${X0.toFixed(2)}" y="${Ybox.toFixed(2)}" width="${Wpx.toFixed(2)}" height="${Dpx.toFixed(2)}" rx="${rpx.toFixed(2)}" ry="${rpx.toFixed(2)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
-  g+=hdim(X0, Ybox-40, X0+Wpx, hName+' '+hMm, OUTER);
-  g+=vdim(X0+Wpx+26, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
-  if(Wpx>70 && Dpx>46){
-    g+=`<text x="${(X0+Wpx/2).toFixed(1)}" y="${(Ybox+Dpx/2+5).toFixed(1)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">实心</text>`;
+  g+=hdim(X0, Ybox-40*TF, X0+Wpx, hName+' '+hMm, OUTER);
+  g+=vdim(X0+Wpx+26*TF, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
+  if(Wpx>70*TF && Dpx>46*TF){
+    g+=`<text x="${(X0+Wpx/2).toFixed(1)}" y="${(Ybox+Dpx/2+5).toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle">实心</text>`;
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1177,16 +1188,16 @@ function block3D(s){
   // 尺寸文字：沿对应棱中点向轮廓外推，保证落在形体外侧
   const ip=(a,b,c)=>bIsoP([a,b,c],1);
   const md=(u,v)=>[(u[0]+v[0])/2,(u[1]+v[1])/2];
-  const L1=outward(md(ip(0,s.W,0),ip(s.L,s.W,0)), g.cen, 20);   // 长（下左棱）
-  const L2=outward(md(ip(s.L,0,0),ip(s.L,s.W,0)), g.cen, 20);   // 宽（下右棱）
-  const L3=outward(md(ip(0,s.W,0),ip(0,s.W,s.H)), g.cen, 15);   // 高（左侧竖棱）
+  const L1=outward(md(ip(0,s.W,0),ip(s.L,s.W,0)), g.cen, 20*TF);   // 长（下左棱）
+  const L2=outward(md(ip(s.L,0,0),ip(s.L,s.W,0)), g.cen, 20*TF);   // 宽（下右棱）
+  const L3=outward(md(ip(0,s.W,0),ip(0,s.W,s.H)), g.cen, 15*TF);   // 高（左侧竖棱）
   const pL=T(L1), pW=T(L2), pH=T(L3);
-  body+=`<text x="${f2(pL[0])}" y="${f2(pL[1]+4)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">长 ${s.L}</text>`;
-  body+=`<text x="${f2(pW[0])}" y="${f2(pW[1]+4)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">宽 ${s.W}</text>`;
-  body+=`<text x="${f2(pH[0])}" y="${f2(pH[1]+4)}" font-size="12" font-weight="700" fill="${OUTER}" text-anchor="middle">高 ${s.H}</text>`;
+  body+=`<text x="${f2(pL[0])}" y="${f2(pL[1]+4*TF)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">长 ${s.L}</text>`;
+  body+=`<text x="${f2(pW[0])}" y="${f2(pW[1]+4*TF)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">宽 ${s.W}</text>`;
+  body+=`<text x="${f2(pH[0])}" y="${f2(pH[1]+4*TF)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">高 ${s.H}</text>`;
   if(s.R>0){
-    const pR=T(outward(bIsoP([s.L,s.W,0],1), g.cen, 13));
-    body+=`<text x="${f2(pR[0])}" y="${f2(pR[1]+4)}" font-size="11" font-weight="700" fill="${THK}" text-anchor="middle">R=${s.R}</text>`;
+    const pR=T(outward(bIsoP([s.L,s.W,0],1), g.cen, 13*TF));
+    body+=`<text x="${f2(pR[0])}" y="${f2(pR[1]+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="${THK}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">R=${s.R}</text>`;
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${body}</svg>`;
 }
@@ -1414,19 +1425,19 @@ function frameFront(s,scale){
     g+=`<polygon points="${pts}" fill="none" stroke="#9aa8b6" stroke-width="0.8" stroke-dasharray="4 3"/>`;
   }
   /* 外形尺寸 */
-  g+=hdim(X0, Y0-24, X0+Wpx, '长 '+s.L, OUTER);
-  g+=vdim(X0+Wpx+22, Y0, Y0+Hpx, '宽 '+s.W, OUTER, 'right');
+  g+=hdim(X0, Y0-24*TF, X0+Wpx, '长 '+s.L, OUTER);
+  g+=vdim(X0+Wpx+22*TF, Y0, Y0+Hpx, '宽 '+s.W, OUTER, 'right');
   /* 磁铁定位：距宽边 / 距长边两条尺寸线引到板外（延伸线穿过磁铁圆心），
      数字标在尺寸线上，综合说明另起一行居中，避免左下角两行字互相压住。
      尺寸行离板底 22px（原来 13px 时数字顶部会被板的底边线穿过） */
-  const dmY=Y0+Hpx+22, dmX=X0-16;
+  const dmY=Y0+Hpx+22*TF, dmX=X0-16*TF;
   g+=`<line x1="${f2(PX(0))}" y1="${f2(Y0+Hpx)}" x2="${f2(PX(0))}" y2="${f2(dmY+4)}" stroke="${THK}" stroke-width="0.8"/>`
    + `<line x1="${f2(PX(s.magW))}" y1="${f2(PY(s.magL))}" x2="${f2(PX(s.magW))}" y2="${f2(dmY+4)}" stroke="${THK}" stroke-width="0.8"/>`
    + hdim(PX(0), dmY, PX(s.magW), dxfNum(s.magW), THK);
   g+=`<line x1="${f2(X0-3)}" y1="${f2(PY(0))}" x2="${f2(dmX-4)}" y2="${f2(PY(0))}" stroke="${THK}" stroke-width="0.8"/>`
    + `<line x1="${f2(PX(s.magW))}" y1="${f2(PY(s.magL))}" x2="${f2(dmX-4)}" y2="${f2(PY(s.magL))}" stroke="${THK}" stroke-width="0.8"/>`
    + vdim(dmX, PY(0), PY(s.magL), dxfNum(s.magL), THK, 'left');
-  g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(dmY+13)}" font-size="11" fill="${THK}" text-anchor="middle">磁铁距长边 ${dxfNum(s.magL)} · 距宽边 ${dxfNum(s.magW)}（四角各 1）</text>`;
+  g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(dmY+13*TF+14)}" font-size="${F_SUB}" fill="${THK}" text-anchor="middle">磁铁距长边 ${dxfNum(s.magL)} · 距宽边 ${dxfNum(s.magW)}（四角各 1）</text>`;
   /* 四角磁铁（画在尺寸线上层，圆心正好盖住尺寸线的交点） */
   const md=s.fMagD, mr=Math.max(md/2*scale, 3.2);
   [s.magW, s.L-s.magW].forEach(x=>{
@@ -1436,16 +1447,16 @@ function frameFront(s,scale){
   });
   /* 磁铁规格：右上角那颗引出到板上方空白区（原来向右伸会压到「宽」的尺寸线） */
   const tx=PX(s.L-s.magW), tz=PY(s.W-s.magL);
-  const lx=tx+mr*0.7, ly=tz-mr*0.7, specY=Y0-9;
-  g+=`<line x1="${f2(lx)}" y1="${f2(ly)}" x2="${f2(lx+11)}" y2="${f2(specY+3)}" stroke="${THK}" stroke-width="0.9"/>`
-   + `<text x="${f2(lx+13)}" y="${f2(specY)}" font-size="11" font-weight="700" fill="${THK}">Ø${md}×${s.fMagTh}</text>`;
+  const lx=tx+mr*0.7, ly=tz-mr*0.7, specY=Y0-9*TF;
+  g+=`<line x1="${f2(lx)}" y1="${f2(ly)}" x2="${f2(lx+11*TF)}" y2="${f2(specY+3*TF)}" stroke="${THK}" stroke-width="0.9"/>`
+   + `<text x="${f2(lx+13*TF)}" y="${f2(specY)}" font-size="${F_SUB}" font-weight="700" fill="${THK}">Ø${md}×${s.fMagTh}</text>`;
   /* 棱边处理标注：从左上角圆弧 45° 引出到板外，避开角上的磁铁 */
   if(pl.r>0){
     const rp=pl.r*scale, cx=X0+rp, cy=Y0+rp;
-    const sx=cx-rp*0.7071, sy=cy-rp*0.7071, ex=X0-10, ey=Y0-10;
+    const sx=cx-rp*0.7071, sy=cy-rp*0.7071, ex=X0-10*TF, ey=Y0-10*TF;
     g+=`<line x1="${f2(sx)}" y1="${f2(sy)}" x2="${f2(ex)}" y2="${f2(ey)}" stroke="${THK}" stroke-width="0.9"/>`;
     const lbl=(pl.edge==='round') ? 'R '+dxfNum(s.R) : 'C'+dxfNum(s.C);
-    g+=`<text x="${f2(ex-3)}" y="${f2(ey+4)}" font-size="11" font-weight="700" fill="${THK}" text-anchor="end">${lbl}</text>`;
+    g+=`<text x="${f2(ex-3*TF)}" y="${f2(ey+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="${THK}" text-anchor="end">${lbl}</text>`;
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1455,7 +1466,7 @@ function frameProfileSvg(s,hMm,hName,scale,mode){
   const horiz=(mode==='top');                 // 俯视图：板面方向沿 x，厚度沿 y
   const Wpx=(horiz?hMm:TT)*scale, Hpx=(horiz?TT:hMm)*scale;
   const X0=(380-Wpx)/2;                       // 主视图水平居中（薄板与间隙整组居中）
-  const Y0=(380-Hpx)/2+10;
+  const Y0=(380-Hpx)/2+10*TF;
   const M=(y,z)=> horiz ? [X0+z*scale, Y0+(TT-y)*scale]
                         : [X0+y*scale, Y0+(hMm-z)*scale];
   const f2=v=>v.toFixed(1);
@@ -1483,13 +1494,13 @@ function frameProfileSvg(s,hMm,hName,scale,mode){
   });
 
   if(horiz){
-    g+=hdim(X0, Y0+Hpx+22, X0+Wpx, hName+' '+hMm, OUTER);
-    g+=`<text x="${f2(X0-8)}" y="${f2(Y0+Hpx/2+4)}" font-size="11" font-weight="700" fill="#7b8794" text-anchor="end">总厚 ${TT}</text>`;
+    g+=hdim(X0, Y0+Hpx+22*TF, X0+Wpx, hName+' '+hMm, OUTER);
+    g+=`<text x="${f2(X0-8)}" y="${f2(Y0+Hpx/2+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="#7b8794" text-anchor="end">总厚 ${TT}</text>`;
   } else {
-    g+=vdim(X0-24, Y0, Y0+Hpx, hName+' '+hMm, OUTER, 'left');
+    g+=vdim(X0-24*TF, Y0, Y0+Hpx, hName+' '+hMm, OUTER, 'left');
   }
   if(horiz)
-    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(Y0-10)}" font-size="11" font-weight="700" fill="#7b8794" text-anchor="middle">板厚 ${t} ×2 · 间隙 ${gp}（示意）</text>`;
+    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(Y0-10*TF)}" font-size="${F_SUB}" font-weight="700" fill="#7b8794" text-anchor="middle">板厚 ${t} ×2 · 间隙 ${gp}（示意）</text>`;
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
 
@@ -1598,7 +1609,7 @@ function shapeGeom(s){
 function shapeFront(s,sc){
   const G=shapeGeom(s);
   const Wpx=G.w*sc, Hpx=G.h*sc;
-  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+12;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+12*TF;
   const f2=v=>v.toFixed(1);
   const P=p=>[X0+p[0]*sc, Y0+(G.h-p[1])*sc];        // mm y 向上 → 屏幕 y 向下
   const fmt=v=>(Math.round(v*100)/100).toString();
@@ -1619,20 +1630,20 @@ function shapeFront(s,sc){
   }
   /* 尺寸：方形 长/宽，圆形 Ø，三角形 底边 a + 两腰 */
   if(G.kind==='square'){
-    g+=hdim(X0, Y0-24, X0+Wpx, '长 '+fmt(s.L), OUTER);
-    g+=vdim(X0+Wpx+22, Y0, Y0+Hpx, '宽 '+fmt(s.W), OUTER, 'right');
+    g+=hdim(X0, Y0-24*TF, X0+Wpx, '长 '+fmt(s.L), OUTER);
+    g+=vdim(X0+Wpx+22*TF, Y0, Y0+Hpx, '宽 '+fmt(s.W), OUTER, 'right');
     g+=rMarkSvg(X0, Y0, G.r*sc, s.R);
   } else if(G.kind==='circle'){
     g+=`<line x1="${f2(X0)}" y1="${f2(Y0+Hpx/2)}" x2="${f2(X0+Wpx)}" y2="${f2(Y0+Hpx/2)}" stroke="${OUTER}" stroke-width="0.8"/>`
-     + `<text x="${f2(X0+Wpx/2)}" y="${f2(Y0+Hpx/2-6)}" font-size="11" font-weight="700" fill="${OUTER}" text-anchor="middle">Ø ${fmt(s.cirD)}</text>`;
+     + `<text x="${f2(X0+Wpx/2)}" y="${f2(Y0+Hpx/2-6*TF)}" font-size="${F_SUB}" font-weight="700" fill="${OUTER}" text-anchor="middle">Ø ${fmt(s.cirD)}</text>`;
   } else {
-    g+=hdim(X0+G.vertsT[0][0]*sc, X0+G.vertsT[1][0]*sc, Y0+Hpx+18, 'a '+fmt(s.triA), OUTER);
+    g+=hdim(X0+G.vertsT[0][0]*sc, Y0+Hpx+18*TF, X0+G.vertsT[1][0]*sc, 'a '+fmt(s.triA), OUTER);
     /* 两腰标注：取轮廓上斜边中点向外推 */
     const vs=G.vertsT.map(P);
     const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
     const cen=P(G.c);
-    const lbl=(p,txt)=>{ const o=outward(p,cen,16);
-      return `<text x="${f2(o[0])}" y="${f2(o[1]+4)}" font-size="11" font-weight="700" fill="${OUTER}" text-anchor="middle">${txt}</text>`; };
+    const lbl=(p,txt)=>{ const o=outward(p,cen,16*TF);
+      return `<text x="${f2(o[0])}" y="${f2(o[1]+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="${OUTER}" text-anchor="middle">${txt}</text>`; };
     g+=lbl(mid(vs[0],vs[2]),'b '+fmt(s.triB));
     g+=lbl(mid(vs[1],vs[2]),'c '+fmt(s.triC));
     /* R 引出：最高顶点的圆弧（R>0 时） */
@@ -1641,17 +1652,17 @@ function shapeFront(s,sc){
       G.segs.forEach(sg=>{ if(sg.t!=='A') return;
         const c=P(sg.c); if(!best || c[1]<best[1]) best=sg; });
       if(best){
-        const c=P(best.c), o=outward(c,cen,best.r*sc+13);
+        const c=P(best.c), o=outward(c,cen,best.r*sc+13*TF);
         g+=`<line x1="${f2(c[0])}" y1="${f2(c[1])}" x2="${f2(o[0])}" y2="${f2(o[1])}" stroke="${THK}" stroke-width="0.9"/>`
-         + `<text x="${f2(o[0])}" y="${f2(o[1]-4)}" font-size="11" font-weight="700" fill="${THK}" text-anchor="middle">R ${fmt(s.R)}</text>`;
+         + `<text x="${f2(o[0])}" y="${f2(o[1]-4*TF)}" font-size="${F_SUB}" font-weight="700" fill="${THK}" text-anchor="middle">R ${fmt(s.R)}</text>`;
       }
     }
   }
   /* 孔说明（底部） */
   if(s.holeOn){
     const posTxt=G.kind==='triangle'?'重心':'居中';
-    const by=(G.kind==='triangle')? Y0+Hpx+36 : Y0+Hpx+20;
-    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(by)}" font-size="11" font-weight="700" fill="${INNER}" text-anchor="middle">孔 Ø${fmt(s.holeD)} × 深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
+    const by=(G.kind==='triangle')? Y0+Hpx+36*TF : Y0+Hpx+20*TF;
+    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(by)}" font-size="${F_SUB}" font-weight="700" fill="${INNER}" text-anchor="middle">孔 Ø${fmt(s.holeD)} × 深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1667,7 +1678,7 @@ function shapeProfileSvg(s,mode,sc){
   const fmt=v=>(Math.round(v*100)/100).toString();
   const horiz=(mode==='top');
   const Wpx=horiz?G.w*sc:s.shT*sc, Hpx=horiz?s.shT*sc:G.h*sc;
-  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+10;
+  const X0=(380-Wpx)/2, Y0=(380-Hpx)/2+10*TF;
   const f2=v=>v.toFixed(1);
   let g=`<rect x="${f2(X0)}" y="${f2(Y0)}" width="${f2(Wpx)}" height="${f2(Hpx)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   if(s.holeOn){
@@ -1677,15 +1688,15 @@ function shapeProfileSvg(s,mode,sc){
       : `<rect x="${f2(X0)}" y="${f2(Y0+(G.h-G.c[1])*sc-hw)}" width="${f2(dep)}" height="${f2(2*hw)}" fill="none" stroke="${INNER}" stroke-width="1" stroke-dasharray="3 2"/>`;
   }
   if(horiz){
-    g+=hdim(X0, Y0+Hpx+20, X0+Wpx, extName+' '+fmt(ext), OUTER);
-    g+=`<text x="${f2(X0-8)}" y="${f2(Y0+Hpx/2+4)}" font-size="11" font-weight="700" fill="#7b8794" text-anchor="end">厚 ${fmt(s.shT)}</text>`;
+    g+=hdim(X0, Y0+Hpx+20*TF, X0+Wpx, extName+' '+fmt(ext), OUTER);
+    g+=`<text x="${f2(X0-8*TF)}" y="${f2(Y0+Hpx/2+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="#7b8794" text-anchor="end">厚 ${fmt(s.shT)}</text>`;
   } else {
-    g+=vdim(X0-24, Y0, Y0+Hpx, extName+' '+fmt(ext), OUTER, 'left');
-    g+=`<text x="${f2(X0+Wpx+12)}" y="${f2(Y0+Hpx/2+4)}" font-size="11" font-weight="700" fill="${THK}">厚 ${fmt(s.shT)}</text>`;
+    g+=vdim(X0-24*TF, Y0, Y0+Hpx, extName+' '+fmt(ext), OUTER, 'left');
+    g+=`<text x="${f2(X0+Wpx+12*TF)}" y="${f2(Y0+Hpx/2+4*TF)}" font-size="${F_SUB}" font-weight="700" fill="${THK}">厚 ${fmt(s.shT)}</text>`;
   }
   if(s.holeOn){
     const posTxt=s.shp==='triangle'?'重心':'居中';
-    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(horiz? Y0-10 : Y0+Hpx+34)}" font-size="11" font-weight="700" fill="${INNER}" text-anchor="middle">孔深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
+    g+=`<text x="${f2(X0+Wpx/2)}" y="${f2(horiz? Y0-10*TF : Y0+Hpx+34*TF)}" font-size="${F_SUB}" font-weight="700" fill="${INNER}" text-anchor="middle">孔深 ${fmt(s.holeDep)}${s.holeThrough?'（打通）':''}（${posTxt}）</text>`;
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1722,7 +1733,7 @@ function shape3D(s){
   /* 标注：厚 T（右侧引出） */
   const eIdx=per.reduce((bi,p,i)=>p[0]>per[bi][0]?i:bi,0);   // 最右轮廓点
   const pe=T(P0[eIdx]);
-  body+=`<text x="${f2(pe[0]+14)}" y="${f2(pe[1]+4)}" font-size="12" font-weight="700" fill="${OUTER}">厚 ${s.shT}</text>`;
+  body+=`<text x="${f2(pe[0]+14*TF)}" y="${f2(pe[1]+4*TF)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">厚 ${s.shT}</text>`;
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${body}</svg>`;
 }
 
@@ -1929,7 +1940,7 @@ function bboxOf(svg){
   }catch(e){ return null; }
 }
 function tightenViewBoxes(){
-  const pad=8, SZ=380, CX=SZ/2;               // CX=190：所有 2D 视图的板件几何都以 x=190 居中绘制
+  const pad=8*TF, SZ=380, CX=SZ/2;               // CX=190：所有 2D 视图的板件几何都以 x=190 居中绘制
   /* 三个正交视图（正/侧/俯）：
      1) 共用同一缩放系数，保证同一尺寸在任何视图里像素长度一致（正视的长=俯视的长、
         正视的宽=侧视的高）；
@@ -2039,14 +2050,14 @@ async function exportPNG(){
 
   /* 以下数值取自打印样式在 A4 横向下的真实排版（CSS px，96dpi）：
      页头 20.3 / 拼接条 25 / 汇总框 34 / 备注行（12px × 1.35 行高，最多 2 行）/ 卡片 80mm、间距 3mm、内边距 2mm */
-  const HD_H=20.3, HD_BASE=13.4, BAN_H=25, BAN_TEXT=17, GAP2=2;
-  const SUM_H=34, SUM_PAD=8, SUM_BASE=21.5;
-  const NOTE_GAP=mm(1.5), NOTE_LH=16.2, NOTE_MAX=2;
+  const HD_H=22.6, HD_BASE=15.2, BAN_H=26.5, BAN_TEXT=18, GAP2=2;
+  const SUM_H=37, SUM_PAD=8, SUM_BASE=23;
+  const NOTE_GAP=mm(1.5), NOTE_LH=17.5, NOTE_MAX=2;
   const CARD_H=mm(80), CARD_GAP=mm(3), CARD_PAD=mm(2), CARD_INSET=CARD_PAD+1;
   const R=12, RIN=10;
 
   /* ① 页头：标题 + 分隔线 */
-  c.fillStyle='#1f2d3d'; c.font='700 13px '+PRINT_FONT;
+  c.fillStyle='#1f2d3d'; c.font='700 15px '+PRINT_FONT;
   c.fillText('粤丰展示产品设计', x0, pad+HD_BASE);
   c.strokeStyle='#e3e8ef'; c.lineWidth=1;
   c.beginPath(); c.moveTo(x0,pad+HD_H); c.lineTo(x1,pad+HD_H); c.stroke();
@@ -2057,7 +2068,7 @@ async function exportPNG(){
     rrect(c,x0,banY,W,BAN_H,9);
     c.fillStyle='#e8f5ee'; c.fill();
     c.strokeStyle='#009944'; c.lineWidth=2; c.stroke();
-    c.fillStyle='#009944'; c.font='700 12px '+PRINT_FONT;
+    c.fillStyle='#009944'; c.font='700 13px '+PRINT_FONT;
     c.fillText('拼接方式：'+jointText, x0+8, banY+BAN_TEXT);
   }
 
@@ -2066,18 +2077,18 @@ async function exportPNG(){
   const sumY=infoY;                       // 打印里 #infoCard 与上方拼接条只隔 GAP2，无额外留白
   // 备注：与打印同样「备注 → 内容」的排法，宽度不够自动换行，最多 2 行
   const nt=noteText();
-  c.font='400 11px '+PRINT_FONT;
+  c.font='400 12px '+PRINT_FONT;
   const ntLabel='备注';
   const ntLabelW=c.measureText(ntLabel).width;
   const ntX=x0+ntLabelW+mm(2);
   let ntLines=[];
   if(nt){
-    c.font='400 12px '+PRINT_FONT;
+    c.font='400 13px '+PRINT_FONT;
     ntLines=wrapText(c, nt, x1-ntX).slice(0,NOTE_MAX);
   }
   const noteTop=sumY+SUM_H+NOTE_GAP;
   const INFO_H=SUM_H+(ntLines.length? NOTE_GAP+ntLines.length*NOTE_LH : 0);
-  c.font='400 11px '+PRINT_FONT;
+  c.font='400 12px '+PRINT_FONT;
   const labW=c.measureText('尺寸汇总').width;
   let warnW=0;
   warns.forEach(w=>{ warnW=Math.max(warnW,c.measureText('⚠ '+w).width); });
@@ -2085,9 +2096,9 @@ async function exportPNG(){
   const GAP_ITEM=22;
   // 条目拆成片段（标签 / 数值 / 位置说明），宽度不够时整体等比缩小
   const segs=items.map(it=>{
-    const a=[{t:it.k,size:11,w:400,col:'#7b8794'},
-             {t:' '+it.v,size:13.5,w:700,col:'#1f2d3d'}];
-    if(it.d) a.push({t:' · '+it.d,size:11,w:400,col:'#7b8794'});
+    const a=[{t:it.k,size:12,w:400,col:'#7b8794'},
+             {t:' '+it.v,size:15,w:700,col:'#1f2d3d'}];
+    if(it.d) a.push({t:' · '+it.d,size:12,w:400,col:'#7b8794'});
     return a;
   });
   const segFont=(sg,k)=>`${sg.w} ${(sg.size*k).toFixed(2)}px ${PRINT_FONT}`;
@@ -2105,7 +2116,7 @@ async function exportPNG(){
   rrect(c,sumX,sumY,sumW,SUM_H,6);
   c.fillStyle='#fbfcfe'; c.fill();
   c.strokeStyle='#e3e8ef'; c.lineWidth=1; c.stroke();
-  c.fillStyle='#7b8794'; c.font='400 11px '+PRINT_FONT;
+  c.fillStyle='#7b8794'; c.font='400 12px '+PRINT_FONT;
   c.fillText('尺寸汇总', x0, sumY+SUM_BASE-0.5);
 
   const avail=sumW-SUM_PAD*2;
@@ -2121,14 +2132,14 @@ async function exportPNG(){
     if(i<segs.length-1) ix+=gap;
   });
   if(warns.length){
-    c.font='400 11px '+PRINT_FONT; c.fillStyle='#c0392b';
-    warns.forEach((w,i)=>{ c.fillText('⚠ '+w, x1-warnW, sumY+13.7+i*14.3); });
+    c.font='400 12px '+PRINT_FONT; c.fillStyle='#c0392b';
+    warns.forEach((w,i)=>{ c.fillText('⚠ '+w, x1-warnW, sumY+14.6+i*15.5); });
   }
   // 备注：小标题与正文同一基线起排，正文按行绘制（与打印的自动换行同宽）
   if(ntLines.length){
-    c.font='400 11px '+PRINT_FONT; c.fillStyle='#7b8794';
+    c.font='400 12px '+PRINT_FONT; c.fillStyle='#7b8794';
     c.fillText(ntLabel, x0, noteTop+11.5);
-    c.font='400 12px '+PRINT_FONT; c.fillStyle='#1f2d3d';
+    c.font='400 13px '+PRINT_FONT; c.fillStyle='#1f2d3d';
     ntLines.forEach((ln,i)=>c.fillText(ln, ntX, noteTop+11.5+i*NOTE_LH));
   }
 
@@ -2164,15 +2175,15 @@ async function exportPNG(){
     if(imgs[i]) c.drawImage(imgs[i],o.dx,o.dy,o.dw,o.dh);
     // 标题：白底压在视口框左上角（同打印 h3 的 top:1mm / left:1.5mm / 9px）
     const tx=o.cx+mm(1.5), ty=o.cy+mm(1);
-    c.font='700 9px '+PRINT_FONT;
+    c.font='700 11px '+PRINT_FONT;
     const tw=c.measureText(o.cap).width;
     let nw=0;
-    if(o.note){ c.font='400 10px '+PRINT_FONT; nw=c.measureText(o.note).width; }
+    if(o.note){ c.font='400 11px '+PRINT_FONT; nw=c.measureText(o.note).width; }
     c.fillStyle='rgba(255,255,255,.92)';
-    c.fillRect(tx-1.5,ty-1,tw+nw+3,12.5);
-    c.fillStyle='#5a6b7c'; c.font='700 9px '+PRINT_FONT;
-    c.fillText(o.cap,tx,ty+8.6);
-    if(o.note){ c.fillStyle='#8a97a4'; c.font='400 10px '+PRINT_FONT; c.fillText(o.note,tx+tw,ty+8.6); }
+    c.fillRect(tx-1.5,ty-1,tw+nw+3,14.5);
+    c.fillStyle='#5a6b7c'; c.font='700 11px '+PRINT_FONT;
+    c.fillText(o.cap,tx,ty+10.4);
+    if(o.note){ c.fillStyle='#8a97a4'; c.font='400 11px '+PRINT_FONT; c.fillText(o.note,tx+tw,ty+10.4); }
   });
 
   const a=document.createElement('a');
@@ -2247,7 +2258,7 @@ function dxfNew(){
     circle(l,c,r){ E.push({k:'C',l,p:[c],r}); },
     /* 圆弧：角度为度，逆时针 a0→a1（DXF ARC 的固定方向） */
     arc(l,c,r,a0,a1){ if(Math.abs(r)>1e-9) E.push({k:'A',l,p:[c],r,a0,a1}); },
-    text(l,p,h,s,rot,al){ if(String(s).length) E.push({k:'T',l,p:[p],h,s,rot:rot||0,al:al||'c'}); }
+    text(l,p,h,s,rot,al){ if(String(s).length) E.push({k:'T',l,p:[p],h:h*DXF_TF,s,rot:rot||0,al:al||'c'}); }
   };
   return api;
 }
@@ -2381,6 +2392,7 @@ function dropCoincidentDashes(segs){
 
 function dxfBuild(){
   const s=readInputs(), joint=getJoint(), j45=(joint==='45'), t=s.t;
+  const TFX=DXF_TF;      // 文字与标注间距的放大倍数（与字高一致）
   const A=dxfNew();
   const TYPE_NAME=PRODUCTS[s.type].name;
   const openTop=(s.type!=='closed');
@@ -2392,18 +2404,18 @@ function dxfBuild(){
   function dimH(xa,xb,y,txt){
     // 跨度比字还小（如 20mm 盒配 5mm 板，内长只剩 10mm）时整条标注省掉，
     // 否则文字会压到轮廓线上；内尺寸在下方信息块里仍有
-    if(Math.abs(xb-xa) < dxfTextW(txt,DIM_H)*0.92) return;
+    if(Math.abs(xb-xa) < dxfTextW(txt,DIM_H*TFX)*0.92) return;
     A.line('DIM',[xa,y],[xb,y]);
-    A.line('DIM',[xa,y-2.2],[xa,y+2.2]);
-    A.line('DIM',[xb,y-2.2],[xb,y+2.2]);
-    A.text('TEXT',[(xa+xb)/2,y-3.4],DIM_H,txt);
+    A.line('DIM',[xa,y-2.2*TFX],[xa,y+2.2*TFX]);
+    A.line('DIM',[xb,y-2.2*TFX],[xb,y+2.2*TFX]);
+    A.text('TEXT',[(xa+xb)/2,y-3.4*TFX],DIM_H,txt);
   }
   function dimV(x,ya,yb,txt,side){
-    if(Math.abs(yb-ya) < dxfTextW(txt,DIM_H)*0.92) return;
+    if(Math.abs(yb-ya) < dxfTextW(txt,DIM_H*TFX)*0.92) return;
     A.line('DIM',[x,ya],[x,yb]);
-    A.line('DIM',[x-2.2,ya],[x+2.2,ya]);
-    A.line('DIM',[x-2.2,yb],[x+2.2,yb]);
-    A.text('TEXT',[x+(side==='right'?3.6:-3.6),(ya+yb)/2],DIM_H,txt,90);
+    A.line('DIM',[x-2.2*TFX,ya],[x+2.2*TFX,ya]);
+    A.line('DIM',[x-2.2*TFX,yb],[x+2.2*TFX,yb]);
+    A.text('TEXT',[x+(side==='right'?3.6*TFX:-3.6*TFX),(ya+yb)/2],DIM_H,txt,90);
   }
   /* ---------- 单个正投影视图：x0,y0 = 左下角 ----------
      b = {inner, lbl:[外宽,外高,内宽,内高], name, mags, axis, miter, centerName}
@@ -2426,7 +2438,7 @@ function dxfBuild(){
         A.line('VIEW',[ix+iw,iy+ih],[x0+w,y0+h]);
       }
       // 壁厚角标 t=3（与页面左下角一致）
-      if(h>=12 && iw>=10) A.text('TEXT',[ix+1.2,y0+3.8],3.0,'t='+dxfNum(s.t),0,'l');
+      if(h>=12*TFX && iw>=10*TFX) A.text('TEXT',[ix+1.6,y0+5.2],3.0,'t='+dxfNum(s.t),0,'l');
     }
     // 俯视图：磁铁圆心（展开坐标 y 向上，故取 W-y）
     if(b.mags) b.mags.forEach(p=>A.circle('MAGNET',[x0+p[0],y0+(h-p[1])],s.magD/2));
@@ -2449,29 +2461,37 @@ function dxfBuild(){
     // 纵向尺寸放视图右侧（x=+22，与内宽标注 +11 错开，互不重叠）。
     if(b.magDims && s.useMag && b.mags){
       const d=s.magDist, spec='磁铁 Ø'+dxfNum(s.magD)+'×'+dxfNum(s.magTh)+'　4 颗';
+      // 每颗磁铁旁直接标直径：俯视图里除了顶部汇总行，磁铁本身也要看出大小
+      // （文字放磁铁朝盒内一侧，避开朝板外的距边延伸线）
+      if(b.mags.length && h>3*d){
+        b.mags.forEach(p=>{
+          const mx=x0+p[0], my=y0+(h-p[1]);
+          A.text('TEXT',[mx,my-6.2*TFX],2.6,'Ø'+dxfNum(s.magD));
+        });
+      }
       if(s.magEdge==='L'){
-        const yd=y0+h+8;
-        A.line('DIM',[x0,y0+h],[x0,yd+2.2]);       A.line('DIM',[x0+d,y0+h],[x0+d,yd+2.2]);
+        const yd=y0+h+8*TFX;
+        A.line('DIM',[x0,y0+h],[x0,yd+2.2*TFX]);       A.line('DIM',[x0+d,y0+h],[x0+d,yd+2.2*TFX]);
         dimH(x0,x0+d,yd,dxfNum(d));                                  // 左磁铁 距宽边
-        A.line('DIM',[x0+w,y0+h],[x0+w,yd+2.2]);   A.line('DIM',[x0+w-d,y0+h],[x0+w-d,yd+2.2]);
+        A.line('DIM',[x0+w,y0+h],[x0+w,yd+2.2*TFX]);   A.line('DIM',[x0+w-d,y0+h],[x0+w-d,yd+2.2*TFX]);
         dimH(x0+w-d,x0+w,yd,dxfNum(d));                              // 右磁铁 距宽边
       } else {
-        const xd=x0+w+22;
-        A.line('DIM',[x0+w,y0],[xd+2.2,y0]);       A.line('DIM',[x0+w,y0+d],[xd+2.2,y0+d]);
+        const xd=x0+w+22*TFX;
+        A.line('DIM',[x0+w,y0],[xd+2.2*TFX,y0]);       A.line('DIM',[x0+w,y0+d],[xd+2.2*TFX,y0+d]);
         dimV(xd,y0,y0+d,dxfNum(d),'right');                          // 下磁铁 距长边
-        A.line('DIM',[x0+w,y0+h],[xd+2.2,y0+h]);   A.line('DIM',[x0+w,y0+h-d],[xd+2.2,y0+h-d]);
+        A.line('DIM',[x0+w,y0+h],[xd+2.2*TFX,y0+h]);   A.line('DIM',[x0+w,y0+h-d],[xd+2.2*TFX,y0+h-d]);
         dimV(xd,y0+h-d,y0+h,dxfNum(d),'right');                      // 上磁铁 距长边
       }
-      A.text('TEXT',[x0+w/2,y0+h+15.5],3.2,spec);
+      A.text('TEXT',[x0+w/2,y0+h+15.5*TFX],3.4,spec);
     }
     // 视图内的物体名称（如俯视图的「盒」）
-    if(b.centerName && w>=26 && h>=26) A.text('TEXT',[x0+w/2,y0+h/2],5.2,b.centerName);
+    if(b.centerName && w>=26*TFX && h>=26*TFX) A.text('TEXT',[x0+w/2,y0+h/2],5.2,b.centerName);
     const lbl=b.lbl||[];
-    if(lbl[0]) dimH(x0,x0+w,y0-11,lbl[0]);
-    if(lbl[1]) dimV(x0-11,y0,y0+h,lbl[1],'left');
+    if(lbl[0]) dimH(x0,x0+w,y0-11*TFX,lbl[0]);
+    if(lbl[1]) dimV(x0-11*TFX,y0,y0+h,lbl[1],'left');
     if(inner){
-      if(inner.w>0 && lbl[2]) dimH(x0+inner.x,x0+inner.x+inner.w,y0-23,lbl[2]);
-      if(inner.h>0 && lbl[3]) dimV(x0+w+11,y0+inner.y,y0+inner.y+inner.h,lbl[3],'right');
+      if(inner.w>0 && lbl[2]) dimH(x0+inner.x,x0+inner.x+inner.w,y0-23*TFX,lbl[2]);
+      if(inner.h>0 && lbl[3]) dimV(x0+w+11*TFX,y0+inner.y,y0+inner.y+inner.h,lbl[3],'right');
     }
     return {w,h};
   }
@@ -2503,22 +2523,23 @@ function dxfBuild(){
               magFromBottom: bi>0
             });
             // 板盖很薄，尺寸线放不下，改用侧边文字标注「盖厚 5」
-            if(b.sideLabel) A.text('TEXT',[x+cw+4, by+b.h/2],3.0,b.sideLabel,0,'l');
+            if(b.sideLabel) A.text('TEXT',[x+cw+4*TFX, by+b.h/2],3.0,b.sideLabel,0,'l');
             by+=b.h+gap;
           });
           return;
         }
         let bx=x;
         boxes.forEach((b,bi)=>{
-          const tp=b.topPad||0;           // 顶部留白：给磁铁距边尺寸 / 规格文字用
-          viewBox(bx,y+tp,b.w,b.h,{
+          // 顶部留白已计入格子高度（ch = h + topPad），图从格子底边起画，
+          // 磁铁规格 / 距边尺寸才真正落在俯视图格子内，不会顶到上一行的标题区
+          viewBox(bx,y,b.w,b.h,{
             inner:b.inner, lbl:b.lbl, name:b.name, mags:b.mags,
             miter:b.miter, centerName:b.centerName,
             magDims:b.magDims,
             axis:(axis && bi===0)?axis:null      // 磁铁只挂在主体那块（盖不重复画）
           });
           // 底/盖文字标注放在该块下方尺寸之外，一眼能分清两块
-          if(b.name) A.text('TEXT',[bx+b.w/2, y-33],4.4,b.name);
+          if(b.name) A.text('TEXT',[bx+b.w/2, y-33*TFX],4.4,b.name);
           bx+=b.w+gap;
         });
       }
@@ -2542,23 +2563,23 @@ function dxfBuild(){
     const add=(title,w,h,draw)=>cells.push({title,w,h,draw});
     add('正视图（长×高）', s.L, s.H, (x,y)=>{
       rl(x,y,x+s.L,y+s.H);
-      dimH(x,x+s.L,y-11,'长 '+dxfNum(s.L));
-      dimV(x-11,y,y+s.H,'高 '+dxfNum(s.H),'left');
+      dimH(x,x+s.L,y-11*TFX,'长 '+dxfNum(s.L));
+      dimV(x-11*TFX,y,y+s.H,'高 '+dxfNum(s.H),'left');
       if(s.R>0){                       // R 引出线：左上角圆弧穿过弧心，45° 引到内部
         const R=Math.min(s.R,s.L/2,s.H/2), cx=x+R, cy=y+s.H-R;
-        A.line('DIM',[cx-R*0.7071, cy+R*0.7071],[cx+6.4, cy-6.4]);
-        A.text('TEXT',[cx+8.4, cy-5.6],2.8,'R'+dxfNum(s.R),0,'l');
+        A.line('DIM',[cx-R*0.7071, cy+R*0.7071],[cx+6.4*TFX, cy-6.4*TFX]);
+        A.text('TEXT',[cx+8.4*TFX, cy-5.6*TFX],2.8,'R'+dxfNum(s.R),0,'l');
       }
     });
     add('侧视图（宽×高）', s.W, s.H, (x,y)=>{
       rl(x,y,x+s.W,y+s.H);
-      dimH(x,x+s.W,y-11,'宽 '+dxfNum(s.W));
-      dimV(x-11,y,y+s.H,'高 '+dxfNum(s.H),'left');
+      dimH(x,x+s.W,y-11*TFX,'宽 '+dxfNum(s.W));
+      dimV(x-11*TFX,y,y+s.H,'高 '+dxfNum(s.H),'left');
     });
     add('俯视图（长×宽）', s.L, s.W, (x,y)=>{
       rl(x,y,x+s.L,y+s.W);
-      dimH(x,x+s.L,y-11,'长 '+dxfNum(s.L));
-      dimV(x-11,y,y+s.W,'宽 '+dxfNum(s.W),'left');
+      dimH(x,x+s.L,y-11*TFX,'长 '+dxfNum(s.L));
+      dimV(x-11*TFX,y,y+s.W,'宽 '+dxfNum(s.W),'left');
       if(s.L>=30 && s.W>=22) A.text('TEXT',[x+s.L/2,y+s.W/2],5.2,'实心');
     });
   } else if(s.frame){
@@ -2613,41 +2634,39 @@ function dxfBuild(){
       if(c>1e-6) A.rect('VIEWIN',x+c,y+c,x+s.L-c,y+s.W-c);   // 外表面实际边界（倒边落线）
       [[s.magW,s.magL],[s.L-s.magW,s.magL],[s.magW,s.W-s.magL],[s.L-s.magW,s.W-s.magL]]
         .forEach(p=>A.circle('MAGNET',[x+p[0],y+p[1]],s.fMagD/2));
-      dimH(x,x+s.L,y-24,'长 '+dxfNum(s.L));                 // 外形尺寸排在外圈
-      dimV(x-24,y,y+s.W,'宽 '+dxfNum(s.W),'left');
+      dimH(x,x+s.L,y-24*TFX,'长 '+dxfNum(s.L));                 // 外形尺寸排在外圈
+      dimV(x-24*TFX,y,y+s.W,'宽 '+dxfNum(s.W),'left');
       /* 磁铁定位：四颗磁铁各自标注「到自己最近两条边的距离」：
          横向永远标到左/右宽边（左列标左边、右列标右边），
          纵向永远标到下/上长边（下排标下边、上排标上边）。
          线段画在板外、从磁铁圆心引延伸线量取；数值 = 线段实际长度
          （此前右上/上方误标成了距左边的坐标值，已改为最近边距离）。 */
       const mL=s.magW, mR=s.L-s.magW, mB=s.magL, mT=s.W-s.magL, E='DIM';
-      A.line(E,[x,y],[x,y-15]);                A.line(E,[x+mL,y+mB],[x+mL,y-15]);
-      dimH(x,x+mL,y-11,dxfNum(s.magW));                          // 左下磁铁 距左宽边
-      A.line(E,[x+s.L,y],[x+s.L,y-15]);        A.line(E,[x+mR,y+mB],[x+mR,y-15]);
-      dimH(x+mR,x+s.L,y-11,dxfNum(s.magW));                      // 右下磁铁 距右宽边
-      A.line(E,[x,y+s.W],[x,y+s.W+15]);        A.line(E,[x+mL,y+mT],[x+mL,y+s.W+15]);
-      dimH(x,x+mL,y+s.W+11,dxfNum(s.magW));                      // 左上磁铁 距左宽边
-      A.line(E,[x+s.L,y+s.W],[x+s.L,y+s.W+15]); A.line(E,[x+mR,y+mT],[x+mR,y+s.W+15]);
-      dimH(x+mR,x+s.L,y+s.W+11,dxfNum(s.magW));                  // 右上磁铁 距右宽边
-      A.line(E,[x,y],[x-15,y]);                A.line(E,[x+mL,y+mB],[x-15,y+mB]);
-      dimV(x-11,y,y+mB,dxfNum(s.magL),'left');                   // 左下磁铁 距下长边
-      A.line(E,[x,y+s.W],[x-15,y+s.W]);        A.line(E,[x+mL,y+mT],[x-15,y+mT]);
-      dimV(x-11,y+mT,y+s.W,dxfNum(s.magL),'left');               // 左上磁铁 距上长边
-      A.line(E,[x+s.L,y],[x+s.L+15,y]);        A.line(E,[x+mR,y+mB],[x+s.L+15,y+mB]);
-      dimV(x+s.L+11,y,y+mB,dxfNum(s.magL),'right');              // 右下磁铁 距下长边
-      A.line(E,[x+s.L,y+s.W],[x+s.L+15,y+s.W]); A.line(E,[x+mR,y+mT],[x+s.L+15,y+mT]);
-      dimV(x+s.L+11,y+mT,y+s.W,dxfNum(s.magL),'right');          // 右上磁铁 距上长边
+      A.line(E,[x,y],[x,y-15*TFX]);                A.line(E,[x+mL,y+mB],[x+mL,y-15*TFX]);
+      dimH(x,x+mL,y-11*TFX,dxfNum(s.magW));                          // 左下磁铁 距左宽边
+      A.line(E,[x+s.L,y],[x+s.L,y-15*TFX]);        A.line(E,[x+mR,y+mB],[x+mR,y-15*TFX]);
+      dimH(x+mR,x+s.L,y-11*TFX,dxfNum(s.magW));                      // 右下磁铁 距右宽边
+      A.line(E,[x,y+s.W],[x,y+s.W+15*TFX]);        A.line(E,[x+mL,y+mT],[x+mL,y+s.W+15*TFX]);
+      dimH(x,x+mL,y+s.W+11*TFX,dxfNum(s.magW));                      // 左上磁铁 距左宽边
+      A.line(E,[x+s.L,y+s.W],[x+s.L,y+s.W+15*TFX]); A.line(E,[x+mR,y+mT],[x+mR,y+s.W+15*TFX]);
+      dimH(x+mR,x+s.L,y+s.W+11*TFX,dxfNum(s.magW));                  // 右上磁铁 距右宽边
+      A.line(E,[x,y],[x-15*TFX,y]);                A.line(E,[x+mL,y+mB],[x-15*TFX,y+mB]);
+      dimV(x-11*TFX,y,y+mB,dxfNum(s.magL),'left');                   // 左下磁铁 距下长边
+      A.line(E,[x,y+s.W],[x-15*TFX,y+s.W]);        A.line(E,[x+mL,y+mT],[x-15*TFX,y+mT]);
+      dimV(x-11*TFX,y+mT,y+s.W,dxfNum(s.magL),'left');               // 左上磁铁 距上长边
+      A.line(E,[x+s.L,y],[x+s.L+15*TFX,y]);        A.line(E,[x+mR,y+mB],[x+s.L+15*TFX,y+mB]);
+      dimV(x+s.L+11*TFX,y,y+mB,dxfNum(s.magL),'right');              // 右下磁铁 距下长边
+      A.line(E,[x+s.L,y+s.W],[x+s.L+15*TFX,y+s.W]); A.line(E,[x+mR,y+mT],[x+s.L+15*TFX,y+mT]);
+      dimV(x+s.L+11*TFX,y+mT,y+s.W,dxfNum(s.magL),'right');          // 右上磁铁 距上长边
       const tx=x+s.L-s.magW, ty=y+s.W-s.magL;
-      A.line('DIM',[tx,ty],[tx-6,ty+6]);
-      A.text('TEXT',[tx-7.4,ty+7],2.8,'Ø'+dxfNum(s.fMagD)+'×'+dxfNum(s.fMagTh),0,'r');
-      if(s.edge==='round' && c>0){
-        const tyTxt=Math.min(y+c-6.4, y-4.4);          // 文字始终落在板下，不压轮廓线
-        A.line('DIM',[x+c-c*0.7071,y+c*0.7071],[x+c+6.4,tyTxt+0.9]);
-        A.text('TEXT',[x+c+8,tyTxt],2.8,'R'+dxfNum(s.R),0,'l');
-      }
-      if(s.edge==='cham' && c>0){
-        A.line('DIM',[x+s.L-c*0.5,y+c*0.5],[x+s.L+6,y-6]);   // 引出到板外右下
-        A.text('TEXT',[x+s.L+7.6,y-7.2],2.8,'C'+dxfNum(s.C),0,'l');
+      A.line('DIM',[tx,ty],[tx-6*TFX,ty+6*TFX]);
+      A.text('TEXT',[tx-7.4*TFX,ty+7*TFX],2.8,'Ø'+dxfNum(s.fMagD)+'×'+dxfNum(s.fMagTh),0,'r');
+      /* 圆角 / C 角标注：引到板外侧右下（该处是空区，不会被磁铁纵向尺寸线压住）。
+         R 与 C 共用同一个位置——两种棱边处理不会同时出现 */
+      if(c>1e-6){
+        const isR=(pl.edge==='round');
+        A.line('DIM',[x+s.L-c*0.2929, y+c*0.2929],[x+s.L+12*TFX, y-5.6*TFX]);
+        A.text('TEXT',[x+s.L+13.5*TFX, y-6.8*TFX],2.8,(isR?'R':'C')+dxfNum(isR?s.R:s.C),0,'l');
       }
     }});
     cells.push({title:'侧视图（宽×厚）', w:TT, h:s.W, draw(x,y){
@@ -2658,8 +2677,8 @@ function dxfBuild(){
         [x1,            y+zc-s.fMagD/2],[x1+s.fMagTh, y+zc-s.fMagD/2],
         [x1+s.fMagTh, y+zc+s.fMagD/2],[x1,            y+zc+s.fMagD/2]],true);
       [s.magL, s.W-s.magL].forEach(zc=>{ hole(x+t-s.fMagTh, zc); hole(x+TT-t, zc); });
-      dimV(x-11,y,y+s.W,'宽 '+dxfNum(s.W),'left');
-      A.text('TEXT',[x,y-8],2.8,'板厚 '+dxfNum(t)+'×2 · 间隙 '+dxfNum(FRAME_GAP)+'（示意）',0,'l');
+      dimV(x-11*TFX,y,y+s.W,'宽 '+dxfNum(s.W),'left');
+      A.text('TEXT',[x,y-8*TFX],2.8,'板厚 '+dxfNum(t)+'×2 · 间隙 '+dxfNum(FRAME_GAP)+'（示意）',0,'l');
     }});
     cells.push({title:'俯视图（长×厚）', w:s.L, h:TT, draw(x,y){
       emitPlate(x,y,s.L,false,true);
@@ -2672,7 +2691,14 @@ function dxfBuild(){
         hole(x+cx, y+t-s.fMagTh);                 // 前板：从内表面往里挖
         hole(x+cx, y+TT-t);                       // 后板：内表面在 TT-t，往 TT-t+厚
       });
-      A.text('TEXT',[x+s.L/2,y-28],2.8,'板厚 '+dxfNum(t)+'×2 · 间隙 '+dxfNum(FRAME_GAP)+'（示意）');
+      A.text('TEXT',[x+s.L/2,y-28*TFX],2.8,'板厚 '+dxfNum(t)+'×2 · 间隙 '+dxfNum(FRAME_GAP)+'（示意）');
+      /* 圆角 / C 角标注：指向近板左下角的倒圆 / 切角，引到板外侧左下空白区
+         （俯视图上方被「长」尺寸线和板厚说明占满，下方是空的） */
+      if(c>1e-6){
+        const isR=(pl.edge==='round');
+        A.line('DIM',[x+c*0.2929, y+c*0.2929],[x-6.5*TFX, y-2.2*TFX]);
+        A.text('TEXT',[x-8.2*TFX, y-3.4*TFX],2.8,(isR?'R':'C')+dxfNum(isR?s.R:s.C),0,'r');
+      }
     }});
     {  /* 斜侧：两块板分开的等轴测线框（近板画实线，远板只留露在外面的轮廓） */
       const iso=frameIso(s);
@@ -2708,7 +2734,7 @@ function dxfBuild(){
         A.poly('VIEW',hNear,true);
         A.poly('VIEW',iso.plates[1].outerFace.map(T),true);
         const c1=T([s.L/2, 2*t+iso.gap, s.W/2]);
-        A.text('TEXT',[c1[0],c1[1]-4],3.0,'两块板分开示意');
+        A.text('TEXT',[c1[0],c1[1]-4*TFX],3.0,'两块板分开示意');
       }});
     }
   } else if(s.shape){
@@ -2734,12 +2760,12 @@ function dxfBuild(){
       emitOutline(x,y);
       if(s.holeOn) A.circle('VIEWIN',[x+G.c[0],y+G.c[1]],s.holeD/2);
       if(s.shp==='square'){
-        dimH(x,x+s.L,y-11,'长 '+fmt(s.L));
-        dimV(x-11,y,y+s.W,'宽 '+fmt(s.W),'left');
+        dimH(x,x+s.L,y-11*TFX,'长 '+fmt(s.L));
+        dimV(x-11*TFX,y,y+s.W,'宽 '+fmt(s.W),'left');
         if(s.R>0){
           const cx=x+s.R, cy=y+s.W-s.R;
           A.line('DIM',[cx-s.R*0.7071, cy+s.R*0.7071],[cx+6.4, cy-6.4]);
-          A.text('TEXT',[cx+8.4, cy-5.6],2.8,'R'+fmt(s.R),0,'l');
+          A.text('TEXT',[cx+8.4*TFX, cy-5.6*TFX],2.8,'R'+fmt(s.R),0,'l');
         }
       } else if(s.shp==='circle'){
         dimH(x,x+s.cirD,y-11,'Ø '+fmt(s.cirD));
@@ -2749,7 +2775,7 @@ function dxfBuild(){
         const vs=tv.map(p=>[x+p[0],y+p[1]]);
         const cen=[x+G.c[0],y+G.c[1]];
         const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
-        const lbl=(p,txt)=>{ const o=outward(p,cen,14); A.text('TEXT',o,2.8,txt); };
+        const lbl=(p,txt)=>{ const o=outward(p,cen,14*TFX); A.text('TEXT',o,2.8,txt); };
         lbl(mid(vs[0],vs[2]),'b '+fmt(s.triB));
         lbl(mid(vs[1],vs[2]),'c '+fmt(s.triC));
         if(s.R>0){
@@ -2758,11 +2784,11 @@ function dxfBuild(){
           if(best){
             const c=[x+best.c[0],y+best.c[1]], o=outward(c,cen,best.r+13);
             A.line('DIM',c,o);
-            A.text('TEXT',[o[0],o[1]+3.4],2.8,'R'+fmt(s.R));
+            A.text('TEXT',[o[0],o[1]+3.4*TFX],2.8,'R'+fmt(s.R));
           }
         }
       }
-      if(s.holeOn) A.text('TEXT',[x+G.w/2,y-22],2.8,
+      if(s.holeOn) A.text('TEXT',[x+G.w/2,y-22*TFX],2.8,
         '孔 Ø'+fmt(s.holeD)+' × 深 '+fmt(s.holeDep)+(s.holeThrough?'（打通）':'')+'（'+holePosTxt+'）');
     }});
     const extH=G.h, extW=G.w;
@@ -2775,8 +2801,8 @@ function dxfBuild(){
         const zc=G.c[1], hw=s.holeD/2;
         A.poly('VIEWIN',[[x,y+zc-hw],[x+s.holeDep,y+zc-hw],[x+s.holeDep,y+zc+hw],[x,y+zc+hw]],true);
       }
-      dimV(x-11,y,y+extH,profLbl('side'),'left');
-      A.text('TEXT',[x+T+4,y+extH/2],2.8,'厚 '+fmt(T),0,'l');
+      dimV(x-11*TFX,y,y+extH,profLbl('side'),'left');
+      A.text('TEXT',[x+T+4*TFX,y+extH/2],2.8,'厚 '+fmt(T),0,'l');
     }});
     cells.push({title:'俯视图（长×厚）', w:extW, h:T, draw(x,y){
       A.rect('VIEW',x,y,x+extW,y+T);
@@ -2785,7 +2811,7 @@ function dxfBuild(){
         A.poly('VIEWIN',[[x+cx-hw,y],[x+cx+hw,y],[x+cx+hw,y+s.holeDep],[x+cx-hw,y+s.holeDep]],true);
       }
       dimH(x,x+extW,y-11,profLbl('top'));
-      A.text('TEXT',[x+extW/2,y+T+5],2.8,'厚 '+fmt(T));
+      A.text('TEXT',[x+extW/2,y+T+5*TFX],2.8,'厚 '+fmt(T));
     }});
     {  /* 斜侧：轮廓沿厚度挤出（凸形体，连接棱全部可见） */
       const iso=isoP;
@@ -2807,7 +2833,7 @@ function dxfBuild(){
           if(s.holeThrough)
             A.poly('VIEWIN',hp.map(p=>Tp(iso([p[0],T,p[2]]))),true);
         }
-        A.text('TEXT',[x+ (bx1-bx0)/2, y-6],3.0,'厚 '+fmt(T));
+        A.text('TEXT',[x+ (bx1-bx0)/2, y-6*TFX],3.0,'厚 '+fmt(T));
       }});
     }
   } else if(s.type==='tiandi'){
@@ -2825,7 +2851,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'底',miter:j45,
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts, topPad:s.useMag?19:0, magDims:true},
+       mags:magPts, topPad:s.useMag?28:0, magDims:true},
       {w:L2,h:W2,inner:{x:t,y:t,w:s.L,h:s.W},name:'盖',miter:j45,
        lbl:['外长 '+dxfNum(L2),'外宽 '+dxfNum(W2),'内长 '+dxfNum(s.L),'内宽 '+dxfNum(s.W)],
        // 盖的磁铁与底盒磁铁上下正对：盖原点在 -t,-t，故平面坐标整体平移 +t
@@ -2844,7 +2870,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},miter:j45,centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts, topPad:s.useMag?19:0, magDims:true}]);
+       mags:magPts, topPad:s.useMag?28:0, magDims:true}]);
   } else {
     addProj('正视图（长×高）',[
       {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},name:'',
@@ -2855,7 +2881,7 @@ function dxfBuild(){
     addProj('俯视图（长×宽）',[
       {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'',miter:j45,centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts, topPad:s.useMag?19:0, magDims:true}]);
+       mags:magPts, topPad:s.useMag?28:0, magDims:true}]);
   }
 
   // 从上方斜侧视图（等轴测，1:1）
@@ -2881,14 +2907,14 @@ function dxfBuild(){
         // 尺寸文字：沿棱中点向轮廓外推（与页面同一套算法，DXF 的 y 向上）
         const ip=(a,b,c)=>bIsoP([a,b,c],-1);
         const md=(u,v)=>[(u[0]+v[0])/2,(u[1]+v[1])/2];
-        const pL=T(outward(md(ip(0,s.W,0),ip(s.L,s.W,0)), gi.cen, 20));
-        const pW=T(outward(md(ip(s.L,0,0),ip(s.L,s.W,0)), gi.cen, 20));
-        const pH=T(outward(md(ip(0,s.W,0),ip(0,s.W,s.H)), gi.cen, 15));
+        const pL=T(outward(md(ip(0,s.W,0),ip(s.L,s.W,0)), gi.cen, 20*TFX));
+        const pW=T(outward(md(ip(s.L,0,0),ip(s.L,s.W,0)), gi.cen, 20*TFX));
+        const pH=T(outward(md(ip(0,s.W,0),ip(0,s.W,s.H)), gi.cen, 15*TFX));
         A.text('TEXT',pL,3.6,'长 '+dxfNum(s.L));
         A.text('TEXT',pW,3.6,'宽 '+dxfNum(s.W));
         A.text('TEXT',pH,3.6,'高 '+dxfNum(s.H));
         if(s.R>0){
-          const pR=T(outward(bIsoP([s.L,s.W,0],-1), gi.cen, 13));
+          const pR=T(outward(bIsoP([s.L,s.W,0],-1), gi.cen, 13*TFX));
           A.text('TEXT',pR,3.0,'R='+dxfNum(s.R));
         }
       }
@@ -2909,22 +2935,22 @@ function dxfBuild(){
           A.line(l,[x+a[0]-x0,y+a[1]-y0],[x+b[0]-x0,y+b[1]-y0]));
         // 三维尺寸文字（与页面斜侧图一致，放在轮廓外侧）
         const pL=T(isoP([s.L,s.W/2,0])), pW=T(isoP([s.L/2,s.W,0])), pH=T(isoP([0,s.W,s.H/2]));
-        A.text('TEXT',[pL[0]+4,pL[1]-2],3.6,'长 '+dxfNum(s.L),0,'l');
-        A.text('TEXT',[pW[0]-5,pW[1]-4],3.6,'宽 '+dxfNum(s.W),0,'r');
-        A.text('TEXT',[pH[0]-4,pH[1]],3.6,'高 '+dxfNum(s.H),0,'r');
+        A.text('TEXT',[pL[0]+4*TFX,pL[1]-2*TFX],3.6,'长 '+dxfNum(s.L),0,'l');
+        A.text('TEXT',[pW[0]-5*TFX,pW[1]-4*TFX],3.6,'宽 '+dxfNum(s.W),0,'r');
+        A.text('TEXT',[pH[0]-4*TFX,pH[1]],3.6,'高 '+dxfNum(s.H),0,'r');
         const pT=T(isoP([s.L,s.W,0]));
-        A.text('TEXT',[pT[0]+3,pT[1]-6],3.0,'t='+dxfNum(s.t),0,'l');
+        A.text('TEXT',[pT[0]+3*TFX,pT[1]-6*TFX],3.0,'t='+dxfNum(s.t),0,'l');
       }
     });
   }
 
   /* ---------- 2×2 网格排布（左上正视图 / 右上侧视图 / 左下俯视图 / 右下斜侧视图） ---------- */
-  const PAD_L=(s.frame?38:26), PAD_R=(s.frame?30:26), PAD_B=((s.solid||s.shape)?18:36), PAD_T=14;
+  const PAD_L=(s.frame?38*TFX:26*TFX), PAD_R=(s.frame?30*TFX:26*TFX), PAD_B=((s.solid||s.shape)?18*TFX:36*TFX), PAD_T=14*TFX;
   const colW=[Math.max(cells[0].w,cells[2].w)+PAD_L+PAD_R,
               Math.max(cells[1].w,cells[3].w)+PAD_L+PAD_R];
   const rowH=[Math.max(cells[0].h,cells[1].h)+PAD_B+PAD_T,
               Math.max(cells[2].h,cells[3].h)+PAD_B+PAD_T];
-  const rowGap=((s.solid||s.frame||s.shape)?12:DXF_CELL_GAP);   // 实心块 / 相夹 / 简单图形没有底/盖文字，行距可收紧
+  const rowGap=((s.solid||s.frame||s.shape)?12*TFX:DXF_CELL_GAP);   // 实心块 / 相夹 / 简单图形没有底/盖文字，行距可收紧
   const rowBase=[-rowH[0], -rowH[0]-rowGap-rowH[1]];
   cells.forEach((c,i)=>{
     const col=i%2, row=(i/2)|0;
@@ -2936,12 +2962,12 @@ function dxfBuild(){
     const cy=rowBase[row]+PAD_B+Math.max(0,(rowMaxH-c.h)/2);
     c.draw(cx,cy);
     // 视图标题固定在格子顶部，避免高低不一时挤到上一行
-    A.text('TEXT',[cellX+colW[col]/2, rowBase[row]+rowH[row]-PAD_T+5],4.6,c.title);
+    A.text('TEXT',[cellX+colW[col]/2, rowBase[row]+rowH[row]-PAD_T+5*TFX],4.6,c.title);
   });
 
   const vb=dxfBBox(A.E);
   // 图纸总标题
-  A.text('TEXT',[vb.minX, vb.maxY+10],7,'粤丰展示产品　四视图（正 / 侧 / 俯 / 上方斜侧）　1:1　单位 mm',0,'l');
+  A.text('TEXT',[vb.minX, vb.maxY+10*TFX],7,'粤丰展示产品　四视图（正 / 侧 / 俯 / 上方斜侧）　1:1　单位 mm',0,'l');
 
   /* ---------- 信息块 ---------- */
   const note=noteText().replace(/\s+/g,' ');
@@ -3008,15 +3034,15 @@ function dxfBuild(){
       `导出：${today}　　粤丰展示产品设计`
     ].filter(Boolean);
   }
-  let ly=vb.minY-14;
+  let ly=vb.minY-14*TFX;
   lines.forEach((ln,i)=>{
     A.text('TEXT',[vb.minX,ly],i===0?4.2:3.6,ln,0,'l');
-    ly-=7.5;
+    ly-=7.5*TFX;
   });
 
   /* ---------- 图框 + 序列化 ---------- */
   const fb=dxfBBox(A.E);
-  A.rect('FRAME',fb.minX-14,fb.minY-14,fb.maxX+14,fb.maxY+14);
+  A.rect('FRAME',fb.minX-14*TFX,fb.minY-14*TFX,fb.maxX+14*TFX,fb.maxY+14*TFX);
   const all=dxfBBox(A.E);
   const dx=-(all.minX)+6, dy=-(all.minY)+6;
 
