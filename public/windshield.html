@@ -1,0 +1,1895 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>挡风玻璃图纸 · 胶条款</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:#eef1f5;color:#0f172a;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+  .app{height:100%;display:flex;flex-direction:column}
+
+  /* 顶栏 */
+  header{
+    flex:0 0 auto;display:flex;align-items:center;gap:18px;
+    padding:8px 16px;background:#fff;border-bottom:1px solid #dbe2ea;
+  }
+  .brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+  .brand b{font-size:14px;font-weight:650;letter-spacing:.2px}
+  .brand span{font-size:11px;color:#7c8798}
+  .tabs{display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:2px;gap:2px}
+  .tabs button{
+    appearance:none;border:0;background:transparent;color:#475569;font:inherit;font-size:12px;
+    padding:4px 14px;border-radius:6px;cursor:pointer;font-weight:550;
+  }
+  .tabs button.on{background:#fff;color:#0f172a;font-weight:650;box-shadow:0 1px 3px rgba(15,23,42,.15)}
+  .tools{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .seg{display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:7px;padding:2px;gap:2px}
+  .seg button{
+    appearance:none;border:0;background:transparent;font:inherit;font-size:11.5px;color:#475569;
+    padding:3px 9px;border-radius:5px;cursor:pointer;white-space:nowrap;
+  }
+  .seg button.on{background:#fff;color:#0f172a;font-weight:650;box-shadow:0 1px 2px rgba(15,23,42,.15)}
+  .tbtn{
+    appearance:none;border:1px solid #cfd8e3;background:#fff;border-radius:7px;font:inherit;
+    font-size:11.5px;padding:4px 10px;color:#334155;cursor:pointer;white-space:nowrap;
+  }
+  .tbtn:hover{background:#f8fafc}
+  .chip{font-size:11.5px;color:#b91c1c;font-weight:600;display:none}
+  .chip.on{display:block}
+
+  /* 图纸区 */
+  .wrap{flex:1;min-height:0;position:relative;padding:8px 10px 10px}
+  svg#sheet{width:100%;height:100%;display:block}
+  .flt{
+    position:absolute;transform:translate(-50%,-50%);width:94px;height:26px;
+    font:inherit;font-size:13px;text-align:center;font-variant-numeric:tabular-nums;
+    border:2px solid #0284c7;border-radius:6px;background:#fff;color:#0f172a;
+    box-shadow:0 5px 16px rgba(2,132,199,.3);z-index:9;outline:none;padding:0 4px;
+  }
+  .hinge{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    color:#64748b;font-size:13px;
+  }
+  .hinge.on{display:flex}
+
+  /* SVG 样式 */
+  text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .lb{font-size:10.5px;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:3.4px;stroke-linejoin:round}
+  .lb.sm{font-size:9.8px;fill:#475569}
+  .lb.hi{fill:#b91c1c;font-weight:600}
+  .lb.cy{fill:#0e7490}
+  .cap{font-size:10.5px;fill:#0f172a;font-weight:650;letter-spacing:.2px}
+  .cap.sub{fill:#a3adbb;font-weight:500;font-size:9.5px}
+  .vfr{fill:#fff;stroke:#dde3ea;stroke-width:1}
+  .part{fill:#fbfdff;stroke:#0f172a;stroke-width:1.6;stroke-linejoin:round}
+  .band{fill:#e4edf7;opacity:.8}
+  .crease{stroke:#0f172a;stroke-width:1.15}
+  .ghost{stroke:#9aa7b6;stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+  .fold{stroke:#dc2626;stroke-width:1.5;stroke-dasharray:9 5;fill:none}
+  .proj{stroke:#0891b2;stroke-width:1.3;stroke-dasharray:8 4;fill:none}
+  .hot{fill:url(#hatch);stroke:#0f172a;stroke-width:1;stroke-dasharray:5 3.5}
+  .hole{fill:#fff;stroke:#0f172a;stroke-width:1.3}
+  .cut{fill:#fff;stroke:none;pointer-events:none}
+  .mouth{stroke:#fff;stroke-width:3.2;stroke-linecap:butt;pointer-events:none}
+  .slotline{fill:none;stroke:#0f172a;stroke-width:1.6;stroke-linejoin:round}
+  .tg{cursor:pointer}
+  .tg rect{fill:#eef2f7;stroke:#c9d4e1;stroke-width:1}
+  .tg text{font-size:9.4px;font-weight:650;fill:#94a3b8}
+  .tg.on rect{fill:#0ea5e9;stroke:#0284c7}
+  .tg.on text{fill:#fff}
+  .tg:hover rect{stroke:#0284c7}
+  .cl{stroke:#0f172a;stroke-width:.72;stroke-dasharray:11 3 2 3;fill:none}
+  .dim{stroke:#64748b;stroke-width:.85}
+  .ext{stroke:#b6c2d1;stroke-width:.7}
+  .arw{fill:#64748b}
+  .ldr{stroke:#64748b;stroke-width:.8;fill:none}
+  .dotm{fill:#64748b}
+  .inset{border:none;fill:#fff;stroke:#b6c2d1;stroke-width:1;stroke-dasharray:5 4}
+  .det{stroke:#0284c7;stroke-width:1;stroke-dasharray:5 3.5;fill:none}
+  .axis{stroke:#dbe2ea;stroke-width:.8}
+  .ed{fill:#0369a1;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:1px;text-underline-offset:2px}
+  .ed:hover{fill:#c2410c;stroke-width:4.6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><b>挡风玻璃图纸</b><span id="sub">胶条款 · 亚克力折弯 · mm · 上北下南左西右东 · 点数字改尺寸（成品立体图只读）</span></div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-model="glue">胶条款</button>
+      <button class="tab" data-model="hinge">合页款</button>
+    </div>
+    <div class="tools" id="tools">
+      <div class="seg" id="segT">
+        <button data-v="4">4 mm</button><button data-v="5" class="on">5 mm</button>
+      </div>
+      <div class="seg" id="segGlue">
+        <button data-v="1" class="on">黑胶</button><button data-v="0">腰形孔</button>
+      </div>
+      <div class="seg" id="segEdge">
+        <button data-v="center" class="on">孔心到边</button><button data-v="end">孔边到边</button>
+      </div>
+      <div class="seg" id="segSide">
+        <button data-v="own" class="on">各贴本侧</button><button data-v="cross">跨侧</button>
+      </div>
+      <button class="tbtn" id="btnSolid">斜视 开</button>
+      <button class="tbtn" id="btnDims">标注 开</button>
+      <button class="tbtn" id="btnReset">重置</button>
+      <span class="chip" id="chip"></span>
+    </div>
+  </header>
+
+  <div class="wrap" id="wrap">
+    <svg id="sheet" viewBox="0 0 1560 880" preserveAspectRatio="xMidYMid meet"></svg>
+    <input id="ed" class="flt" hidden autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   状态
+   ===================================================================== */
+const S = {
+  model: 'glue', t: 5, dims: true, solid: true,
+  upper: {
+    wTop: 950, h: 400, wBot: 980, rTop: 5, rBot: 5,
+    foldFromTop: 45, foldAngle: 90, bendR: 10,
+    /* 下沿内收台阶（只合页款用）：下沿两侧各收 neck，台阶高 neckH */
+    neck: 39.42, neckH: 44.44, rIn: 10, rOut: 5,
+    /* 台阶下方 backFromStep 处再朝后折一道（与顶部折边反向）；折弯线下整段翻到后面 */
+    backFromStep: 15, backAngle: 100, backR: 10,
+    /* 台阶上方那排侧边开口槽（只合页款用） */
+    slotDepth: 20, slotH: 12, slotFromStep: 35, slotR: 5, slotOn: true,
+    useGlue: true,
+    padLen: 50, padWidth: 40, padFromFold: 50,
+    holeR: 7, holeLen: 44, holeEdge: 20.5, holeEdgeMode: 'center', holeSide: 'own', holeFromFold: 70
+  },
+  lower: {
+    wTop: 980, h: 450, wBot: 980, rTop: 5, rBot: 5,
+    foldFromBottom: 40, foldAngle: 30, bendR: 10,
+    neck: 20, neckH: 80, rIn: 10, rOut: 5,
+    /* 上沿也内收（与上挡下沿同一口径）：台阶高 neckTopH，内收 neckTop */
+    neckTop: 39.42, neckTopH: 70, rInTop: 6, rOutTop: 10,
+    /* 台阶往上 topFrom 处朝后折 topAngle；再在距台阶 frontFrom（沿板面）处折回 frontAngle */
+    topOn: true, topFrom: 10, topAngle: 80, topR: 10, frontFrom: 50, frontAngle: 80,
+    slotDepth: 20, slotH: 12, slotTop: 25, slotStep: 25, slotR: 5,
+    slotTopOn: true, slotStepOn: true
+  }
+};
+const DEFAULTS = JSON.parse(JSON.stringify(S));
+
+/* 两款各自一套参数：切 tab 时先把当前这款存回去，再载入另一款的。
+   初始两套完全一样（合页款＝胶条款图纸的复制），之后各改各的，互不影响 */
+const STORE = { glue: null, hinge: null };
+const snap = () => JSON.parse(JSON.stringify({ upper: S.upper, lower: S.lower }));
+const loadSnap = sn => {
+  S.upper = JSON.parse(JSON.stringify(sn.upper));
+  S.lower = JSON.parse(JSON.stringify(sn.lower));
+};
+STORE.glue = snap(); STORE.hinge = snap();
+
+/* 可点击数值的取值范围 */
+const SPEC = {
+  'upper.wTop':        [60, 1800, 1],
+  'upper.h':           [100, 900, 1],
+  'upper.wBot':        [60, 1800, 1],
+  'upper.rTop':        [0, 80, .5],
+  'upper.rBot':        [0, 80, .5],
+  'upper.foldFromTop': [5, 250, 1],
+  'upper.foldAngle':   [1, 175, 1],
+  'upper.bendR':       [1, 60, .5],
+  'upper.padLen':      [5, 300, 1],
+  'upper.padWidth':    [5, 300, 1],
+  'upper.padFromFold': [0, 300, 1],
+  'upper.holeLen':     [0, 200, 1],
+  'upper.holeR':       [1, 50, .5],
+  'upper.holeEdge':    [1, 400, .5],
+  'upper.holeFromFold':[5, 400, 1],
+  'upper.neck':        [10, 150, 1],
+  'upper.neckH':       [10, 890, 1],
+  'upper.rIn':         [0, 40, .5],
+  'upper.rOut':        [0, 40, .5],
+  'upper.slotDepth':   [6, 200, 1],
+  'upper.slotH':       [4, 60, .5],
+  'upper.slotFromStep':[3, 400, 1],
+  'upper.slotR':       [0, 20, .5],
+  'upper.backFromStep':[2, 400, 1],
+  'upper.backAngle':   [1, 175, 1],
+  'upper.backR':       [1, 40, .5],
+  'lower.wTop':        [60, 1800, 1],
+  'lower.h':           [100, 900, 1],
+  'lower.wBot':        [60, 1800, 1],
+  'lower.rTop':        [0, 80, .5],
+  'lower.rBot':        [0, 80, .5],
+  'lower.foldFromBottom': [5, 250, 1],
+  'lower.foldAngle':   [1, 175, 1],
+  'lower.neck':        [10, 150, 1],
+  'lower.neckH':       [10, 890, 1],
+  'lower.rIn':         [0, 40, .5],
+  'lower.rOut':        [0, 40, .5],
+  'lower.neckTop':     [0, 150, 1],
+  'lower.neckTopH':    [20, 400, 1],
+  'lower.rInTop':      [0, 40, .5],
+  'lower.rOutTop':     [0, 40, .5],
+  'lower.topFrom':     [2, 400, 1],
+  'lower.topAngle':    [1, 175, 1],
+  'lower.topR':        [1, 40, .5],
+  'lower.frontFrom':   [5, 400, 1],
+  'lower.frontAngle':  [1, 175, 1],
+  'lower.slotDepth':   [6, 200, 1],
+  'lower.slotH':       [4, 60, .5],
+  'lower.slotTop':     [3, 400, 1],
+  'lower.slotStep':    [3, 400, 1],
+  'lower.slotR':       [0, 20, .5],
+  'lower.bendR':       [1, 60, .5]
+};
+
+/* 由其他参数派生的可点数值：改它等于反向推算源参数 */
+const DER = {
+  /* 折弯线以上 / 以下的竖直高度 */
+  'lower.hAbove': {
+    get: () => S.lower.h - S.lower.foldFromBottom,
+    set: v => { S.lower.h = clamp(v + S.lower.foldFromBottom, SPEC['lower.h'][0], SPEC['lower.h'][1]); },
+    spec: [60, 900, 1]
+  },
+  'upper.hBelow': {
+    get: () => S.upper.h - S.upper.foldFromTop,
+    set: v => { S.upper.h = clamp(v + S.upper.foldFromTop, SPEC['upper.h'][0], SPEC['upper.h'][1]); },
+    spec: [60, 900, 1]
+  },
+  /* 折弯段的实际板长（沿板面展开长）：改它时另一段不动，总高随之变化 */
+  'upper.legLen': {
+    get: () => S.upper.foldFromTop,
+    set: v => {
+      const below = S.upper.h - S.upper.foldFromTop;
+      S.upper.foldFromTop = clamp(v, 5, 250);
+      S.upper.h = clamp(below + S.upper.foldFromTop, SPEC['upper.h'][0], SPEC['upper.h'][1]);
+    },
+    spec: [5, 250, 1]
+  },
+  'lower.legLen': {
+    get: () => S.lower.foldFromBottom,
+    set: v => {
+      const above = S.lower.h - S.lower.foldFromBottom;
+      S.lower.foldFromBottom = clamp(v, 5, 250);
+      S.lower.h = clamp(above + S.lower.foldFromBottom, SPEC['lower.h'][0], SPEC['lower.h'][1]);
+    },
+    spec: [5, 250, 1]
+  },
+  /* 下挡上沿那道折边的板面长（第一折弯线 → 第二折弯线）：改它 = 改第二折弯线位置 */
+  'lower.tfLeg': {
+    get: () => S.lower.frontFrom - S.lower.topFrom,
+    set: v => { S.lower.frontFrom = clamp(S.lower.topFrom + v, 2, 400); },
+    spec: [6, 200, 1]
+  },
+  /* 下风挡折弯段的竖直高度：与料长按折弯角互锁 */
+  'lower.legH': {
+    get: () => legHeightOf('lower'),
+    set: v => { const L = legLenFromH(v); if (L != null) DER['lower.legLen'].set(L); },
+    spec: [3, 240, 1]
+  },
+  /* 下风挡内收后的下沿长度：台阶宽 − 2×内收。
+     两个方向互为反算 —— 改下沿就改内收，改内收就改下沿，台阶外角不动 */
+  'lower.wBotNeck': {
+    get: () => stepWidth() - 2 * S.lower.neck,
+    set: v => { S.lower.neck = clamp((stepWidth() - v) / 2, 10, 150); },
+    spec: [40, 1800, 1]
+  },
+  /* 台阶处（左右两个外角所在的水平线）的宽度：这块板最宽的地方，可直接改 */
+  'lower.wStep': {
+    get: () => stepWidth(),
+    set: v => {
+      const L = S.lower, k = clamp(L.neckH / L.h, 0, 1);
+      if (k < 0.95) L.wBot = clamp((v - L.wTop * k) / (1 - k), 60, 1800);
+    },
+    spec: [60, 2000, 1]
+  },
+  /* 上挡（合页款）下沿内收：与下挡同一套反算关系 */
+  'upper.wBotNeck': {
+    get: () => stepWidthU() - 2 * S.upper.neck,
+    set: v => { S.upper.neck = clamp((stepWidthU() - v) / 2, 10, 150); },
+    spec: [40, 1800, 1]
+  },
+  'upper.wStep': {
+    get: () => stepWidthU(),
+    set: v => {
+      const U = S.upper, k = clamp(U.neckH / U.h, 0, 1);
+      if (k < 0.95) U.wBot = clamp((v - U.wTop * k) / (1 - k), 60, 1800);
+    },
+    spec: [60, 2000, 1]
+  },
+  'upper.rIn': {
+    get: () => S.upper.rIn,
+    set: v => { S.upper.rIn = clamp(v, 0, S.upper.neck); },
+    spec: [0, 40, .5]
+  },
+  /* 合页款上挡：顶部折弯线 → 下折弯线 之间的竖直高度（两道折弯线之间那段主面） */
+  'upper.hFace': {
+    get: () => (S.upper.h - S.upper.foldFromTop) - backFoldOf(S.upper, S.t).zc,
+    set: v => {
+      const fb = backFoldOf(S.upper, S.t);
+      S.upper.h = clamp(S.upper.foldFromTop + v + fb.zc, SPEC['upper.h'][0], SPEC['upper.h'][1]);
+    },
+    spec: [40, 900, 1]
+  },
+  'upper.rOut': {
+    get: () => S.upper.rOut,
+    set: v => { S.upper.rOut = clamp(v, 0, Math.max(0, S.upper.neck - S.upper.rIn)); },
+    spec: [0, 40, .5]
+  },
+  /* 下风挡台阶圆角：左右两端共用同一个值（风挡左右对称），改任一处两处一起变。
+     台阶那条横边只有 neck 长，两个圆角的切线长之和不能超过它 */
+  'lower.rIn': {
+    get: () => S.lower.rIn,
+    set: v => { S.lower.rIn = clamp(v, 0, S.lower.neck); },
+    spec: [0, 40, .5]
+  },
+  'lower.rOut': {
+    get: () => S.lower.rOut,
+    set: v => { S.lower.rOut = clamp(v, 0, Math.max(0, S.lower.neck - S.lower.rIn)); },
+    spec: [0, 40, .5]
+  },
+  /* 下风挡上沿内收后的上沿长度：与内收互为反算 */
+  'lower.wTopNeck': {
+    get: () => S.lower.wTop - 2 * S.lower.neckTop,
+    set: v => { S.lower.neckTop = clamp((S.lower.wTop - v) / 2, 0, 150); },
+    spec: [40, 1800, 1]
+  },
+  /* 成形后的正视总高：改它等于整块板按差值伸缩 */
+  'upper.hFormed': {
+    get: () => { const s = formedSpan('upper'); return s.z1 - s.z0; },
+    set: v => {
+      const s = formedSpan('upper'), cur = s.z1 - s.z0;
+      S.upper.h = clamp(S.upper.h + (v - cur), SPEC['upper.h'][0], SPEC['upper.h'][1]);
+    },
+    spec: [100, 900, 1]
+  },
+  'lower.hFormed': {
+    get: () => { const s = formedSpan('lower'); return s.z1 - s.z0; },
+    set: v => {
+      const s = formedSpan('lower'), cur = s.z1 - s.z0;
+      S.lower.h = clamp(S.lower.h + (v - cur), SPEC['lower.h'][0], SPEC['lower.h'][1]);
+    },
+    spec: [100, 900, 1]
+  }
+};
+const valOf = k => (DER[k] ? DER[k].get() : getPath(k));
+const specOf = k => k === 'lower.neckH'
+  ? [S.lower.foldFromBottom + 5, S.lower.h - 20, 1]
+  : k === 'upper.neckH'
+    ? [10, Math.max(10, S.upper.h - S.upper.foldFromTop - 5), 1]
+    : (DER[k] ? DER[k].spec : SPEC[k]);
+const putVal = (k, v) => { if (DER[k]) DER[k].set(v); else setPath(k, v); };
+
+/* 台阶处（左右两个外角所在水平线）的宽度 = 这块板最宽的地方 */
+function stepWidth() {
+  const L = S.lower, k = clamp(L.neckH / L.h, 0, 1);
+  return L.wBot - (L.wBot - L.wTop) * k;
+}
+/* 上挡台阶宽（合页款的下沿内收用） */
+function stepWidthU() {
+  const U = S.upper, k = clamp(U.neckH / U.h, 0, 1);
+  return U.wBot - (U.wBot - U.wTop) * k;
+}
+/* 下挡上沿台阶（内收起点）处的板宽 */
+function stepWidthTop() {
+  const L = S.lower, k = clamp((L.h - (L.neckTopH ?? 70)) / L.h, 0, 1);
+  return L.wBot - (L.wBot - L.wTop) * k;
+}
+
+/* 合页款上挡：台阶所在高度（从下沿量，平料长度） */
+function upperStepY(p) {
+  return clamp(p.neckH, 10, Math.max(10, (p.h - p.foldFromTop) - 5));
+}
+
+/* 台阶下方那道反向折弯。
+   zc = 折弯线离下沿的料长；折弯线以下整段朝后翻（与顶部折边反向）。
+   zb = 圆弧在主面一侧的起点；Lf = 折边平料长（沿板面） */
+function backFoldOf(p, t) {
+  const on0 = S.model === 'hinge' && (p.neck || 0) >= 1;
+  const zc = upperStepY(p) - clamp(p.backFromStep ?? 15, 2, 400);
+  const ang = clamp(p.backAngle ?? 100, 1, 175) * Math.PI / 180;
+  /* 圆弧不能把折边吃光：按剩余料长反算最大外半径 */
+  const maxArc = Math.max(0.6, 2 * (zc - 1.5));
+  const RoMax = (2 * maxArc / ang + t) / 2;
+  const Ro = Math.max(0.5, Math.min(p.backR ?? 10, RoMax));
+  const Ri = Math.max(Ro - t, 0.3);
+  const arcMid = ang * ((Ri + Ro) / 2);
+  const zb = zc + arcMid / 2;
+  const Lf = zc - arcMid / 2;
+  return {
+    on: on0 && zc > 3 && Lf > 1,
+    zc, ang, Ro, Ri, arcMid, zb, Lf,
+    C: { u: -Ri, z: zb },
+    dir: { u: -Math.sin(ang), z: -Math.cos(ang) }
+  };
+}
+
+/* 下风挡上沿：内收台阶 + 两道折弯。
+   yStep = 台阶线料长；y1 = 第一折弯线（台阶往上 topFrom）；
+   y2 = 第二折弯线（距台阶 frontFrom，沿板面量）。
+   折边走 dir1（朝后偏上），回折走 dir2 = dir1 反向转 frontAngle */
+function topFoldOf(p, t) {
+  /* 只合页款的下挡做上沿内收 + 双折弯；胶条款保持原样 */
+  const on = S.model === 'hinge' && (p.neckTop || 0) >= 1 && p.topOn !== false && p.h > 0;
+  const aT = clamp(p.topAngle ?? 80, 1, 175) * Math.PI / 180;
+  const aF = clamp(p.frontAngle ?? 80, 1, 175) * Math.PI / 180;
+  const RoT = Math.max(p.topR ?? 10, 0.5);
+  const RiT = Math.max(RoT - t, 0.3);
+  const RmT = (RiT + RoT) / 2;
+  const arc1 = aT * RmT, arc2 = aF * RmT;
+  const nH = clamp(p.neckTopH ?? 70, 20, p.h - 20);
+  const yStep = p.h - nH;
+  const y1 = yStep + clamp(p.topFrom ?? 10, 2, Math.max(2, nH - 6));
+  const y2 = yStep + clamp(p.frontFrom ?? 50, Math.min(5, nH), Math.max(5, nH));
+  const L1 = Math.max(0, (y2 - y1) - arc1 / 2 - arc2 / 2);
+  const L2 = Math.max(0, (p.h - y2) - arc2 / 2);
+  const C1 = { u: -RiT, z: y1 };
+  const dir1 = { u: -Math.sin(aT), z: Math.cos(aT) };
+  const E1 = { u: C1.u + RoT * Math.cos(aT), z: C1.z + RoT * Math.sin(aT) };
+  const E1i = { u: C1.u + RiT * Math.cos(aT), z: C1.z + RiT * Math.sin(aT) };
+  const P2 = { u: E1.u + L1 * dir1.u, z: E1.z + L1 * dir1.z };
+  const P2i = { u: E1i.u + L1 * dir1.u, z: E1i.z + L1 * dir1.z };
+  /* 第二道折弯反向：圆心落在 u=t 一侧，半径 RiT/RoT 对应的面与第一道折弯正好互换。
+     C2 在 P2 之外 RiT（不是 RoT），否则回折段整体偏出一个板厚、与折边断开 */
+  const C2 = { u: P2.u + RiT * Math.cos(aT), z: P2.z + RiT * Math.sin(aT) };
+  const th0 = Math.PI + aT, th1 = th0 - aF;
+  const dir2 = { u: -Math.sin(aT - aF), z: Math.cos(aT - aF) };
+  /* eIn 走 u=0 面（第二道折弯的外弧 RoT），eOut 走 u=t 面（内弧 RiT） */
+  const eIn = { u: C2.u + RoT * Math.cos(th1) + L2 * dir2.u, z: C2.z + RoT * Math.sin(th1) + L2 * dir2.z };
+  const eOut = { u: C2.u + RiT * Math.cos(th1) + L2 * dir2.u, z: C2.z + RiT * Math.sin(th1) + L2 * dir2.z };
+  const E1m = { u: C1.u + RmT * Math.cos(aT), z: C1.z + RmT * Math.sin(aT) };
+  const eMid = { u: C2.u + RmT * Math.cos(th1) + L2 * dir2.u, z: C2.z + RmT * Math.sin(th1) + L2 * dir2.z };
+  return {
+    on, aT, aF, RoT, RiT, RmT, arc1, arc2, yStep, nH, y1, y2,
+    a0: y1 - arc1 / 2, a1: y1 + arc1 / 2, b0: y2 - arc2 / 2, b1: y2 + arc2 / 2,
+    L1, L2, C1, C2, dir1, dir2, E1, E1i, E1m, P2, P2i, eIn, eOut, eMid, th0, th1
+  };
+}
+
+/* 下挡内收台阶必须始终在折弯线之上（折弯线夹在下沿与台阶之间） */
+function fixNeck() {
+  const L = S.lower;
+  L.neck = clamp(L.neck, 10, 150);
+  L.neckH = clamp(L.neckH, L.foldFromBottom + 5, L.h - 20);
+  /* 内收段的竖边恒为竖直 → 下沿 = 台阶宽 − 2×neck，须留得住下沿 */
+  L.neck = Math.min(L.neck, Math.max(10, (stepWidth() - 40) / 2));
+  L.rIn = clamp(L.rIn, 0, 40);
+  L.rOut = clamp(L.rOut, 0, 40);
+  /* 内角恒为 R10 口径：不因内收缩小而缩水。
+     台阶横边长度 = neck（恒 ≥ 10），先让内角吃掉，剩下的才归外角 */
+  L.rIn = Math.min(L.rIn, L.neck);
+  L.rOut = Math.min(L.rOut, Math.max(0, L.neck - L.rIn));
+  /* 四角开口槽：槽底半圆恒 = 槽高一半；
+     slotDepth 的量法 = 板边 → 槽底半圆圆心（不是最深点），最深点 = slotDepth + sr */
+  L.slotH = clamp(L.slotH, 4, 60);
+  const sr = L.slotH / 2;
+  const rowCap = Math.max(sr + 3, L.h - L.neckH - 2 * sr - 8);
+  L.slotTop = clamp(L.slotTop, sr + 3, rowCap);
+  L.slotStep = clamp(L.slotStep, sr + 3, rowCap);
+  const wAt = y => y < L.neckH
+    ? Math.max(20, stepWidth() - 2 * L.neck)
+    : L.wBot - (L.wBot - L.wTop) * clamp(y / L.h, 0, 1);
+  const capD = Math.min(wAt(L.h - L.slotTop), wAt(L.neckH + L.slotStep)) / 2 - 8;
+  /* 圆心最多到 capD − sr，保证最深点（含半圆）不越中线 */
+  L.slotDepth = clamp(L.slotDepth, 2, Math.max(2, capD - sr));
+  /* 槽口圆角不得超过半圆半径，也不得吃掉整段槽壁 */
+  L.slotR = clamp(L.slotR ?? 5, 0, Math.max(0, Math.min(sr * 0.95, L.slotDepth * 0.9)));
+
+  /* 上沿内收台阶 + 两道折弯（台阶高 neckTopH，折弯线在台阶往上 topFrom） */
+  L.neckTop = clamp(L.neckTop ?? 39.42, 0, 150);
+  L.neckTopH = clamp(L.neckTopH ?? 70, 20, Math.max(30, L.h - L.foldFromBottom - 20));
+  L.neckTop = Math.min(L.neckTop, Math.max(6, (stepWidthTop() - 40) / 2));
+  L.rInTop = clamp(L.rInTop ?? 6, 0, 40);
+  L.rOutTop = clamp(L.rOutTop ?? 10, 0, 40);
+  L.rInTop = Math.min(L.rInTop, L.neckTop);
+  L.rOutTop = Math.min(L.rOutTop, Math.max(0, L.neckTop - L.rInTop));
+  L.topFrom = clamp(L.topFrom ?? 10, 2, Math.max(2, L.neckTopH - 8));
+  L.frontFrom = clamp(L.frontFrom ?? 50, L.topFrom + 6, Math.max(L.topFrom + 6, L.neckTopH));
+  L.topAngle = clamp(L.topAngle ?? 80, 1, 175);
+  L.frontAngle = clamp(L.frontAngle ?? 80, 1, 175);
+  L.topR = clamp(L.topR ?? 10, 1, 40);
+
+  /* 上挡下沿内收（只合页款画）：台阶必须留在下沿与折弯线之间 */
+  const U = S.upper;
+  U.neck = clamp(U.neck, 10, 150);
+  const yFU = U.h - U.foldFromTop;
+  U.neckH = clamp(U.neckH, 10, Math.max(10, yFU - 5));
+  U.neck = Math.min(U.neck, Math.max(10, (stepWidthU() - 40) / 2));
+  U.rIn = clamp(U.rIn, 0, 40);
+  U.rOut = clamp(U.rOut, 0, 40);
+  U.rIn = Math.min(U.rIn, U.neck);
+  U.rOut = Math.min(U.rOut, Math.max(0, U.neck - U.rIn));
+  /* 台阶下方那道反向折弯：折弯线要留在下沿之上，且下面还得留得住折弯弧 */
+  U.backFromStep = clamp(U.backFromStep ?? 15, 2, Math.max(2, U.neckH - 6));
+  U.backAngle = clamp(U.backAngle ?? 100, 1, 175);
+  U.backR = clamp(U.backR ?? 10, 1, 40);
+  /* 台阶上方那排开口槽 */
+  U.slotH = clamp(U.slotH, 4, 60);
+  const srU = U.slotH / 2;
+  U.slotFromStep = clamp(U.slotFromStep, srU + 3, Math.max(srU + 3, U.h - U.neckH - 2 * srU - 8));
+  const wAtU = y => y < U.neckH
+    ? Math.max(20, stepWidthU() - 2 * U.neck)
+    : U.wBot - (U.wBot - U.wTop) * clamp(y / U.h, 0, 1);
+  const capU = wAtU(U.neckH + U.slotFromStep) / 2 - 8;
+  U.slotDepth = clamp(U.slotDepth, 2, Math.max(2, capU - srU));
+  U.slotR = clamp(U.slotR ?? 5, 0, Math.max(0, Math.min(srU * 0.95, U.slotDepth * 0.9)));
+}
+
+/* =====================================================================
+   工具
+   ===================================================================== */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = v => { const n = Number(v); return (Math.round(n * 100) / 100).toString(); };
+function unit(x, y) { const l = Math.hypot(x, y) || 1; return { x: x / l, y: y / l }; }
+function getPath(k) { return k.split('.').reduce((o, p) => o[p], S); }
+function setPath(k, v) { const a = k.split('.'), last = a.pop(), o = a.reduce((x, p) => x[p], S); o[last] = v; }
+function segsInner(segs, ro) {
+  return segs.map(g => typeof g === 'string'
+    ? `<tspan>${g}</tspan>`
+    : ro ? `<tspan>${g.v}</tspan>`
+         : `<tspan class="ed" data-k="${g.k}">${g.v}</tspan>`).join('');
+}
+
+class Draft {
+  constructor(ro) { this.o = ''; this.s = 1; this.ox = 0; this.oy = 0; this.ro = !!ro; }
+  mapTo(b, r) {
+    const bw = Math.max(b.x1 - b.x0, 1e-6), bh = Math.max(b.y1 - b.y0, 1e-6);
+    this.s = Math.min(r.w / bw, r.h / bh);
+    this.ox = r.x + (r.w - bw * this.s) / 2 - b.x0 * this.s;
+    this.oy = r.y + (r.h - bh * this.s) / 2 + b.y1 * this.s;
+    return this;
+  }
+  X(x) { return this.ox + x * this.s; }
+  Y(y) { return this.oy - y * this.s; }
+  add(s) { this.o += s; return this; }
+
+  /* 静态文字 */
+  tx(x, y, s, cls, anchor) {
+    this.o += `<text class="lb ${cls || ''}" x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" dominant-baseline="middle">${s}</text>`;
+    return this;
+  }
+  /* 可编辑文字：segs 中字符串 = 静态，{k,v} = 可点击 */
+  ed(x, y, segs, cls, anchor) {
+    this.o += `<text class="lb ${cls || ''}" x="${x}" y="${y}" text-anchor="${anchor || 'middle'}" dominant-baseline="middle">${segsInner(segs, this.ro)}</text>`;
+    return this;
+  }
+  /* 开关：点一下切换布尔参数（开 / 关） */
+  toggle(x, y, key, on, w) {
+    const W = w || 42, H = 14, x0 = x - W / 2, y0 = y - H / 2;
+    this.o += `<g class="tg ${on ? 'on' : 'off'}" data-tg="${key}">`
+      + `<rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="${H / 2}"/>`
+      + `<text x="${x}" y="${y + 0.5}" text-anchor="middle" dominant-baseline="middle">${on ? '开' : '关'}</text></g>`;
+    return this;
+  }
+  arrow(x, y, dx, dy) {
+    const L = 7, W = 2.3, px = -dy, py = dx;
+    this.o += `<polygon class="arw" points="${x},${y} ${x - dx * L + px * W},${y - dy * L + py * W} ${x - dx * L - px * W},${y - dy * L - py * W}"/>`;
+  }
+  dimH(x1, x2, yGeom, yLine, segs) {
+    const a = this.X(x1), b = this.X(x2), dr = Math.sign(yLine - yGeom) || 1;
+    if (S.dims) {
+      this.o += `<line class="ext" x1="${a}" y1="${yGeom + dr * 3}" x2="${a}" y2="${yLine + dr * 6}"/>`;
+      this.o += `<line class="ext" x1="${b}" y1="${yGeom + dr * 3}" x2="${b}" y2="${yLine + dr * 6}"/>`;
+      this.o += `<line class="dim" x1="${a}" y1="${yLine}" x2="${b}" y2="${yLine}"/>`;
+      this.arrow(a, yLine, -1, 0); this.arrow(b, yLine, 1, 0);
+    }
+    this.ed((a + b) / 2, yLine - 8, segs);
+    return this;
+  }
+  dimV(y1, y2, xGeom, xLine, segs) {
+    const a = this.Y(y1), b = this.Y(y2), dr = Math.sign(xLine - xGeom) || 1;
+    if (S.dims) {
+      this.o += `<line class="ext" x1="${xGeom + dr * 3}" y1="${a}" x2="${xLine + dr * 6}" y2="${a}"/>`;
+      this.o += `<line class="ext" x1="${xGeom + dr * 3}" y1="${b}" x2="${xLine + dr * 6}" y2="${b}"/>`;
+      this.o += `<line class="dim" x1="${xLine}" y1="${a}" x2="${xLine}" y2="${b}"/>`;
+      this.arrow(xLine, a, 0, 1); this.arrow(xLine, b, 0, -1);
+    }
+    if (Math.abs(b - a) >= 60) {
+      const cy = (a + b) / 2;
+      this.o += `<text class="lb" transform="rotate(-90 ${xLine} ${cy})" x="${xLine}" y="${cy + (dr > 0 ? 9 : -9)}" text-anchor="middle" dominant-baseline="middle">${segsInner(segs, this.ro)}</text>`;
+    } else {
+      this.ed(xLine + dr * 6, (a + b) / 2, segs, '', dr > 0 ? 'start' : 'end');
+    }
+    return this;
+  }
+  /* 斜向尺寸：沿 p1-p2 方向，法向偏移 off；
+     tOff 给定时 = 文字沿法向相对尺寸线的偏移（正 = 远离工件），否则沿用本地坐标 */
+  dimAligned(x1, y1, x2, y2, off, segs, cls, tOff) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    const ax = x1 + nx * off, ay = y1 + ny * off;
+    const bx = x2 + nx * off, by = y2 + ny * off;
+    if (S.dims) {
+      this.o += `<line class="ext" x1="${x1}" y1="${y1}" x2="${x1 + nx * (off + 5)}" y2="${y1 + ny * (off + 5)}"/>`;
+      this.o += `<line class="ext" x1="${x2}" y1="${y2}" x2="${x2 + nx * (off + 5)}" y2="${y2 + ny * (off + 5)}"/>`;
+      this.o += `<line class="dim" x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>`;
+      this.arrow(ax, ay, -dx / len, -dy / len);
+      this.arrow(bx, by, dx / len, dy / len);
+    }
+    let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (ang > 90) ang -= 180; else if (ang < -90) ang += 180;
+    let cx = (ax + bx) / 2, cy = (ay + by) / 2, oy = -13;
+    if (tOff != null) { cx += nx * tOff; cy += ny * tOff; oy = 0; }
+    this.o += `<text class="lb ${cls || 'sm'}" transform="translate(${cx} ${cy}) rotate(${ang})" x="0" y="${oy}" text-anchor="middle" dominant-baseline="middle">${segsInner(segs, this.ro)}</text>`;
+    return this;
+  }
+  leadPx(a, b, c, e) {
+    this.o += `<polyline class="ldr" points="${a},${b} ${c},${e}"/>`;
+    this.o += `<circle class="dotm" cx="${a}" cy="${b}" r="1.6"/>`;
+    return this;
+  }
+}
+
+/* ---------- 圆角多边形 ---------- */
+function roundedPath(pts, radii, X, Y) {
+  const n = pts.length; let d = '', started = false;
+  /* 每条边长：圆角的切线长不得超过相邻两条边的一半（否则会互相穿插、画出小钩子） */
+  const EL = pts.map((p, i) => {
+    const q = pts[(i + 1) % n];
+    return Math.hypot(q.x - p.x, q.y - p.y);
+  });
+  for (let i = 0; i < n; i++) {
+    const p = pts[i], pp = pts[(i - 1 + n) % n], pn = pts[(i + 1) % n];
+    const v1 = unit(pp.x - p.x, pp.y - p.y), v2 = unit(pn.x - p.x, pn.y - p.y);
+    const ang = Math.acos(clamp(v1.x * v2.x + v1.y * v2.y, -1, 1));
+    const r = Math.max(0, radii[i] || 0);
+    if (r < 0.06 || ang < 0.02) {
+      d += (started ? 'L ' : 'M ') + X(p.x) + ' ' + Y(p.y) + ' '; started = true;
+      continue;
+    }
+    const cap = 0.5 * Math.min(EL[(i - 1 + n) % n], EL[i]);
+    const dist = Math.min(r / Math.tan(ang / 2), cap);
+    const rr = dist * Math.tan(ang / 2);          /* 实际生效的圆角半径 */
+    const t1 = { x: p.x + v1.x * dist, y: p.y + v1.y * dist };
+    const t2 = { x: p.x + v2.x * dist, y: p.y + v2.y * dist };
+    const bis = unit(v1.x + v2.x, v1.y + v2.y);
+    const c = { x: p.x + bis.x * (rr / Math.sin(ang / 2)), y: p.y + bis.y * (rr / Math.sin(ang / 2)) };
+    const a1 = Math.atan2(t1.y - c.y, t1.x - c.x);
+    const a2 = Math.atan2(t2.y - c.y, t2.x - c.x);
+    let dl = a2 - a1;
+    while (dl > Math.PI) dl -= 2 * Math.PI;
+    while (dl < -Math.PI) dl += 2 * Math.PI;
+    d += (started ? 'L ' : 'M ') + X(t1.x) + ' ' + Y(t1.y) + ' '; started = true;
+    for (let k = 1; k <= 14; k++) {
+      const a = a1 + dl * k / 14;
+      d += 'L ' + X(c.x + rr * Math.cos(a)) + ' ' + Y(c.y + rr * Math.sin(a)) + ' ';
+    }
+  }
+  return d + 'Z';
+}
+
+/* ---------- 腰形孔：长轴沿给定方向（缺省竖直），可与斜边平行 ---------- */
+function obroundPath(cx, cy, half, r, X, Y, dir) {
+  const N = 12;
+  const ux = dir ? dir.x : 0, uy = dir ? dir.y : 1;   // 长轴单位向量
+  const vx = -uy, vy = ux;                            // 短轴（法向）单位向量
+  const at = (a, b) => X(cx + ux * a + vx * b) + ' ' + Y(cy + uy * a + vy * b);
+  let d = `M ${at(half, r)} `;
+  d += `L ${at(-half, r)} `;                          // 一侧直边
+  for (let k = 1; k <= N; k++) {                      // 南/下端半圆
+    const a = Math.PI / 2 + Math.PI * k / N;
+    d += `L ${at(-half + r * Math.cos(a), r * Math.sin(a))} `;
+  }
+  d += `L ${at(half, -r)} `;                          // 另一侧直边
+  for (let k = 1; k <= N; k++) {                      // 北/上端半圆
+    const a = Math.PI * 1.5 + Math.PI * k / N;
+    d += `L ${at(half + r * Math.cos(a), r * Math.sin(a))} `;
+  }
+  return d + 'Z';
+}
+
+/* =====================================================================
+   侧视截面几何  u = 前后(+前), z = 高度
+   ===================================================================== */
+function arcPts(c, r, a0, a1, n) {
+  const out = []; n = n || 22;
+  for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; out.push({ u: c.u + r * Math.cos(a), z: c.z + r * Math.sin(a) }); }
+  return out;
+}
+function sideGeom(kind, p, t) {
+  const ang = clamp(p.foldAngle, 1, 175) * Math.PI / 180;
+  const Ro = Math.max(p.bendR, 0.5);
+  const Ri = Math.max(Ro - t, 0.3);
+  const arcMid = ang * ((Ri + Ro) / 2);
+  const P = [];
+  let z1, C, Lf, dir, detail, detailB, detailC;
+  let fbObj = { on: false }, tfObj = { on: false };
+
+  if (kind === 'upper') {
+    z1 = (p.h - p.foldFromTop) - arcMid / 2;
+    C = { u: Ri + t, z: z1 };
+    Lf = Math.max(0, p.foldFromTop - arcMid / 2);
+    dir = { u: Math.sin(ang), z: Math.cos(ang) };
+    const a0 = Math.PI, a1 = Math.PI - ang;
+    /* 台阶下方那道反向折弯（合页款）：折弯线以下整段朝后翻 */
+    const fb = backFoldOf(p, t);
+    fbObj = fb;
+    const zB = fb.on ? fb.zb : 0;
+    P.push({ u: 0, z: zB }, { u: 0, z: z1 });
+    P.push(...arcPts(C, Ro, a0, a1));
+    const tf = P[P.length - 1];
+    const te = { u: tf.u + Lf * dir.u, z: tf.z + Lf * dir.z };
+    P.push(te);
+    const be = { u: te.u - t * Math.cos(a1), z: te.z - t * Math.sin(a1) };
+    P.push(be, { u: be.u - Lf * dir.u, z: be.z - Lf * dir.z });
+    P.push(...arcPts(C, Ri, a1, a0));
+    P.push({ u: t, z: zB });
+    if (fb.on) {
+      /* 外侧沿 Ro 弯到 −θ → 折边外皮 → 端头 → 内皮回来，终点回到 (0, zb) 闭合 */
+      const i0 = P.length;
+      P.push(...arcPts(fb.C, fb.Ro, 0, -fb.ang, 20));
+      const t2 = P[P.length - 1];
+      const e2 = { u: t2.u + fb.Lf * fb.dir.u, z: t2.z + fb.Lf * fb.dir.z };
+      P.push(e2);
+      /* 端头：从外皮（R=Ro）沿半径方向往里挪一个板厚，正好落在内皮（R=Ri）上 */
+      const b2 = { u: e2.u - t * Math.cos(fb.ang), z: e2.z + t * Math.sin(fb.ang) };
+      P.push(b2, { u: b2.u - fb.Lf * fb.dir.u, z: b2.z - fb.Lf * fb.dir.z });
+      P.push(...arcPts(fb.C, fb.Ri, -fb.ang, 0, 20));
+      /* 局部图 B 的取景框：把这段折弯（含圆弧、折边、端头）圈进去 */
+      const seg = P.slice(i0);
+      let bx0 = 1e9, bx1 = -1e9, bz0 = 1e9, bz1 = -1e9;
+      for (const q of seg) {
+        bx0 = Math.min(bx0, q.u); bx1 = Math.max(bx1, q.u);
+        bz0 = Math.min(bz0, q.z); bz1 = Math.max(bz1, q.z);
+      }
+      bx1 = Math.max(bx1, t) + 11;
+      bz1 = Math.max(bz1, fb.zb);
+      detailB = { x0: bx0 - 4, x1: bx1, y0: bz0 - 6, y1: bz1 + 4 };
+    }
+    detail = { x0: C.u - Ro - 14, y0: z1 - 44, x1: Math.max(C.u + Ro + 20, te.u + 10), y1: z1 + Ro + 20 };
+  } else {
+    z1 = p.foldFromBottom + arcMid / 2;
+    C = { u: -Ri, z: z1 };
+    Lf = Math.max(0, p.foldFromBottom - arcMid / 2);
+    dir = { u: -Math.sin(ang), z: -Math.cos(ang) };
+    const a0 = 0, a1 = -ang;
+    /* 上沿内收 + 两道折弯（台阶后折 topAngle，再距台阶 frontFrom 处折回 frontAngle） */
+    const tf = topFoldOf(p, t);
+    tfObj = tf;
+    if (tf.on) {
+      P.push(tf.eIn);
+      P.push(...arcPts(tf.C2, tf.RoT, tf.th1, tf.th0, 14));
+      P.push(tf.P2i, tf.E1i);
+      P.push(...arcPts(tf.C1, tf.RiT, tf.aT, 0, 16));
+      P.push({ u: 0, z: tf.y1 });
+    } else {
+      P.push({ u: 0, z: p.h });
+    }
+    P.push({ u: 0, z: z1 });
+    P.push(...arcPts(C, Ri, a0, a1));
+    const tfp = P[P.length - 1];
+    const te = { u: tfp.u + Lf * dir.u, z: tfp.z + Lf * dir.z };
+    P.push(te);
+    const be = { u: te.u + t * Math.cos(a1), z: te.z + t * Math.sin(a1) };
+    P.push(be, { u: be.u - Lf * dir.u, z: be.z - Lf * dir.z });
+    P.push(...arcPts(C, Ro, a1, a0));
+    if (tf.on) {
+      P.push({ u: t, z: tf.y1 });
+      P.push(...arcPts(tf.C1, tf.RoT, 0, tf.aT, 16));
+      P.push(tf.P2);
+      P.push(...arcPts(tf.C2, tf.RiT, tf.th0, tf.th1, 14));
+      P.push(tf.eOut);
+      /* 局部图 C 取景：把上沿两道折弯整段圈进去 */
+      const segC = [tf.eIn, tf.eOut, tf.E1, tf.E1i, tf.P2, tf.P2i,
+                    { u: 0, z: tf.y1 }, { u: t, z: tf.y1 },
+                    ...arcPts(tf.C1, tf.RoT, 0, tf.aT, 10),
+                    ...arcPts(tf.C2, tf.RoT, tf.th0, tf.th1, 10)];
+      let cx0 = 1e9, cx1 = -1e9, cz0 = 1e9, cz1 = -1e9;
+      for (const q of segC) {
+        cx0 = Math.min(cx0, q.u); cx1 = Math.max(cx1, q.u);
+        cz0 = Math.min(cz0, q.z); cz1 = Math.max(cz1, q.z);
+      }
+      detailC = { x0: cx0 - 6, x1: Math.max(cx1, t) + 6,
+                  y0: Math.min(cz0, tf.yStep) - 7, y1: Math.max(cz1, tf.y1) + 5 };
+    } else {
+      P.push({ u: t, z: p.h });
+    }
+    detail = { x0: Math.min(C.u - Ro - 14, te.u - 10), y0: Math.min(z1 - Ro - 20, te.z - 10), x1: C.u + Ro + 20, y1: z1 + 26 };
+  }
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const q of P) { x0 = Math.min(x0, q.u); x1 = Math.max(x1, q.u); y0 = Math.min(y0, q.z); y1 = Math.max(y1, q.z); }
+  return { pts: P, bbox: { x0, y0, x1, y1 }, z1, C, Ri, Ro, Lf, ang, dir, detail, detailB, detailC, kind, fb: fbObj, tf: tfObj };
+}
+function pathFromPts(P, X, Y) { return P.map((q, i) => (i ? 'L ' : 'M ') + X(q.u) + ' ' + Y(q.z)).join(' ') + ' Z'; }
+
+/* 折弯段的几何换算：竖直高 ←→ 沿板面料长 */
+function legHeightOf(kind) {
+  const p = kind === 'upper' ? S.upper : S.lower;
+  const g = sideGeom(kind, p, S.t);
+  const yF = kind === 'upper' ? p.h - p.foldFromTop : p.foldFromBottom;
+  return yF - g.bbox.y0;
+}
+/* 成形后正视方向的高度区间（z 轴 = 竖直高度） */
+function formedSpan(kind) {
+  const p = kind === 'upper' ? S.upper : S.lower;
+  const g = sideGeom(kind, p, S.t);
+  return { z0: g.bbox.y0, z1: g.bbox.y1, zF: kind === 'upper' ? p.h - p.foldFromTop : p.foldFromBottom };
+}
+function legLenFromH(H) {
+  const p = S.lower, t = S.t;
+  const ang = Math.PI / 180 * clamp(p.foldAngle, 1, 175);
+  const Ro = Math.max(p.bendR, 0.5), Ri = Math.max(Ro - t, 0.3);
+  const arcMid = ang * ((Ri + Ro) / 2);
+  const c = Math.cos(ang), s = Math.sin(ang);
+  if (c < 0.18) return null;
+  const L = (H + arcMid / 2 * (1 + c) - (Ri + t) * s) / c;
+  return isFinite(L) ? L : null;
+}
+
+/* =====================================================================
+   视图布局
+   ===================================================================== */
+const SHEET = { w: 1560, h: 880 };
+const V = {
+  uFace: { x: 22, y: 22, w: 588, h: 414 },
+  uFlat: { x: 620, y: 22, w: 588, h: 414 },
+  uSide: { x: 1218, y: 22, w: 320, h: 414 },
+  lFace: { x: 22, y: 444, w: 588, h: 414 },
+  lFlat: { x: 620, y: 444, w: 588, h: 414 },
+  lSide: { x: 1218, y: 444, w: 320, h: 414 }
+};
+
+function frame(d, r, cap, sub) {
+  d.add(`<rect class="vfr" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="6"/>`);
+  d.add(`<text class="cap" x="${r.x + 10}" y="${r.y + 15}">${cap}</text>`);
+  if (sub) d.add(`<text class="cap sub" x="${r.x + r.w - 10}" y="${r.y + 15}" text-anchor="end">${sub}</text>`);
+}
+
+/* =====================================================================
+   正视图 / 展开图
+   ===================================================================== */
+function viewFace(kind, mode, r) {
+  const p = kind === 'upper' ? S.upper : S.lower;
+  const h = p.h, wTop = p.wTop, wBot = p.wBot, t = S.t, b = (wBot - wTop) / 2;
+  const yF = kind === 'upper' ? h - p.foldFromTop : p.foldFromBottom;
+  const id = kind + mode;
+
+  const formed = mode === 'formed';
+  /* 成品正视图只读：尺寸只能从展开图 / 侧视图改 */
+  const d = new Draft(formed);
+  frame(d, r, (kind === 'upper' ? '上风挡' : '下风挡') + (formed ? ' · 正视图' : ' · 展开图'),
+        formed ? '折弯后投影 · 只读' : '展开 / 下料');
+
+  const A = { x: r.x, y: r.y + 18, w: r.w, h: r.h - 18 };
+  const xMin = Math.min(0, b), xMax = Math.max(wBot, b + wTop);
+  const foldOK = yF > 0 && yF < h;
+  const sp = formedSpan(kind);
+  const z0 = formed ? sp.z0 : 0;
+  const z1 = formed ? sp.z1 : h;
+  const zTop = formed && kind === 'upper' ? Math.max(z1, sp.zF) : z1;
+  d.mapTo({ x0: xMin, y0: z0, x1: xMax, y1: zTop }, { x: A.x + 54, y: A.y + 40, w: A.w - 132, h: A.h - 110 });
+
+  const xa = b * yF / h, xb = wBot - b * yF / h;
+
+  /* 内收台阶（倒凸字）：下沿两侧各收 neck，台阶高 neckH，台阶以上是主体。
+     下挡恒有；上挡只在合页款有（下沿也做成同样的内收凸字） */
+  const neckKind = kind === 'lower' || (kind === 'upper' && S.model === 'hinge');
+  const neck = neckKind ? Math.max(0, p.neck) : 0;
+  const neckHc = !neckKind ? 0
+    : kind === 'lower' ? clamp(p.neckH, yF + 5, h - 20)
+                       : clamp(p.neckH, 10, Math.max(10, yF - 5));
+  const hasNeck = neckKind && neck >= 1;
+  /* 台阶下方那道反向折弯（只合页款上挡有） */
+  const fb = kind === 'upper' ? backFoldOf(p, t) : { on: false };
+  const axN = b * neckHc / h, bxN = wBot - b * neckHc / h;
+  /* 内收段的两条侧边恒为竖直线（y 轴平行），从下沿一直竖到台阶：
+     台阶外角往里收 neck → 下沿 = 台阶宽 − 2×neck，两者互为反算 */
+  const xLv = axN + neck, xRv = bxN - neck;
+  /* 上沿内收（下挡）：台阶高 neckTopH，内收 neckTop，与上挡下沿同一口径 */
+  const hasNeckTop = kind === 'lower' && S.model === 'hinge' && Math.max(0, p.neckTop || 0) >= 1 && (p.topOn !== false);
+  const nTop = hasNeckTop ? p.neckTop : 0;
+  const yTopStep = h - clamp(p.neckTopH ?? 70, 20, Math.max(20, h - 20));
+  const axT = b * yTopStep / h, bxT = wBot - b * yTopStep / h;
+  const xLt = axT + nTop, xRt = bxT - nTop;
+  const rInT = Math.max(0, p.rInTop ?? 6), rOutT = Math.max(0, p.rOutTop ?? 10);
+  const zTopS = formed ? Math.max(z1, yTopStep + 3) : h;
+  /* 折弯线处的板边：下挡的折弯线落在内收段里（板边是竖边），
+     上挡的折弯线在主体上（板边仍是斜边） */
+  const foldL = (kind === 'lower' && hasNeck) ? xLv : xa;
+  const foldR = (kind === 'lower' && hasNeck) ? xRv : xb;
+  const rIn = Math.max(0, p.rIn || 0), rOut = Math.max(0, p.rOut || 0);
+  const rB = Math.max(0, p.rBot), rT = Math.max(0, p.rTop);
+
+  let pts, radii;
+  if (!formed && hasNeck && hasNeckTop) {
+    /* 下挡展开轮廓：下沿内收 + 上沿内收，上下各一个台阶 */
+    pts = [{ x: xLv, y: 0 }, { x: xRv, y: 0 },
+           { x: xRv, y: neckHc }, { x: bxN, y: neckHc },
+           { x: bxT, y: yTopStep }, { x: xRt, y: yTopStep }, { x: xRt, y: h },
+           { x: xLt, y: h }, { x: xLt, y: yTopStep }, { x: axT, y: yTopStep },
+           { x: axN, y: neckHc }, { x: xLv, y: neckHc }];
+    radii = [rB, rB, rIn, rOut, rOutT, rInT, rT, rT, rInT, rOutT, rOut, rIn];
+  } else if (!formed && hasNeck) {
+    pts = [{ x: xLv, y: 0 }, { x: xRv, y: 0 },
+           { x: xRv, y: neckHc }, { x: bxN, y: neckHc },
+           { x: b + wTop, y: h }, { x: b, y: h },
+           { x: axN, y: neckHc }, { x: xLv, y: neckHc }];
+    radii = [rB, rB, rIn, rOut, rT, rT, rOut, rIn];
+  } else if (!formed) {
+    pts = [{ x: 0, y: 0 }, { x: wBot, y: 0 }, { x: b + wTop, y: h }, { x: b, y: h }];
+    radii = [rB, rB, rT, rT];
+  } else if (kind === 'upper' && hasNeck) {
+    /* 合页款上挡：下沿内收成凸字，顶部折边走投影窄带 */
+    pts = [{ x: xLv, y: z0 }, { x: xRv, y: z0 },
+           { x: xRv, y: neckHc }, { x: bxN, y: neckHc },
+           { x: xb, y: yF },
+           { x: b + wTop, y: z1 }, { x: b, y: z1 }, { x: xa, y: yF },
+           { x: axN, y: neckHc }, { x: xLv, y: neckHc }];
+    radii = [rB, rB, rIn, rOut, 0, rT, rT, 0, rOut, rIn];
+  } else if (kind === 'upper') {
+    /* 顶部折边折走 → 只投影成顶部一条窄带（末端宽 = 上沿） */
+    pts = [{ x: 0, y: z0 }, { x: wBot, y: z0 }, { x: xb, y: yF }, { x: b + wTop, y: z1 }, { x: b, y: z1 }, { x: xa, y: yF }];
+    radii = [rB, rB, 0, 0, 0, 0];
+  } else if (hasNeck && hasNeckTop) {
+    /* 下挡成形：底部折边投影成下沿窄带；上沿折弯段投影成顶部窄带 */
+    pts = [{ x: xLv, y: z0 }, { x: xRv, y: z0 }, { x: xRv, y: yF }, { x: xRv, y: neckHc },
+           { x: bxN, y: neckHc },
+           { x: bxT, y: yTopStep }, { x: xRt, y: yTopStep }, { x: xRt, y: zTopS },
+           { x: xLt, y: zTopS }, { x: xLt, y: yTopStep }, { x: axT, y: yTopStep },
+           { x: axN, y: neckHc }, { x: xLv, y: neckHc }, { x: xLv, y: yF }];
+    radii = [rB, rB, 0, rIn, rOut, rOutT, rInT, rT, rT, rInT, rOutT, rOut, rIn, 0];
+  } else if (hasNeck) {
+    /* 底部折边朝后下方折 → 投影为下沿一条带；台阶以下整体收窄，两侧竖边仍竖直 */
+    pts = [{ x: xLv, y: z0 }, { x: xRv, y: z0 }, { x: xRv, y: yF }, { x: xRv, y: neckHc },
+           { x: bxN, y: neckHc },
+           { x: b + wTop, y: h }, { x: b, y: h },
+           { x: axN, y: neckHc }, { x: xLv, y: neckHc }, { x: xLv, y: yF }];
+    radii = [rB, rB, 0, rIn, rOut, rT, rT, rOut, rIn, 0];
+  } else {
+    pts = [{ x: 0, y: z0 }, { x: wBot, y: z0 }, { x: xb, y: yF }, { x: b + wTop, y: h }, { x: b, y: h }, { x: xa, y: yF }];
+    radii = [rB, rB, 0, rT, rT, 0];
+  }
+  const outline = roundedPath(pts, radii, x => d.X(x), y => d.Y(y));
+  d.add(`<defs><clipPath id="cl-${id}"><path d="${outline}"/></clipPath></defs>`);
+  d.add(`<path class="part" d="${outline}"/>`);
+
+  /* 成形：折弯段的投影带 + 折弯棱线 */
+  if (formed && foldOK) {
+    const bT = kind === 'upper' ? z1 : yF;
+    const bB = kind === 'upper' ? yF : z0;
+    d.add(`<g clip-path="url(#cl-${id})"><rect class="band" x="${d.X(xMin) - 2}" y="${d.Y(bT)}" width="${d.X(xMax) - d.X(xMin) + 4}" height="${Math.max(1, d.Y(bB) - d.Y(bT))}"/></g>`);
+    d.add(`<line class="crease" x1="${d.X(foldL)}" y1="${d.Y(yF)}" x2="${d.X(foldR)}" y2="${d.Y(yF)}"/>`);
+  }
+
+  /* 折弯线（展开） */
+  if (mode === 'flat' && foldOK) {
+    d.add(`<line class="fold" x1="${d.X(foldL)}" y1="${d.Y(yF)}" x2="${d.X(foldR)}" y2="${d.Y(yF)}"/>`);
+    d.tx(d.X((xa + xb) / 2), d.Y(yF) - 9, '折弯线', 'hi');
+  }
+
+  /* 上沿两道折弯：展开图两道折弯线；成形图顶部投影带 */
+  if (hasNeckTop) {
+    const tfL = sideGeom('lower', p, t).tf;
+    if (mode === 'flat') {
+      d.add(`<line class="fold" x1="${d.X(xLt - 3)}" y1="${d.Y(tfL.y1)}" x2="${d.X(xRt + 3)}" y2="${d.Y(tfL.y1)}"/>`);
+      d.add(`<line class="fold" x1="${d.X(xLt - 3)}" y1="${d.Y(tfL.y2)}" x2="${d.X(xRt + 3)}" y2="${d.Y(tfL.y2)}"/>`);
+    } else if (tfL.y1 < zTopS) {
+      d.add(`<g clip-path="url(#cl-${id})"><rect class="band" x="${d.X(xMin) - 2}" y="${d.Y(zTopS)}" width="${d.X(xMax) - d.X(xMin) + 4}" height="${Math.max(1, d.Y(tfL.y1) - d.Y(zTopS))}"/></g>`);
+      d.add(`<line class="crease" x1="${d.X(xLt)}" y1="${d.Y(tfL.y1)}" x2="${d.X(xRt)}" y2="${d.Y(tfL.y1)}"/>`);
+    }
+  }
+
+  /* 台阶下方那道反向折弯（朝后）：展开图画折弯线，成形图画折边投影带 */
+  if (fb.on) {
+    if (mode === 'flat') {
+      d.add(`<line class="fold" x1="${d.X(xLv)}" y1="${d.Y(fb.zc)}" x2="${d.X(xRv)}" y2="${d.Y(fb.zc)}"/>`);
+      d.tx(d.X((xLv + xRv) / 2), d.Y(fb.zc) + 10, '下折弯线（朝后折）', 'hi');
+    } else {
+      d.add(`<g clip-path="url(#cl-${id})"><rect class="band" x="${d.X(xMin) - 2}" y="${d.Y(fb.zc)}" width="${d.X(xMax) - d.X(xMin) + 4}" height="${Math.max(1, d.Y(z0) - d.Y(fb.zc))}"/></g>`);
+      d.add(`<line class="crease" x1="${d.X(xLv)}" y1="${d.Y(fb.zc)}" x2="${d.X(xRv)}" y2="${d.Y(fb.zc)}"/>`);
+    }
+  }
+
+  /* 侧边开口槽：从左右板边水平切进去，槽底半圆 R = 槽高一半，
+     槽深 = 板边到半圆圆心的距离（不含半圆本身），槽口两个外角 R 圆角。
+     下挡两排（靠上沿 / 靠台阶）；合页款上挡一排（台阶上方 slotFromStep 处） */
+  const slotRows = [];
+  if (kind === 'lower') {
+    if (S.model !== 'hinge' && p.slotTopOn !== false) slotRows.push(h - p.slotTop);
+    if (p.slotStepOn !== false) slotRows.push(neckHc + p.slotStep);
+  } else if (kind === 'upper' && S.model === 'hinge' && hasNeck) {
+    if (p.slotOn !== false) slotRows.push(neckHc + p.slotFromStep);
+  }
+  const sH = Math.max(1, p.slotH), sr = sH / 2;
+  if (slotRows.length) {
+    const exAt = (y, side) => {
+      if (hasNeckTop && y >= yTopStep) return side < 0 ? xLt : xRt;
+      if (!hasNeck || y >= neckHc) return side < 0 ? b * y / h : wBot - b * y / h;
+      return side < 0 ? xLv : xRv;             /* 台阶以下：竖边 */
+    };
+    const slopeAt = (y, side) => (y >= neckHc ? (side < 0 ? b / h : -b / h) : 0);
+    const pairs = [];
+    slotRows.forEach(y => pairs.push([y, -1], [y, 1]));
+    pairs.forEach(([yc, side]) => {
+      const dir = -side;                       /* 往里为正：左槽 +x，右槽 −x */
+      const xe = exAt(yc, side);
+      const y1 = yc - sr, y2 = yc + sr;
+      /* slotDepth = 板边 → 半圆圆心；最深点 = slotDepth + sr */
+      const xc = xe + dir * p.slotDepth;
+      const wallLen = Math.max(0.5, p.slotDepth);          /* 板边到半圆起点 */
+      const R0 = Math.max(0, Math.min(p.slotR ?? 5, sr * 0.95, wallLen * 0.9));
+      /* 槽口一个外角：u = 沿板边离开槽口，v = 沿槽壁往里 */
+      const corner = (yy, sgnY) => {
+        const sl = slopeAt(yy, side);
+        const ul = Math.hypot(sl * sgnY, sgnY) || 1;
+        const u = { x: sl * sgnY / ul, y: sgnY / ul };
+        const v = { x: dir, y: 0 };
+        const th = Math.acos(clamp(u.x * v.x + u.y * v.y, -1, 1));
+        const hf = Math.max(0.02, th / 2);
+        const Rr = Math.min(R0, wallLen * Math.tan(hf) * 0.98);
+        const t = Rr / Math.tan(hf), dc = Rr / Math.sin(hf);
+        const Ax = exAt(yy, side);
+        const bl = Math.hypot(u.x + v.x, u.y + v.y) || 1;
+        return {
+          P1: { x: Ax + u.x * t, y: yy + u.y * t },        /* 板边上的切点 */
+          P2: { x: Ax + v.x * t, y: yy + v.y * t },        /* 槽壁上的切点 */
+          c: { x: Ax + (u.x + v.x) / bl * dc, y: yy + (u.y + v.y) / bl * dc },
+          Rr
+        };
+      };
+      const cpL = corner(y1, -1), cpU = corner(y2, 1);
+      /* 圆角按点采样，避免大坐标下 SVG 圆弧标志位判断出错。
+         rev=false：P1（板边）→ P2（槽壁）；rev=true：P2 → P1 */
+      const arcOf = (cp, rev) => {
+        const S0 = rev ? cp.P2 : cp.P1, S1 = rev ? cp.P1 : cp.P2;
+        const a1 = Math.atan2(S0.y - cp.c.y, S0.x - cp.c.x);
+        const a2 = Math.atan2(S1.y - cp.c.y, S1.x - cp.c.x);
+        let da = a2 - a1;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        let s2 = '';
+        for (let k = 1; k <= 10; k++) {
+          const a = a1 + da * k / 10;
+          s2 += `L ${d.X(cp.c.x + cp.Rr * Math.cos(a))} ${d.Y(cp.c.y + cp.Rr * Math.sin(a))} `;
+        }
+        return s2;
+      };
+      const N = 16;
+      let dd = `M ${d.X(cpL.P1.x)} ${d.Y(cpL.P1.y)} ${arcOf(cpL)}`;
+      dd += `L ${d.X(xc)} ${d.Y(y1)} `;
+      for (let k = 1; k <= N; k++) {
+        const th = Math.PI * k / N;
+        dd += `L ${d.X(xc + dir * sr * Math.sin(th))} ${d.Y(yc - sr * Math.cos(th))} `;
+      }
+      dd += `L ${d.X(cpU.P2.x)} ${d.Y(cpU.P2.y)} ${arcOf(cpU, true)}`;
+      /* 先把槽腔涂白，再用一条白线把开口处那段板边擦掉，最后描槽的轮廓 */
+      d.add(`<path class="cut" d="${dd}Z"/>`);
+      d.add(`<line class="mouth" x1="${d.X(cpU.P1.x)}" y1="${d.Y(cpU.P1.y)}" x2="${d.X(cpL.P1.x)}" y2="${d.Y(cpL.P1.y)}"/>`);
+      d.add(`<path class="slotline" d="${dd}"/>`);
+      if (mode === 'flat') {
+        d.add(`<line class="cl" x1="${d.X(xe - dir * 2)}" y1="${d.Y(yc)}" x2="${d.X(xe + dir * (p.slotDepth + sr + 2))}" y2="${d.Y(yc)}"/>`);
+      }
+    });
+  }
+
+  /* 说明文字（只在展开图上可点改，成品图只读）；每排一个开关。
+     开关行不随自身开关状态隐藏：关掉后行还在，才能再点开 */
+  if (mode === 'flat') {
+    const x0 = d.X(xMin) + 40;
+    if (kind === 'lower') {
+      const r2 = d.Y(h * 0.655);
+      if (S.model !== 'hinge') {
+        const r1 = d.Y(h * 0.755);
+        d.tx(x0, r1, '上排开口槽', 'sm', 'start');
+        d.toggle(x0 + 74, r1, 'lower.slotTopOn', p.slotTopOn !== false, 36);
+        d.ed(x0 + 100, r1, ['圆心距边 ', { k: 'lower.slotDepth', v: fmt(p.slotDepth) },
+                             ' × 高 ', { k: 'lower.slotH', v: fmt(p.slotH) },
+                             '　槽心距上沿 ', { k: 'lower.slotTop', v: fmt(p.slotTop) }], 'sm', 'start');
+      }
+      d.tx(x0, r2, '台阶上开口槽', 'sm', 'start');
+      d.toggle(x0 + 86, r2, 'lower.slotStepOn', p.slotStepOn !== false, 36);
+      d.ed(x0 + 112, r2, ['槽心距台阶 ', { k: 'lower.slotStep', v: fmt(p.slotStep) },
+                           '　槽底半圆 R', fmt(sr),
+                           '　槽口 R', { k: 'lower.slotR', v: fmt(p.slotR) }], 'sm', 'start');
+    } else if (S.model === 'hinge' && hasNeck) {
+      /* 合页款上挡：只有台阶上方那一排 */
+      const r1 = d.Y(neckHc) - 34;
+      d.tx(x0, r1, '台阶开口槽', 'sm', 'start');
+      d.toggle(x0 + 74, r1, 'upper.slotOn', p.slotOn !== false, 36);
+      d.ed(x0 + 100, r1, ['槽心距台阶 ', { k: 'upper.slotFromStep', v: fmt(p.slotFromStep) },
+                           '　圆心距边 ', { k: 'upper.slotDepth', v: fmt(p.slotDepth) },
+                           ' × 高 ', { k: 'upper.slotH', v: fmt(p.slotH) },
+                           '　槽口 R', { k: 'upper.slotR', v: fmt(p.slotR) }], 'sm', 'start');
+    }
+  }
+
+  /* 内收台阶标注（下挡恒有；上挡只合页款有） */
+  if (hasNeck && kind === 'upper') {
+    /* 上挡台阶贴着下沿，左右各标一组会挤成一团：合成一行放在台阶上方 */
+    const x0 = d.X(xMin) + 40, ty = d.Y(neckHc) - 18;
+    /* 台阶下方的反向折弯（朝后）：图形保留，描述与可改数值只在侧视图 B 局部图，不再重复 */
+    d.leadPx(d.X(axN), d.Y(neckHc), x0 + 104, ty + 4);
+    d.ed(x0 + 124, ty, ['台阶高 ', { k: 'upper.neckH', v: fmt(p.neckH) },
+                         '　内收 ', { k: 'upper.neck', v: fmt(neck) }, '（两侧各）',
+                         '　内角 R', { k: 'upper.rIn', v: fmt(rIn) },
+                         '　外角 R', { k: 'upper.rOut', v: fmt(rOut) }], 'sm', 'start');
+  } else if (hasNeck) {
+    const txR = d.X(bxN) - 150, ty = d.Y(neckHc) - 34;
+    d.leadPx(d.X(bxN), d.Y(neckHc), txR + 74, ty + 9);
+    d.ed(txR, ty, ['台阶高 ', { k: kind + '.neckH', v: fmt(p.neckH) }, '　内收 ', { k: kind + '.neck', v: fmt(neck) }, '（两侧各）'], 'sm');
+    /* 两端共用同一组圆角：左右对称，改左边右边一起变 */
+    d.ed(txR, ty + 16, ['内角 R', { k: kind + '.rIn', v: fmt(rIn) }, '　外角 R', { k: kind + '.rOut', v: fmt(rOut) }], 'sm');
+    const txL = d.X(axN) + 150;
+    d.leadPx(d.X(axN), d.Y(neckHc), txL - 74, ty + 16);
+    d.ed(txL, ty + 16, ['内角 R', { k: kind + '.rIn', v: fmt(rIn) }, '　外角 R', { k: kind + '.rOut', v: fmt(rOut) }], 'sm');
+    /* 上沿内收台阶（下挡）：台阶高 / 内收 / 两个角 R，放在台阶线以下的板内 */
+    if (hasNeckTop) {
+      const tyT = d.Y(yTopStep) + 24;
+      d.leadPx(d.X(xRt), d.Y(yTopStep), d.X(xRt) - 10, tyT - 2);
+      d.ed(d.X((xLt + xRt) / 2) + 30, tyT,
+        ['上沿台阶 高 ', { k: 'lower.neckTopH', v: fmt(p.neckTopH) },
+         '　内收 ', { k: 'lower.neckTop', v: fmt(nTop) }, '（两侧各）',
+         '　内角 R', { k: 'lower.rInTop', v: fmt(rInT) },
+         '　外角 R', { k: 'lower.rOutTop', v: fmt(rOutT) }], 'sm');
+    }
+  }
+
+  /* 上风挡：黑胶贴合区 / 腰形孔 */
+  let holeWarn = '';
+  if (kind === 'upper') {
+    const L = Math.hypot(b, h) || 1;
+    const yA = yF - p.padFromFold;
+    const yHole = yF - p.holeFromFold;
+    const half = p.holeLen / 2, rr = p.holeR;
+
+    /* 合页款上挡下沿有内收台阶，贴合区/孔的文字往上让一行，避免和台阶标注打架 */
+    const bx = d.X(wBot * 0.5), by = d.Y(h * (kind === 'upper' && S.model === 'hinge' ? 0.62 : 0.30));
+
+    if (p.useGlue) {
+      const sides = [
+        { ax: b * yA / h, d: { x: -b / L, y: -h / L }, n: { x: h / L, y: -b / L } },
+        { ax: wBot - b * yA / h, d: { x: b / L, y: -h / L }, n: { x: -h / L, y: -b / L } }
+      ];
+      const ends = [];
+      sides.forEach(sd => {
+        const Aq = { x: sd.ax, y: yA };
+        const p1 = { x: Aq.x + sd.d.x * p.padLen, y: Aq.y + sd.d.y * p.padLen };
+        const p2 = { x: p1.x + sd.n.x * p.padWidth, y: p1.y + sd.n.y * p.padWidth };
+        const p3 = { x: Aq.x + sd.n.x * p.padWidth, y: Aq.y + sd.n.y * p.padWidth };
+        d.add(`<polygon class="hot" points="${[Aq, p1, p2, p3].map(q => d.X(q.x) + ',' + d.Y(q.y)).join(' ')}"/>`);
+        ends.push(p2);
+      });
+      d.leadPx(d.X(ends[0].x), d.Y(ends[0].y), bx - 78, by - 8);
+      d.leadPx(d.X(ends[1].x), d.Y(ends[1].y), bx + 78, by - 8);
+      d.ed(bx, by, ['贴合区（左右各一）  ', { k: 'upper.padLen', v: fmt(p.padLen) }, ' × ', { k: 'upper.padWidth', v: fmt(p.padWidth) }], 'sm');
+      d.ed(bx, by + 15, ['距折弯线 ', { k: 'upper.padFromFold', v: fmt(p.padFromFold) }], 'sm');
+    } else {
+      /* 板边：梯形时两侧是斜边，孔的长轴要跟本侧边平行，孔心到边按法向量的 */
+      const Dg = Math.hypot(b, h) || 1;
+      const edgeOf = s => s > 0
+        ? { xAt: y => b * y / h, d: { x: b / Dg, y: h / Dg }, n: { x: h / Dg, y: -b / Dg } }
+        : { xAt: y => wBot - b * y / h, d: { x: -b / Dg, y: h / Dg }, n: { x: -h / Dg, y: -b / Dg } };
+      const mk = side => {
+        const own = edgeOf(side);
+        const ref = p.holeSide === 'own' ? own : edgeOf(-side);
+        const off = p.holeEdge + (p.holeEdgeMode === 'end' ? rr : 0);
+        const c = { x: ref.xAt(yHole) + ref.n.x * off, y: yHole + ref.n.y * off };
+        const u = own.d, v = { x: -u.y, y: u.x };      /* 长轴沿本侧边，短轴取法向 */
+        d.add(`<path class="hole" d="${obroundPath(c.x, c.y, half, rr, q => d.X(q), q => d.Y(q), u)}"/>`);
+        const P = (a, bb) => ({ x: c.x + u.x * a + v.x * bb, y: c.y + u.y * a + v.y * bb });
+        const e1 = P(0, -(rr + 7)), e2 = P(0, rr + 7), e3 = P(-(half + rr + 7), 0), e4 = P(half + rr + 7, 0);
+        d.add(`<line class="cl" x1="${d.X(e1.x)}" y1="${d.Y(e1.y)}" x2="${d.X(e2.x)}" y2="${d.Y(e2.y)}"/>`);
+        d.add(`<line class="cl" x1="${d.X(e3.x)}" y1="${d.Y(e3.y)}" x2="${d.X(e4.x)}" y2="${d.Y(e4.y)}"/>`);
+        const cs = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([su, sv]) => P(half * su, rr * sv));
+        const ok = cs.every(q => q.x > b * q.y / h + 0.4 && q.x < wBot - b * q.y / h - 0.4);
+        return { x: c.x, y: c.y, u, half, rr, ok };
+      };
+      const L1 = mk(1), L2 = mk(-1);
+      if (!L1.ok || !L2.ok) holeWarn = '腰形孔超出板边';
+      d.leadPx(d.X(L1.x + L1.u.x * (L1.half + L1.rr)), d.Y(L1.y + L1.u.y * (L1.half + L1.rr)), bx - 86, by - 8);
+      d.leadPx(d.X(L2.x - L2.u.x * (L2.half + L2.rr)), d.Y(L2.y - L2.u.y * (L2.half + L2.rr)), bx + 86, by - 8);
+      d.ed(bx, by, ['腰形孔（左右各一）长 ', { k: 'upper.holeLen', v: fmt(p.holeLen) }, '  R', { k: 'upper.holeR', v: fmt(p.holeR) }], 'sm');
+      d.ed(bx, by + 15, ['距边 ', { k: 'upper.holeEdge', v: fmt(p.holeEdge) }, p.holeEdgeMode === 'end' ? '（孔边到边）' : '（孔心到边）', '　距折弯线 ', { k: 'upper.holeFromFold', v: fmt(p.holeFromFold) }], 'sm');
+      if (holeWarn) d.tx(bx, by + 32, holeWarn, 'hi');
+    }
+  }
+
+  /* 尺寸 */
+  const bx0 = hasNeck ? xLv : 0, bx1 = hasNeck ? xRv : wBot;
+  const xEdge = foldR;                             /* 折弯线处的实际板边 */
+  const botKey = hasNeck ? kind + '.wBotNeck' : kind + '.wBot';
+  const botVal = fmt(hasNeck ? xRv - xLv : wBot);
+  if (!formed) {
+    const yTopPx = d.Y(h), yBotPx = d.Y(0);
+    const tKey = hasNeckTop ? kind + '.wTopNeck' : kind + '.wTop';
+    const tVal = fmt(hasNeckTop ? xRt - xLt : wTop);
+    const tL = hasNeckTop ? xLt : b, tR = hasNeckTop ? xRt : b + wTop;
+    d.dimH(tL, tR, yTopPx, yTopPx - 34, ['上沿 ', { k: tKey, v: tVal }]);
+    d.dimH(bx0, bx1, yBotPx, yBotPx + 34, ['下沿 ', { k: botKey, v: botVal }]);
+    /* 台阶（左右两个外角）处的宽度 = 这块板最宽的地方，单独标一条 */
+    if (hasNeck) {
+      const wStep = wBot - (wBot - wTop) * neckHc / h;
+      d.dimH(axN, bxN, d.Y(neckHc), yBotPx + 62, ['台阶宽 ', { k: kind + '.wStep', v: fmt(wStep) }]);
+    }
+    d.dimV(0, h, d.X(xMin) - 2, d.X(xMin) - 32, ['高 ', { k: kind + '.h', v: fmt(h) }]);
+    if (foldOK) {
+      const xr = d.X(xEdge), xl = xr + (hasNeck ? 24 : 30);
+      if (kind === 'upper') d.dimV(yF, h, xr, xl, [{ k: 'upper.legLen', v: fmt(p.foldFromTop) }]);
+      else d.dimV(0, yF, xr, xl, [{ k: 'lower.legLen', v: fmt(p.foldFromBottom) }]);
+    }
+  } else {
+    const yBotPx = d.Y(z0);
+    d.dimH(bx0, bx1, yBotPx, yBotPx + 30, ['下沿 ', { k: botKey, v: botVal }]);
+    d.dimV(z0, z1, d.X(xMin) - 2, d.X(xMin) - 32, ['高 ', { k: kind + '.hFormed', v: fmt(z1 - z0) }]);
+    if (foldOK) {
+      if (kind === 'upper') {
+        const dz = z1 - yF;
+        if (dz > 1) {
+          const ym = (d.Y(yF) + d.Y(z1)) / 2, xr0 = d.X(xb) - 2;
+          d.add(`<line class="ext" x1="${xr0}" y1="${ym}" x2="${xr0}" y2="${d.Y(z1) - 7}"/>`);
+          d.tx(d.X(xMax) - 8, d.Y(z1) - 9, `折边高 ${fmt(dz)}`, 'sm', 'end');
+        }
+      } else {
+        d.dimV(z0, yF, d.X(xEdge), d.X(xEdge) + 16, [{ k: 'lower.legH', v: fmt(yF - z0) }]);
+      }
+    }
+  }
+
+  /* 角 R */
+  if (!formed || kind === 'lower') {
+    const yTopR = hasNeckTop ? (formed ? zTopS : h) : (formed ? z1 : h);
+    const rL = hasNeckTop ? xLt : b, rR = hasNeckTop ? xRt : b + wTop;
+    const rDy = -10;
+    /* 上沿两角联动：改一处两处一起变 */
+    d.ed(d.X(rR) - 26, d.Y(yTopR) + rDy, ['R', { k: kind + '.rTop', v: fmt(p.rTop) }], 'sm');
+    d.ed(d.X(rL) + 26, d.Y(yTopR) + rDy, ['R', { k: kind + '.rTop', v: fmt(p.rTop) }], 'sm');
+  }
+  const yBotR = formed ? z0 : 0;
+  /* 下沿两角联动 */
+  d.ed(d.X(bx1) - 26, d.Y(yBotR) + 11, ['R', { k: kind + '.rBot', v: fmt(p.rBot) }], 'sm');
+  d.ed(d.X(bx0) + 26, d.Y(yBotR) + 11, ['R', { k: kind + '.rBot', v: fmt(p.rBot) }], 'sm');
+
+  /* 罗盘 */
+  if (kind === 'upper' && mode === 'formed') {
+    const cx = r.x + 26, cy = r.y + r.h - 30;
+    d.add(`<g opacity=".9">
+      <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - 13}" stroke="#94a3b8" stroke-width="1"/>
+      <polygon points="${cx},${cy - 20} ${cx - 3},${cy - 12} ${cx + 3},${cy - 12}" fill="#94a3b8"/>
+      <line x1="${cx}" y1="${cy}" x2="${cx + 13}" y2="${cy}" stroke="#94a3b8" stroke-width="1"/>
+      <polygon points="${cx + 20},${cy} ${cx + 12},${cy - 3} ${cx + 12},${cy + 3}" fill="#94a3b8"/>
+    </g>`);
+    d.tx(cx, cy - 27, '北', 'sm');
+    d.tx(cx + 26, cy, '东', 'sm', 'start');
+  }
+
+  return d.o;
+}
+
+/* =====================================================================
+   立体斜视图（轴测）
+   折弯件看成「沿板宽方向拉伸的剖面」，所以只要知道展开图上 y 处的
+   板面点在剖面上的位置 (u, z)，整块料就能投影出来
+   ===================================================================== */
+const AXI = { yaw: 14 * Math.PI / 180, pitch: 24 * Math.PI / 180 };
+const AXC = {
+  cy: Math.cos(AXI.yaw), sy: Math.sin(AXI.yaw),
+  cp: Math.cos(AXI.pitch), sp: Math.sin(AXI.pitch)
+};
+/* 视线方向（进画面为正）：从上前方看 */
+const AXF = { x: AXC.sy * AXC.cp, y: AXC.cy * AXC.cp, z: -AXC.sp };
+/* 光源：左前上方 */
+const AXL = (() => {
+  const v = [-0.30, -0.44, 0.85], n = Math.hypot(v[0], v[1], v[2]);
+  return { x: v[0] / n, y: v[1] / n, z: v[2] / n };
+})();
+function axP(X, U, Z) {
+  return {
+    sx: X * AXC.cy - U * AXC.sy,
+    sy: -(X * AXC.sy * AXC.sp + U * AXC.cy * AXC.sp + Z * AXC.cp),
+    dp: X * AXC.sy * AXC.cp + U * AXC.cy * AXC.cp - Z * AXC.sp
+  };
+}
+
+/* 展开图上高度 y 处的板面点，在剖面里的位置（u 前后 / z 高度）。
+   板厚 4~5mm，出图后不到 2px，这里按零厚度面算，背向相机时再偏移一个板厚 */
+function sheetPos(kind, p, t, y, g) {
+  const ang = g.ang, Ro = g.Ro, Ri = g.Ri, arcMid = ang * ((Ri + Ro) / 2);
+  if (kind === 'upper') {
+    const yF = p.h - p.foldFromTop, yA = yF - arcMid / 2, yB = yF + arcMid / 2;
+    if (y >= yB) {                                    /* 顶部折边 */
+      const tf = { u: g.C.u + Ro * Math.cos(Math.PI - ang), z: g.C.z + Ro * Math.sin(Math.PI - ang) };
+      return { u: tf.u + (y - yB) * g.dir.u, z: tf.z + (y - yB) * g.dir.z };
+    }
+    if (y >= yA) {                                    /* 顶部折弯圆弧 */
+      const th = Math.PI - ang * (y - yA) / arcMid;
+      return { u: g.C.u + Ro * Math.cos(th), z: g.C.z + Ro * Math.sin(th) };
+    }
+    const fb = g.fb;
+    if (fb && fb.on) {
+      const a0 = fb.zc - fb.arcMid / 2, a1 = fb.zc + fb.arcMid / 2;
+      const C2 = { u: fb.C.u - t, z: fb.C.z };        /* 挪到 u=0 面上，免得折弯线处错开一个板厚 */
+      if (y <= a0) {                                  /* 台阶下折边（朝后） */
+        const E = { u: C2.u + fb.Ro * Math.cos(-fb.ang), z: C2.z + fb.Ro * Math.sin(-fb.ang) };
+        return { u: E.u + (a0 - y) * fb.dir.u, z: E.z + (a0 - y) * fb.dir.z };
+      }
+      if (y <= a1) {                                  /* 台阶下折弯圆弧 */
+        const th = -fb.ang * (y - a0) / fb.arcMid;
+        return { u: C2.u + fb.Ro * Math.cos(th), z: C2.z + fb.Ro * Math.sin(th) };
+      }
+    }
+    return { u: 0, z: y };                            /* 主体（竖直面） */
+  }
+  const yF = p.foldFromBottom, yA = yF + arcMid / 2, yB = yF - arcMid / 2;
+  /* 上沿两道折弯：先按料长落到折边 / 回折段上 */
+  const tf = g.tf;
+  if (tf && tf.on) {
+    if (y >= tf.b0) {
+      if (y <= tf.b1) {                               /* 第二折（回折）圆弧 */
+        const th = tf.th0 - tf.aF * (y - tf.b0) / tf.arc2;
+        return { u: tf.C2.u + tf.RmT * Math.cos(th), z: tf.C2.z + tf.RmT * Math.sin(th) };
+      }
+      return { u: tf.eMid.u + (y - tf.b1) * tf.dir2.u, z: tf.eMid.z + (y - tf.b1) * tf.dir2.z };
+    }
+    if (y >= tf.a0) {
+      if (y <= tf.a1) {                               /* 第一折圆弧 */
+        const th = tf.aT * (y - tf.a0) / tf.arc1;
+        return { u: tf.C1.u + tf.RmT * Math.cos(th), z: tf.C1.z + tf.RmT * Math.sin(th) };
+      }
+      return { u: tf.E1m.u + (y - tf.a1) * tf.dir1.u, z: tf.E1m.z + (y - tf.a1) * tf.dir1.z };
+    }
+  }
+  if (y >= yA) return { u: 0, z: y };                 /* 主体（竖直面） */
+  if (y >= yB) {                                      /* 底部折弯圆弧（内 R） */
+    const th = -ang * (yA - y) / arcMid;
+    return { u: g.C.u + Ri * Math.cos(th), z: g.C.z + Ri * Math.sin(th) };
+  }
+  const E = { u: g.C.u + Ri * Math.cos(-ang), z: g.C.z + Ri * Math.sin(-ang) };
+  return { u: E.u + (yB - y) * g.dir.u, z: E.z + (yB - y) * g.dir.z };
+}
+
+function viewSolid(kind, r) {
+  const p = kind === 'upper' ? S.upper : S.lower;
+  const t = S.t, h = p.h, wTop = p.wTop, wBot = p.wBot, b = (wBot - wTop) / 2;
+  const g = sideGeom(kind, p, t);
+  const d = new Draft(true);
+  frame(d, r, (kind === 'upper' ? '上风挡' : '下风挡') + ' · 立体斜视',
+        '从上前方看 · 折弯后 · 只读');
+
+  /* --- 板边（与正视图同一套定义，含内收台阶与开口槽） --- */
+  const yF = kind === 'upper' ? h - p.foldFromTop : p.foldFromBottom;
+  const neckKind = kind === 'lower' || (kind === 'upper' && S.model === 'hinge');
+  const neck = neckKind ? Math.max(0, p.neck) : 0;
+  const neckHc = !neckKind ? 0
+    : kind === 'lower' ? clamp(p.neckH, yF + 5, h - 20)
+                       : clamp(p.neckH, 10, Math.max(10, yF - 5));
+  const hasNeck = neckKind && neck >= 1;
+  const axN = b * neckHc / h, bxN = wBot - b * neckHc / h;
+  const xLv = axN + neck, xRv = bxN - neck;
+  /* 上沿内收（下挡）+ 两道折弯：板边在台阶以上收成竖边 */
+  const hasNeckTop = kind === 'lower' && S.model === 'hinge' && Math.max(0, p.neckTop || 0) >= 1 && p.topOn !== false;
+  const nTop = hasNeckTop ? p.neckTop : 0;
+  const yTopStep = h - clamp(p.neckTopH ?? 70, 20, Math.max(20, h - 20));
+  const axT = b * yTopStep / h, bxT = wBot - b * yTopStep / h;
+  const xLt = axT + nTop, xRt = bxT - nTop;
+  const exAt = (y, side) => {
+    if (hasNeckTop && y >= yTopStep) return side < 0 ? xLt : xRt;
+    if (!hasNeck || y >= neckHc) return side < 0 ? b * y / h : wBot - b * y / h;
+    return side < 0 ? xLv : xRv;
+  };
+  const slotRows = [];
+  if (kind === 'lower') {
+    if (S.model !== 'hinge' && p.slotTopOn !== false) slotRows.push(h - p.slotTop);
+    if (p.slotStepOn !== false) slotRows.push(neckHc + p.slotStep);
+  } else if (kind === 'upper' && S.model === 'hinge' && hasNeck) {
+    if (p.slotOn !== false) slotRows.push(neckHc + p.slotFromStep);
+  }
+  const sr = Math.max(0.5, p.slotH / 2);
+  const slots = [];
+  slotRows.forEach(yc => [-1, 1].forEach(side => {
+    const dir = -side, xe = exAt(yc, side);
+    slots.push({ yc, side, dir, xe, xc: xe + dir * p.slotDepth, sr });
+  }));
+  const edgeX = (y, side) => {
+    let x = exAt(y, side);
+    for (const s of slots) {
+      if (s.side !== side) continue;
+      const dy = y - s.yc;
+      if (dy > s.sr || dy < -s.sr) continue;
+      const xb = s.xc + s.dir * Math.sqrt(Math.max(0, s.sr * s.sr - dy * dy));
+      x = side < 0 ? Math.max(x, xb) : Math.min(x, xb);
+    }
+    return x;
+  };
+
+  /* --- 沿高度取样（槽口圆弧、折弯线处额外加密） --- */
+  const rows = [];
+  const N = 118;
+  for (let i = 0; i <= N; i++) rows.push(h * i / N);
+  slots.forEach(s => {
+    for (let k = -10; k <= 10; k++) rows.push(s.yc + s.sr * k / 10);
+    /* 槽口侧壁：紧贴上下沿再补两行，让那条水平切口是平的而不是斜的 */
+    rows.push(s.yc - s.sr - 0.06, s.yc - s.sr + 0.06, s.yc + s.sr - 0.06, s.yc + s.sr + 0.06);
+  });
+  rows.push(yF);
+  if (g.fb && g.fb.on) rows.push(g.fb.zc - g.fb.arcMid / 2, g.fb.zc, g.fb.zc + g.fb.arcMid / 2);
+  if (g.tf && g.tf.on) rows.push(g.tf.a0, g.tf.y1, g.tf.a1, g.tf.b0, g.tf.y2);
+  rows.sort((a, c) => a - c);
+  const R = [];
+  rows.forEach(y => {
+    y = clamp(y, 0, h);
+    if (!R.length || y - R[R.length - 1] > 0.03) R.push(y);
+  });
+  if (R[R.length - 1] < h - 0.03) R.push(h);
+
+  const RW = R.map(y => {
+    const q = sheetPos(kind, p, t, y, g);
+    return { y, q, xl: edgeX(y, -1), xr: edgeX(y, 1), xn: exAt(y, -1), xx: exAt(y, 1) };
+  });
+
+  /* --- 取景：先投到「世界像素」，再统一缩放居中 --- */
+  const raw = RW.map(o => ({ l: axP(o.xl, o.q.u, o.q.z), r: axP(o.xr, o.q.u, o.q.z) }));
+  let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+  raw.forEach(o => [o.l, o.r].forEach(q => {
+    bx0 = Math.min(bx0, q.sx); bx1 = Math.max(bx1, q.sx);
+    by0 = Math.min(by0, q.sy); by1 = Math.max(by1, q.sy);
+  }));
+  const A = { x: r.x + 16, y: r.y + 30, w: r.w - 32, h: r.h - 80 };
+  const sc = Math.min(A.w / Math.max(1, bx1 - bx0), A.h / Math.max(1, by1 - by0));
+  const ox = A.x + (A.w - (bx1 - bx0) * sc) / 2, oy = A.y + (A.h - (by1 - by0) * sc) / 2;
+  const PX = q => ox + (q.sx - bx0) * sc;
+  const PY = q => oy + (q.sy - by0) * sc;
+
+  /* --- 逐带生成图元，按进深排序（远 → 近） --- */
+  const prim = [];
+  const push = (dp, s) => prim.push({ dp, s });
+  for (let i = 0; i < RW.length - 1; i++) {
+    const a = RW[i], c = RW[i + 1];
+    let du = c.q.u - a.q.u, dz = c.q.z - a.q.z;
+    const ln = Math.hypot(du, dz);
+    if (ln < 1e-6) continue;
+    const nx = -dz / ln, nz = du / ln;               /* 板面法线（U, Z 分量） */
+    const face = nx * AXF.y + nz * AXF.z;            /* >0 → 背向相机 */
+    const back = face > 0;
+    const ou = back ? -nx * t : 0, oz = back ? -nz * t : 0;
+    const nv = back ? { x: 0, y: -nx, z: -nz } : { x: 0, y: nx, z: nz };
+    const nd = Math.max(0, nv.y * AXL.y + nv.z * AXL.z);
+    const col = `rgb(${Math.round(249 - 34 * (1 - nd))},${Math.round(251 - 31 * (1 - nd))},${Math.round(253 - 26 * (1 - nd))})`;
+
+    const u0 = a.q.u + ou, z0 = a.q.z + oz, u1 = c.q.u + ou, z1 = c.q.z + oz;
+    const p1 = axP(a.xl, u0, z0), p2 = axP(a.xr, u0, z0);
+    const p3 = axP(c.xr, u1, z1), p4 = axP(c.xl, u1, z1);
+    const dp = (p1.dp + p2.dp + p3.dp + p4.dp) / 4;
+    push(dp, `<path d="M ${PX(p1).toFixed(1)} ${PY(p1).toFixed(1)} L ${PX(p2).toFixed(1)} ${PY(p2).toFixed(1)} L ${PX(p3).toFixed(1)} ${PY(p3).toFixed(1)} L ${PX(p4).toFixed(1)} ${PY(p4).toFixed(1)} Z" fill="${col}" stroke="${col}" stroke-width=".6"/>`);
+    /* 左右轮廓：只画朝向相机那一侧，深度跟着本带走，前面的带自然会盖住后面的 */
+    const seg = (qa, qb, dd) => push(dd, `<line x1="${PX(qa).toFixed(1)}" y1="${PY(qa).toFixed(1)}" x2="${PX(qb).toFixed(1)}" y2="${PY(qb).toFixed(1)}" stroke="#0f172a" stroke-width="1.5" stroke-linecap="round"/>`);
+    seg(p1, p4, dp);
+    seg(p2, p3, dp);
+    if (i === 0) seg(p1, p2, dp);
+    if (i === RW.length - 2) seg(p4, p3, dp);
+  }
+  /* 折弯棱线：板面在折弯处不光滑的地方补一道 */
+  const creaseAt = (yy, key) => {
+    const o = RW.reduce((m, q) => Math.abs(q.y - yy) < Math.abs(m.y - yy) ? q : m, RW[0]);
+    if (Math.abs(o.y - yy) > 1.2) return;
+    const q1 = axP(o.xl, o.q.u, o.q.z), q2 = axP(o.xr, o.q.u, o.q.z);
+    push((q1.dp + q2.dp) / 2, `<line x1="${PX(q1).toFixed(1)}" y1="${PY(q1).toFixed(1)}" x2="${PX(q2).toFixed(1)}" y2="${PY(q2).toFixed(1)}" stroke="#64748b" stroke-width=".8" stroke-dasharray="6 3"/>`);
+  };
+  if (g.fb && g.fb.on) creaseAt(g.fb.zc, 'fb');
+  if (g.tf && g.tf.on) { creaseAt(g.tf.y1, 'tf1'); creaseAt(g.tf.y2, 'tf2'); }
+
+  prim.sort((a, c) => c.dp - a.dp);
+  prim.forEach(o => d.add(o.s));
+
+  /* 罗盘：摆在零件下方，避免压住板子 */
+  const cx = r.x + 26, cy = Math.min(PY({ sy: by1 }) + 50, r.y + r.h - 12);
+  d.add(`<g opacity=".75">
+    <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - 13}" stroke="#94a3b8" stroke-width="1"/>
+    <polygon points="${cx},${cy - 20} ${cx - 3},${cy - 12} ${cx + 3},${cy - 12}" fill="#94a3b8"/>
+    <line x1="${cx}" y1="${cy}" x2="${cx + 13}" y2="${cy}" stroke="#94a3b8" stroke-width="1"/>
+    <polygon points="${cx + 20},${cy} ${cx + 12},${cy - 3} ${cx + 12},${cy + 3}" fill="#94a3b8"/>
+  </g>`);
+  d.tx(cx, cy - 27, '北', 'sm');
+  d.tx(cx + 26, cy, '东', 'sm', 'start');
+
+  return d.o;
+}
+
+/* =====================================================================
+   侧视图（剖面 + 局部放大）
+   ===================================================================== */
+/* 上下两块侧视共用同一套投影：非折弯段落在同一条竖线上 */
+function sideUnionBox() {
+  const a = sideGeom('upper', S.upper, S.t), b = sideGeom('lower', S.lower, S.t);
+  const x0 = Math.min(a.bbox.x0, b.bbox.x0), x1 = Math.max(a.bbox.x1, b.bbox.x1);
+  const y0 = Math.min(a.bbox.y0, b.bbox.y0), y1 = Math.max(a.bbox.y1, b.bbox.y1);
+  return { x0: -x1, y0, x1: -x0, y1 };
+}
+
+function viewSide(kind, r) {
+  const p = kind === 'upper' ? S.upper : S.lower;
+  const t = S.t;
+  const g = sideGeom(kind, p, t);
+  const d = new Draft();
+  const id = kind + 'side';
+
+  frame(d, r, (kind === 'upper' ? '上风挡' : '下风挡') + ' · 侧视（剖面）', '左为前');
+
+  /* 横向取反：左 = 前（车头）；上下两块共用同一映射 */
+  const bbD = sideUnionBox();
+  const upper = kind === 'upper';
+  d.mapTo(bbD, { x: r.x + 74, y: r.y + 50, w: 72, h: r.h - 50 - 58 });
+  d.add(`<path class="part" d="${g.pts.map((q, i) => (i ? 'L ' : 'M ') + d.X(-q.u) + ' ' + d.Y(q.z)).join(' ')} Z"/>`);
+
+  /* 折弯处上 / 下两段的竖直高度 */
+  const yF = upper ? p.h - p.foldFromTop : p.foldFromBottom;
+  const sxL = d.X(bbD.x0);
+  if (upper) {
+    /* 有下折弯时，这段量到下面那道折弯线（两道折弯线之间的主面高） */
+    if (g.fb && g.fb.on) {
+      d.dimV(g.fb.zc, yF, sxL - 1, sxL - 22, ['下\u00A0', { k: 'upper.hFace', v: fmt(yF - g.fb.zc) }]);
+    } else {
+      d.dimV(g.bbox.y0, yF, sxL - 1, sxL - 22, ['下\u00A0', { k: 'upper.hBelow', v: fmt(p.h - p.foldFromTop) }]);
+    }
+  } else {
+    d.dimV(yF, p.h, sxL - 1, sxL - 22, ['上\u00A0', { k: 'lower.hAbove', v: fmt(p.h - p.foldFromBottom) }]);
+    /* 量到本块自己的最低点（折边端头），不能用两块的并集框，否则会多出几毫米 */
+    d.dimV(g.bbox.y0, yF, sxL - 1, sxL - 22, ['下\u00A0', { k: 'lower.legH', v: fmt(yF - g.bbox.y0) }]);
+  }
+
+  /* 放大标记：A = 主折弯（顶部 / 底部），B = 台阶下那道朝后折（只合页款上挡） */
+  const det = g.detail;
+  const detB = (upper && g.fb && g.fb.on && g.detailB) ? g.detailB : null;
+  const detC = (!upper && g.tf && g.tf.on && g.detailC) ? g.detailC : null;
+  const mark = (dd, tag, below) => {
+    const mx = d.X(-(dd.x0 + dd.x1) / 2), my = d.Y((dd.y0 + dd.y1) / 2);
+    const rx = Math.max(10, (dd.x1 - dd.x0) * d.s / 2 + 2);
+    const ry = Math.max(10, (dd.y1 - dd.y0) * d.s / 2 + 2);
+    d.add(`<ellipse class="det" cx="${mx}" cy="${my}" rx="${rx}" ry="${ry}"/>`);
+    if (below) d.tx(mx, Math.min(my + ry + 11, r.y + r.h - 24), tag, 'sm');
+    else d.tx(mx - rx - 5, my, tag, 'sm', 'end');
+  };
+  mark(det, 'A', true);
+  if (detB) mark(detB, 'B', false);
+  if (detC) mark(detC, 'C', false);
+
+  /* 放大图 A */
+  /* 局部图列起点：主剖面（x + 74，宽 72）右端恒在 146。
+     下挡有上沿折弯时，折边端头与回折段正好落在 138~146，若从 138 起会被白底盖住、看着像断掉 */
+  const wideTopFold = !upper && g.tf && g.tf.on;
+  const ix = r.x + (wideTopFold ? 152 : 138), iy = r.y + 30,
+        iw = r.w - (wideTopFold ? 162 : 148), ih = 166;
+  const dIn = new Draft();
+  dIn.mapTo({ x0: -det.x1, y0: det.y0, x1: -det.x0, y1: det.y1 }, { x: ix, y: iy, w: iw, h: ih });
+  dIn.add(`<defs><clipPath id="ci-${id}"><rect x="${ix}" y="${iy}" width="${iw}" height="${ih}"/></clipPath></defs>`);
+  dIn.add(`<rect class="inset" x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="4"/>`);
+  dIn.add(`<g clip-path="url(#ci-${id})">`);
+  dIn.add(`<path class="part" d="${g.pts.map((q, i) => (i ? 'L ' : 'M ') + dIn.X(-q.u) + ' ' + dIn.Y(q.z)).join(' ')} Z" stroke-width="1.9"/>`);
+  dIn.add(`</g>`);
+  dIn.add(`<rect x="${ix + 1}" y="${iy + 1}" width="74" height="16" rx="3" fill="#fff" opacity=".88"/>`);
+  dIn.tx(ix + 7, iy + 10, `A 局部 ${(dIn.s / d.s).toFixed(1)}×`, 'sm', 'start');
+
+  /* 折弯角：贴着折弯外缘的圆弧 + 可改数值 */
+  const aA = kind === 'upper' ? Math.PI : 0;
+  const aB = kind === 'upper' ? Math.PI - g.ang : -g.ang;
+  const Rarc = g.Ro + 2.5;
+  const ap = arcPts(g.C, Rarc, aA, aB, 24);
+  dIn.add(`<polyline fill="none" stroke="#475569" stroke-width=".8" points="${ap.map(q => dIn.X(-q.u) + ',' + dIn.Y(q.z)).join(' ')}"/>`);
+  [aA, aB].forEach(a => {
+    const q1 = { u: g.C.u + (g.Ro - 1.5) * Math.cos(a), z: g.C.z + (g.Ro - 1.5) * Math.sin(a) };
+    const q2 = { u: g.C.u + (g.Ro + 7) * Math.cos(a), z: g.C.z + (g.Ro + 7) * Math.sin(a) };
+    dIn.add(`<line stroke="#b6c2d1" stroke-width=".7" x1="${dIn.X(-q1.u)}" y1="${dIn.Y(q1.z)}" x2="${dIn.X(-q2.u)}" y2="${dIn.Y(q2.z)}"/>`);
+  });
+  const mid = (aA + aB) / 2, Rl = g.Ro + 17;
+  const mLbl = { u: g.C.u + Rl * Math.cos(mid), z: g.C.z + Rl * Math.sin(mid) };
+  const pmx = dIn.X(-mLbl.u), pmy = dIn.Y(mLbl.z);
+  const lx = clamp(pmx, ix + 24, ix + iw - 24);
+  const ly = clamp(pmy, iy + 20, iy + ih - 10);
+  if (Math.hypot(lx - pmx, ly - pmy) > 4) dIn.add(`<line stroke="#b6c2d1" stroke-width=".7" x1="${pmx}" y1="${pmy}" x2="${lx}" y2="${ly}"/>`);
+  dIn.ed(lx, ly, [{ k: kind + '.foldAngle', v: fmt(p.foldAngle) }, '°'], 'sm');
+
+  /* 折边料长：从中面上的折弯线量到折边端头，只标料长（不再加板厚） */
+  const Rm = (g.Ri + g.Ro) / 2, midA = (aA + aB) / 2;
+  const Mpt = { u: g.C.u + Rm * Math.cos(midA), z: g.C.z + Rm * Math.sin(midA) };
+  const dirV = upper ? { u: Math.sin(g.ang), z: Math.cos(g.ang) } : { u: -Math.sin(g.ang), z: -Math.cos(g.ang) };
+  const Lleg = upper ? p.foldFromTop : p.foldFromBottom;
+  /* 折边端头的两个真实角点：沿折边方向投影最远的两点 */
+  const proj = q => q.u * dirV.u + q.z * dirV.z;
+  const byEnd = g.pts.slice().sort((a, b) => proj(b) - proj(a));
+  const eA = byEnd[0], eB = byEnd[1];
+  const eMid = { u: (eA.u + eB.u) / 2, z: (eA.z + eB.z) / 2 };
+
+  /* 折弯线在剖面上的位置：过中面折弯中点的一小段虚线，给尺寸一个明确起点 */
+  const rad = { u: Math.cos(midA), z: Math.sin(midA) }, rl = t * 0.5 + 5.5;
+  dIn.add(`<line stroke="#94a3b8" stroke-width=".6" stroke-dasharray="2.5 2.5"
+    x1="${dIn.X(-(Mpt.u + rad.u * rl))}" y1="${dIn.Y(Mpt.z + rad.z * rl)}"
+    x2="${dIn.X(-(Mpt.u - rad.u * rl))}" y2="${dIn.Y(Mpt.z - rad.z * rl)}"/>`);
+
+  dIn.dimAligned(dIn.X(-Mpt.u), dIn.Y(Mpt.z), dIn.X(-eMid.u), dIn.Y(eMid.z), 16,
+    ['料长 ', { k: kind + '.legLen', v: fmt(Lleg) }], '', 13);
+
+  /* 板厚：标在竖直板身那段，尺寸太小、箭头放外面，数值引到左侧空白处 */
+  if (upper) {
+    const zT = det.y0 + (det.y1 - det.y0) * 0.34;
+    const yG = dIn.Y(zT), yD = yG - 17;
+    const xR = dIn.X(0), xL = dIn.X(-t);
+    dIn.add(`<line class="ext" x1="${xR}" y1="${yG}" x2="${xR}" y2="${yD - 7}"/>`);
+    dIn.add(`<line class="ext" x1="${xL}" y1="${yG}" x2="${xL}" y2="${yD - 7}"/>`);
+    dIn.add(`<line class="dim" x1="${xL - 15}" y1="${yD}" x2="${xR + 15}" y2="${yD}"/>`);
+    dIn.arrow(xR, yD, -1, 0);
+    dIn.arrow(xL, yD, 1, 0);
+    dIn.tx(xL - 19, yD, `板厚 ${fmt(t)}`, 'sm', 'end');
+  }
+
+  /* 放大图 A 下说明 */
+  const ty = iy + ih + 14;
+  dIn.tx(ix + iw / 2, ty, `成形高 ${fmt(g.bbox.y1 - g.bbox.y0)} · 板厚 ${fmt(t)}`, 'sm');
+  d.add(dIn.o);
+
+  /* 放大图 B：台阶下方那道朝后折的局部（角度 / 半径 / 距台阶都在这里点改） */
+  if (detB) {
+    const fb = g.fb;
+    const ixB = ix, iyB = r.y + 222, iwB = iw, ihB = 116;
+    const dB = new Draft();
+    dB.mapTo({ x0: -detB.x1, y0: detB.y0, x1: -detB.x0, y1: detB.y1 },
+             { x: ixB, y: iyB, w: iwB, h: ihB });
+    const cid = `ci-${id}b`;
+    dB.add(`<defs><clipPath id="${cid}"><rect x="${ixB}" y="${iyB}" width="${iwB}" height="${ihB}"/></clipPath></defs>`);
+    dB.add(`<rect class="inset" x="${ixB}" y="${iyB}" width="${iwB}" height="${ihB}" rx="4"/>`);
+    dB.add(`<g clip-path="url(#${cid})">`);
+    dB.add(`<path class="part" d="${g.pts.map((q, i) => (i ? 'L ' : 'M ') + dB.X(-q.u) + ' ' + dB.Y(q.z)).join(' ')} Z" stroke-width="1.9"/>`);
+    dB.add(`</g>`);
+    dB.add(`<rect x="${ixB + 1}" y="${iyB + 1}" width="74" height="16" rx="3" fill="#fff" opacity=".88"/>`);
+    dB.tx(ixB + 7, iyB + 10, `B 局部 ${(dB.s / d.s).toFixed(1)}×`, 'sm', 'start');
+
+    /* 折弯角：贴外缘的圆弧 + 两条半径引线 + 可点改的角度 */
+    const apB = arcPts(fb.C, fb.Ro + 2.5, 0, -fb.ang, 20);
+    dB.add(`<polyline fill="none" stroke="#475569" stroke-width=".8" points="${apB.map(q => dB.X(-q.u) + ',' + dB.Y(q.z)).join(' ')}"/>`);
+    [0, -fb.ang].forEach(a => {
+      const q1 = { u: fb.C.u + (fb.Ro - 1.5) * Math.cos(a), z: fb.C.z + (fb.Ro - 1.5) * Math.sin(a) };
+      const q2 = { u: fb.C.u + (fb.Ro + 7) * Math.cos(a), z: fb.C.z + (fb.Ro + 7) * Math.sin(a) };
+      dB.add(`<line stroke="#b6c2d1" stroke-width=".7" x1="${dB.X(-q1.u)}" y1="${dB.Y(q1.z)}" x2="${dB.X(-q2.u)}" y2="${dB.Y(q2.z)}"/>`);
+    });
+    const midB = -fb.ang / 2, RlB = fb.Ro + 13;
+    const mLB = { u: fb.C.u + RlB * Math.cos(midB), z: fb.C.z + RlB * Math.sin(midB) };
+    const pxB = dB.X(-mLB.u), pyB = dB.Y(mLB.z);
+    /* 引线从圆弧中点沿半径往外拉，整段都落在板料之外，不会压到折边 */
+    const arcP = { u: fb.C.u + (fb.Ro + 2.5) * Math.cos(midB), z: fb.C.z + (fb.Ro + 2.5) * Math.sin(midB) };
+    const lxB = clamp(pxB, ixB + 24, ixB + iwB - 24);
+    const lyB = clamp(pyB, iyB + 22, iyB + ihB - 8);
+    dB.add(`<line stroke="#b6c2d1" stroke-width=".7" x1="${dB.X(-arcP.u)}" y1="${dB.Y(arcP.z)}" x2="${lxB}" y2="${lyB}"/>`);
+    dB.ed(lxB, lyB, [{ k: 'upper.backAngle', v: fmt(p.backAngle) }, '°'], 'sm');
+
+    const tyB = iyB + ihB + 13;
+    dB.ed(ixB + iwB / 2, tyB, ['朝后折 ', { k: 'upper.backAngle', v: fmt(p.backAngle) }, '°',
+                               '　折弯 R', { k: 'upper.backR', v: fmt(p.backR) }], 'sm');
+    dB.ed(ixB + iwB / 2, tyB + 14, ['料长 ', fmt(fb.zc),
+                                    '　距台阶 ', { k: 'upper.backFromStep', v: fmt(p.backFromStep) }], 'sm');
+    d.add(dB.o);
+  }
+
+  /* 放大图 C：下风挡上沿内收台阶处的两道折弯（后折 + 回折，合页款） */
+  if (detC) {
+    const tf = g.tf;
+    const ixC = ix, iyC = r.y + 222, iwC = iw, ihC = 116;
+    const dC = new Draft();
+    dC.mapTo({ x0: -detC.x1, y0: detC.y0, x1: -detC.x0, y1: detC.y1 },
+             { x: ixC, y: iyC, w: iwC, h: ihC });
+    const cidC = `ci-${id}c`;
+    dC.add(`<defs><clipPath id="${cidC}"><rect x="${ixC}" y="${iyC}" width="${iwC}" height="${ihC}"/></clipPath></defs>`);
+    dC.add(`<rect class="inset" x="${ixC}" y="${iyC}" width="${iwC}" height="${ihC}" rx="4"/>`);
+    dC.add(`<g clip-path="url(#${cidC})">`);
+    dC.add(`<path class="part" d="${g.pts.map((q, i) => (i ? 'L ' : 'M ') + dC.X(-q.u) + ' ' + dC.Y(q.z)).join(' ')} Z" stroke-width="1.9"/>`);
+    dC.add(`</g>`);
+    dC.add(`<rect x="${ixC + 1}" y="${iyC + 1}" width="74" height="16" rx="3" fill="#fff" opacity=".88"/>`);
+    dC.tx(ixC + 7, iyC + 10, `C 局部 ${(dC.s / d.s).toFixed(1)}×`, 'sm', 'start');
+
+    /* 台阶线（细虚线），给 10 / 50 一个视觉落点 */
+    dC.add(`<line stroke="#94a3b8" stroke-width=".6" stroke-dasharray="3 3"
+      x1="${dC.X(-detC.x1 + 2)}" y1="${dC.Y(tf.yStep)}" x2="${dC.X(-detC.x0 - 2)}" y2="${dC.Y(tf.yStep)}"/>`);
+
+    /* 料长：沿中面链式标 台阶线 → 第一折弯线 → 第二折弯线 → 端头，
+       三段相加恒等于台阶高，跟平面展开的料长对得上 */
+    const RmT = tf.RmT;
+    const B0 = { u: t / 2, z: tf.yStep };
+    const B1 = { u: t / 2, z: tf.y1 };
+    const M1 = { u: tf.C1.u + RmT * Math.cos(tf.aT / 2), z: tf.C1.z + RmT * Math.sin(tf.aT / 2) };
+    const m2m = (tf.th0 + tf.th1) / 2;
+    const M2 = { u: tf.C2.u + RmT * Math.cos(m2m), z: tf.C2.z + RmT * Math.sin(m2m) };
+    const M3 = tf.eMid;
+    const sx = q => dC.X(-q.u), sy = q => dC.Y(q.z);
+    /* 尺寸线朝哪边偏：取背离折弯圆心的一侧（材料外侧），换角度也不会压到板面 */
+    const awayFrom = (a, b, ctr, base) => {
+      const nx = -(b[1] - a[1]), ny = b[0] - a[0];
+      const vx = a[0] - ctr[0], vy = a[1] - ctr[1];
+      return (nx * vx + ny * vy) >= 0 ? base : -base;
+    };
+    const sB0 = [sx(B0), sy(B0)], sB1 = [sx(B1), sy(B1)];
+    const sM1 = [sx(M1), sy(M1)], sM2 = [sx(M2), sy(M2)], sM3 = [sx(M3), sy(M3)];
+    const c1s = [sx({ u: tf.C1.u, z: tf.C1.z }), sy({ u: tf.C1.u, z: tf.C1.z })];
+    const c2s = [sx({ u: tf.C2.u, z: tf.C2.z }), sy({ u: tf.C2.u, z: tf.C2.z })];
+    /* ① 台阶线 → 第一折弯线（竖直段），短尺寸，文字横排放在右侧 */
+    dC.dimAligned(sB0[0], sB0[1], sB1[0], sB1[1], 14, [], '', 0);
+    dC.ed(sB0[0] + 21, (sB0[1] + sB1[1]) / 2,
+      ['料长 ', { k: 'lower.topFrom', v: fmt(p.topFrom) }], 'sm', 'start');
+    /* ② 第一折弯线 → 第二折弯线（斜折边） */
+    const o2 = awayFrom(sM1, sM2, c1s, 13);
+    dC.dimAligned(sM1[0], sM1[1], sM2[0], sM2[1], o2,
+      ['料长 ', { k: 'lower.tfLeg', v: fmt(p.frontFrom - p.topFrom) }], '', Math.sign(o2) * 9);
+    /* ③ 第二折弯线 → 端头（回折段） */
+    const o3 = awayFrom(sM2, sM3, c2s, 13);
+    dC.dimAligned(sM2[0], sM2[1], sM3[0], sM3[1], o3,
+      ['料长 ', fmt(p.h - tf.y2)], '', Math.sign(o3) * 9);
+
+    const tC = iyC + ihC + 11;
+    dC.ed(ixC + iwC / 2, tC, ['后折 ', { k: 'lower.topAngle', v: fmt(p.topAngle) }, '°',
+                              '　距台阶 ', { k: 'lower.topFrom', v: fmt(p.topFrom) },
+                              '　R', { k: 'lower.topR', v: fmt(p.topR) }], 'sm');
+    dC.ed(ixC + iwC / 2, tC + 13, ['回折 ', { k: 'lower.frontAngle', v: fmt(p.frontAngle) }, '°',
+                                   '　距台阶 ', { k: 'lower.frontFrom', v: fmt(p.frontFrom) },
+                                   '　台阶高 ', { k: 'lower.neckTopH', v: fmt(p.neckTopH) }], 'sm');
+    d.add(dC.o);
+  }
+
+  /* 方向提示 */
+  const dy = r.y + r.h - 13, x1 = r.x + 34, x2 = r.x + 140;
+  d.add(`<line class="dim" x1="${x1}" y1="${dy}" x2="${x2}" y2="${dy}"/>`);
+  d.arrow(x1 + 7, dy, -1, 0); d.arrow(x2 - 7, dy, 1, 0);
+  d.tx(x1 - 3, dy, '前', 'sm', 'end');
+  d.tx(x2 + 3, dy, '后', 'sm', 'start');
+  return d.o;
+}
+
+/* =====================================================================
+   渲染
+   ===================================================================== */
+function render() {
+  const svg = document.getElementById('sheet');
+  fixNeck();
+
+  let o = '';
+  o += `<defs>
+    <pattern id="hatch" width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="5" stroke="#9aa7b6" stroke-width="1"/>
+    </pattern>
+  </defs>`;
+  o += `<rect x="0" y="0" width="${SHEET.w}" height="${SHEET.h}" fill="#f7f9fb" rx="8"/>`;
+
+  const left = (kind, r) => S.solid ? viewSolid(kind, r) : viewFace(kind, 'formed', r);
+  o += left('upper', V.uFace);
+  o += viewFace('upper', 'flat', V.uFlat);
+  o += viewSide('upper', V.uSide);
+  o += left('lower', V.lFace);
+  o += viewFace('lower', 'flat', V.lFlat);
+  o += viewSide('lower', V.lSide);
+
+  svg.innerHTML = o;
+  syncTools();
+}
+
+/* =====================================================================
+   图上就地编辑
+   ===================================================================== */
+const edEl = document.getElementById('ed');
+const wrapEl = document.getElementById('wrap');
+let editing = null;
+
+document.getElementById('sheet').addEventListener('click', e => {
+  const tg = e.target.closest('[data-tg]');
+  if (tg) {
+    if (editing) commit(false);
+    const k = tg.dataset.tg;
+    setPath(k, !getPath(k));
+    render();
+    return;
+  }
+  const el = e.target.closest('[data-k]');
+  if (!el) return;
+  const k = el.dataset.k;
+  if (!SPEC[k] && !DER[k]) return;
+  if (editing) commit(false);
+  const box = wrapEl.getBoundingClientRect();
+  const rc = el.getBoundingClientRect();
+  editing = k;
+  edEl.value = fmt(valOf(k));
+  edEl.style.left = (rc.left + rc.width / 2 - box.left) + 'px';
+  edEl.style.top = (rc.top + rc.height / 2 - box.top) + 'px';
+  edEl.hidden = false;
+  edEl.focus();
+  edEl.select();
+});
+
+edEl.addEventListener('input', () => {
+  if (!editing) return;
+  const sp = specOf(editing);
+  const v = parseFloat(edEl.value);
+  if (!isFinite(v) || v < sp[0] || v > sp[1]) return;
+  putVal(editing, v);
+  render();
+});
+
+edEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); commit(false); }
+  else if (e.key === 'Escape') { e.preventDefault(); commit(true); }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const sp = specOf(editing);
+    const cur = parseFloat(edEl.value) || 0;
+    const nv = clamp(cur + (e.key === 'ArrowUp' ? sp[2] : -sp[2]), sp[0], sp[1]);
+    edEl.value = fmt(nv);
+    putVal(editing, nv);
+    render();
+  }
+});
+edEl.addEventListener('blur', () => commit(false));
+
+function commit(cancel) {
+  if (!editing) return;
+  const k = editing; editing = null;
+  const sp = specOf(k);
+  const before = valOf(k);
+  if (!cancel) {
+    let v = parseFloat(edEl.value);
+    if (isFinite(v)) putVal(k, clamp(v, sp[0], sp[1]));
+  }
+  edEl.hidden = true;
+  if (valOf(k) !== before) render();
+}
+
+/* =====================================================================
+   工具条
+   ===================================================================== */
+function syncTools() {
+  qa('#segT button', b => b.classList.toggle('on', String(S.t) === b.dataset.v));
+  qa('#segGlue button', b => b.classList.toggle('on', (b.dataset.v === '1') === !!S.upper.useGlue));
+  qa('#segEdge button', b => b.classList.toggle('on', S.upper.holeEdgeMode === b.dataset.v));
+  qa('#segSide button', b => b.classList.toggle('on', S.upper.holeSide === b.dataset.v));
+  document.getElementById('segEdge').style.display = S.upper.useGlue ? 'none' : '';
+  document.getElementById('segSide').style.display = S.upper.useGlue ? 'none' : '';
+  document.getElementById('btnDims').textContent = '标注 ' + (S.dims ? '开' : '关');
+  document.getElementById('btnSolid').textContent = '斜视 ' + (S.solid ? '开' : '关');
+  const name = S.model === 'glue' ? '胶条款' : '合页款';
+  document.getElementById('sub').textContent = name + ' · 亚克力折弯 · mm · 上北下南左西右东 · 点数字改尺寸（成品立体图只读）';
+  document.title = '挡风玻璃图纸 · ' + name;
+}
+function qa(sel, fn) { document.querySelectorAll(sel).forEach(fn); }
+
+document.getElementById('segT').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.t = Number(b.dataset.v); render();
+});
+document.getElementById('segGlue').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.upper.useGlue = b.dataset.v === '1'; render();
+});
+document.getElementById('segEdge').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.upper.holeEdgeMode = b.dataset.v; render();
+});
+document.getElementById('segSide').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.upper.holeSide = b.dataset.v; render();
+});
+document.getElementById('btnDims').addEventListener('click', () => { S.dims = !S.dims; render(); });
+document.getElementById('btnSolid').addEventListener('click', () => { if (editing) commit(false); S.solid = !S.solid; render(); });
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (editing) commit(false);
+  S.upper = JSON.parse(JSON.stringify(DEFAULTS.upper));
+  S.lower = JSON.parse(JSON.stringify(DEFAULTS.lower));
+  STORE[S.model] = snap();
+  render();
+});
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if (!b) return;
+  const next = b.dataset.model;
+  if (next === S.model) return;
+  if (editing) commit(false);
+  STORE[S.model] = snap();          /* 存回当前这款 */
+  S.model = next;
+  loadSnap(STORE[next]);            /* 载入另一款 */
+  qa('.tab', t => t.classList.toggle('on', t.dataset.model === S.model));
+  render();
+});
+
+window.addEventListener('resize', () => { if (editing) commit(false); });
+
+render();
+</script>
+</body>
+</html>
