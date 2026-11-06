@@ -353,21 +353,42 @@
       </div>
     </div>
     <div class="field" id="jointField">
-      <label>拼接方式（必选）</label>
+      <label>四壁拼接（必选）</label>
       <div class="row">
         <label class="radio"><input type="radio" name="joint" value="90"> 90° 直角</label>
         <label class="radio"><input type="radio" name="joint" value="45"> 45° 斜角</label>
+      </div>
+      <div class="field" id="jointToField" style="display:none;margin-top:6px;margin-bottom:0;">
+        <label>90° 直拼 · 哪条边到底？</label>
+        <select id="jointTo">
+          <option value="L">长边到底（长板整条，短板嵌中间）</option>
+          <option value="W">宽边到底（短板整条，长板嵌中间）</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" id="jointBottomField">
+      <label>底板拼接（可与四壁不同）</label>
+      <div class="row">
+        <label class="radio"><input type="radio" name="jointBottom" value="45" checked> 45° 斜拼</label>
+        <label class="radio"><input type="radio" name="jointBottom" value="90"> 90° 直拼</label>
       </div>
     </div>
     <div class="field" id="magField" style="display:none;">
       <label id="magLabel">磁铁（4 个 · 圆磁 · 吸合盖用）</label>
       <label class="radio"><input type="checkbox" id="useMag"> 添加磁铁</label>
       <div id="magOpts" style="display:none;margin-top:5px;">
+        <div class="field" id="magNField" style="margin-bottom:7px;display:none;">
+          <label>磁铁数量</label>
+          <select id="magN">
+            <option value="4">4 颗（四角）</option>
+            <option value="6">6 颗（四角 + 放置边中间 2 颗居中）</option>
+          </select>
+        </div>
         <div class="field" style="margin-bottom:7px;">
           <label>放置边</label>
           <select id="magEdge">
-            <option value="L">长边（4 个都放长边）</option>
-            <option value="W">宽边（4 个都放宽边）</option>
+            <option value="L">长边（磁铁都放长边）</option>
+            <option value="W">宽边（磁铁都放宽边）</option>
           </select>
         </div>
         <div class="field" style="margin-bottom:7px;">
@@ -544,7 +565,8 @@ function readInputs(){
   const notBox = solid || frame || shape;
   $('thickField').style.display    = notBox ? 'none' : 'block';
   $('jointField').style.display    = notBox ? 'none' : 'block';
-  $('magField').style.display      = notBox ? 'none' : 'block';
+  $('jointBottomField').style.display = notBox ? 'none' : 'block';
+  $('magField').style.display      = (notBox || type==='tiandi') ? 'none' : 'block';  // 天地盖不用磁铁
   $('edgeField').style.display     = (notBox && shapeEdgeOn) ? 'block' : (!shape && notBox) ? 'block' : 'none';
   $('cEdgeLabel').style.display    = frame ? '' : 'none';
   $('plateField').style.display    = frame ? 'block' : 'none';
@@ -580,16 +602,24 @@ function readInputs(){
   $('triHint').textContent = tri && triRIn>0
     ? `当前内切圆半径 ${triRIn.toFixed(1)} mm（R 角上限）`
     : '三边需满足任意两边之和大于第三边，不符时自动修正';
-  $('magLabel').textContent = (type==='open')
-    ? '磁铁（4 个 · 圆磁 · 吸合独立盖板用）'
-    : '磁铁（4 个 · 圆磁 · 吸合盖用）';
 
-  const useMag = notBox ? false : $('useMag').checked;
+  const useMag = (notBox || type==='tiandi') ? false : $('useMag').checked;  // 天地盖不用磁铁
+  /* 拼接：四壁（竖直接缝）与底板（水平接缝）分开选。
+     jointWall = '45'|'90'|null（未选）；jointTo 仅在 90° 直拼时有意义：到底的那条边 */
+  const jointWall   = notBox ? null : getJoint();
+  const jointBottom = notBox ? null : ((document.querySelector('input[name="jointBottom"]:checked')||{value:'45'}).value);
+  const jointTo     = notBox ? null : $('jointTo').value;
   $('magOpts').style.display = useMag ? 'block' : 'none';
+  $('magNField').style.display = (type==='openlid') ? 'block' : 'none';  // 6 颗选项仅板盖盒提供
   const magEdge = $('magEdge').value;          // 'L' 长边 / 'W' 宽边
   const mparts = $('magSize').value.split(',');
   const magD = +mparts[0], magTh = +mparts[1]; // 直径 / 厚
   const magDist = Math.max(0, parseFloat($('magDist').value)||20);
+  const magN = (type==='openlid' && useMag) ? (parseInt($('magN').value)||4) : 4;
+  $('magLabel').textContent = (type==='openlid')
+    ? `磁铁（盒体 ${magN} + 板盖 ${magN} · 圆磁 · 吸合盖用）`
+    : (type==='open') ? '磁铁（4 个 · 圆磁 · 吸合独立盖板用）'
+                      : '磁铁（4 个 · 圆磁 · 吸合盖用）';
   const magOk = (t >= magD + 2);               // 盒体板厚需 ≥ 直径+2
   /* 板盖磁铁不再做「直径+2 ≤ 盖厚」校验（用户要求删除）：盖薄时磁铁照样允许放置，
      盒体磁铁的 magOk 校验保持不变 */
@@ -607,11 +637,19 @@ function readInputs(){
           shT,cirD,triA,triB,triC,tri,triRIn,triFixed,shapeEdgeOn,
           holeOn,holeD,holeDep,holeDepIn,holeThrough,holeFits,
           fMagD,fMagTh,magL,magW,magFit,useMag,
-          magEdge,magD,magTh,magDist,magOk};
+          magEdge,magD,magTh,magDist,magN,magOk,
+          jointWall,jointBottom,jointTo};
 }
 function getJoint(){
   const el=document.querySelector('input[name="joint"]:checked');
   return el ? el.value : null;
+}
+/* 拼接说明文字：页面横幅 / 汇总 / PNG·打印拼接条 / DXF 信息块共用，保证四处一致 */
+function jointDesc(jW,jB,jTo){
+  const wall = jW==='45' ? '四壁 45° 斜拼'
+             : `四壁 90° 直拼（${jTo==='W'?'宽边':'长边'}到底）`;
+  const bot  = jB==='45' ? '底板 45° 斜拼' : '底板 90° 直拼';
+  return wall+' · '+bot;
 }
 function updateJoint(){
   const j=getJoint();
@@ -620,15 +658,19 @@ function updateJoint(){
     // 实心块 / 相夹 / 简单图形没有拼接工艺，不显示拼接条（打印 / 导出版式相应上移）
     b.textContent='';
     b.style.display='none';
+    $('jointToField').style.display='none';
     return;
   }
+  // 90° 直拼才需要选「哪条边到底」；45° 斜拼四角对称，无此问题
+  $('jointToField').style.display = (j==='90') ? 'block' : 'none';
   if(!j){
     // 未选拼接方式：不再显示提示条（打印/导出时会弹窗提醒）
     b.textContent='';
     b.style.display='none';
     b.classList.add('warnj');
   } else {
-    b.textContent='拼接方式：'+(j==='45'?'45° 拼接（斜角）':'90° 拼接（直角）');
+    const jB=(document.querySelector('input[name="jointBottom"]:checked')||{value:'45'}).value;
+    b.textContent='拼接方式：'+jointDesc(j,jB,$('jointTo').value);
     b.classList.remove('warnj');
     b.style.display='';
   }
@@ -711,6 +753,19 @@ function render3D(s){
     cand+=innerShell([-s.t,-s.t,s.H+lg],s.L+2*s.t,s.W+2*s.t,s.Hl,s.t,false,true);
   }
   body+=cand;
+  // 拼接缝（盒类）：画在盒口沿（z=壁顶）——与俯视图同一套几何，立体上也能看出拼接方式
+  if(s.jointWall && !s.solid && !s.frame && !s.shape){
+    const zr=(s.type==='closed')?s.H-s.t:s.H;   // 闭合盒壁顶让一个板厚（顶板坐在四壁上）
+    const rim=(a,b)=>{ const p=pj([a[0],a[1],zr]), q=pj([b[0],b[1],zr]);
+      body+=`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke="${INNER}" stroke-width="1.1"/>`; };
+    const tt=s.t, LL=s.L, WW=s.W;
+    if(s.jointWall==='45'){
+      rim([0,0],[tt,tt]); rim([LL,0],[LL-tt,tt]); rim([0,WW],[tt,WW-tt]); rim([LL,WW],[LL-tt,WW-tt]);
+    } else if(s.jointWall==='90'){
+      if(s.jointTo==='L'){ rim([0,tt],[tt,tt]); rim([LL-tt,tt],[LL,tt]); rim([0,WW-tt],[tt,WW-tt]); rim([LL-tt,WW-tt],[LL,WW-tt]); }
+      else { rim([tt,0],[tt,tt]); rim([tt,WW-tt],[tt,WW]); rim([LL-tt,0],[LL-tt,tt]); rim([LL-tt,WW-tt],[LL-tt,WW]); }
+    }
+  }
   if(s.useMag){
     const r=(s.magD/2)*scale;
     // 圆心夹在盒体轮廓内（略向内收，抵消等轴测投影后正圆的视觉外溢）
@@ -805,13 +860,17 @@ function magCyl(cx,cy,w,h,ok){
   return `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.4"/>`
        + `<line x1="${cx.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(y0+h).toFixed(1)}" stroke="${stroke}" stroke-width="0.6"/>`;
 }
-// 4 个磁铁在俯视平面里的圆心（已按板厚居中于相应侧壁），位于顶部边缘 z=H
+// 磁铁在俯视平面里的圆心（已按板厚居中于相应侧壁），位于顶部边缘 z=H。
+// 6 颗（仅板盖盒）：四角 4 颗之外，在放置边中间再加 2 颗——无论 4 颗的距边 d 是多少，
+// 这 2 颗永远落在放置边的中点（沿边方向居中），与 4 颗互不影响。
 function magPlanCenters(s){
-  const d=s.magDist, t=s.t;
+  const d=s.magDist, t=s.t, six=(s.magN===6);
   if(s.magEdge==='L'){ // 长边：磁铁在前后长边上（y=0 与 y=W），距宽边(x端) d
-    return [[d, t/2],[s.L-d, t/2],[d, s.W-t/2],[s.L-d, s.W-t/2]];
+    const base=[[d, t/2],[s.L-d, t/2],[d, s.W-t/2],[s.L-d, s.W-t/2]];
+    return six ? base.concat([[s.L/2, t/2],[s.L/2, s.W-t/2]]) : base;
   } else {             // 宽边：磁铁在左右宽边上（x=0 与 x=L），距长边(y端) d
-    return [[t/2, d],[t/2, s.W-d],[s.L-t/2, d],[s.L-t/2, s.W-d]];
+    const base=[[t/2, d],[t/2, s.W-d],[s.L-t/2, d],[s.L-t/2, s.W-d]];
+    return six ? base.concat([[t/2, s.W/2],[s.L-t/2, s.W/2]]) : base;
   }
 }
 /* 板盖磁铁平面位置 = 盒体磁铁平面位置（同一 (x,y)，才能上下正对吸合）。
@@ -849,6 +908,51 @@ function drawMagsVert(X0,Ytop,Wpx,tpx,scale,s,axis){
 // 把圆心夹在 [lo,hi] 内；区间无效时取中点
 function clampC(v,lo,hi){ return hi<lo ? (lo+hi)/2 : Math.min(Math.max(v,lo),hi); }
 
+/* ---------- 拼接缝绘制（页面视图） ----------
+   红色实线 = 板与板的拼接缝（红色虚线 = 内腔，同色系：实线是待确认的接缝工艺）。
+   · 四壁竖直接缝（90° 直拼才有）：「到底」的那对壁板通到外沿，另一对壁板嵌在中间，
+     其端面接缝在正/侧视图里是两条竖线（从内底到壁顶），在俯视图里是内壁线延到外沿的两小段。
+   · 45° 斜拼：正/侧视图竖直接缝不显线（四角对称），俯视图画四角对角接缝线。
+   · 底板接缝：90° 直拼 = 四壁坐在底板上 → 正/侧视图里底板顶面处一条横线（通长）；
+     45° 斜拼 = 四壁斜面落到底 → 正/侧视图底部两角各一条 45° 斜切线。
+   topInset：闭合盒壁顶再让一个板厚（顶板坐在四壁上），开口盒为 0。 */
+function jointSeamsV(X0,Ytop,Wpx,Hpx,tpx,s,axis,topInset){
+  const jW=s.jointWall, jB=s.jointBottom, jTo=s.jointTo;
+  if(!jW) return '';
+  let g='';
+  const ln=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INNER}" stroke-width="1.2"/>`;
+  const wallBot=Ytop+Hpx-tpx, wallTop=Ytop+topInset;   // 竖直接缝的范围：内底 → 壁顶
+  // 正视图（axis=x，横向=长）看到的是长板：短板到底(宽边到底)时长板嵌中间 → 有竖直接缝
+  // 侧视图（axis=y，横向=宽）看到的是短板：长边到底时短板嵌中间 → 有竖直接缝
+  if(jW==='90' && jTo===(axis==='x'?'W':'L')){
+    g+=ln(X0+tpx,wallTop,X0+tpx,wallBot)+ln(X0+Wpx-tpx,wallTop,X0+Wpx-tpx,wallBot);
+  }
+  if(jB==='90'){
+    g+=ln(X0,wallBot,X0+Wpx,wallBot);
+  } else if(jB==='45'){
+    g+=ln(X0,Ytop+Hpx,X0+tpx,wallBot)+ln(X0+Wpx,Ytop+Hpx,X0+Wpx-tpx,wallBot);
+  }
+  return g;
+}
+// 俯视图：45° 斜拼画四角对角线；90° 直拼按「到底边」把内壁接缝延长到外沿
+function jointSeamsTop(X0,Ybox,Wpx,Dpx,tpx,s){
+  const jW=s.jointWall;
+  if(!jW) return '';
+  let g='';
+  const ln=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INNER}" stroke-width="1.2"/>`;
+  const x1=X0+Wpx, y1=Ybox+Dpx, xi=X0+tpx, xj=x1-tpx, yi=Ybox+tpx, yj=y1-tpx;
+  if(jW==='45'){
+    g+=ln(X0,Ybox,xi,yi)+ln(x1,Ybox,xj,yi)+ln(X0,y1,xi,yj)+ln(x1,y1,xj,yj);
+  } else if(jW==='90'){
+    if(s.jointTo==='L'){   // 长板到底：短板端面接缝 = 内壁横线贯穿左右壁厚
+      g+=ln(X0,yi,xi,yi)+ln(xj,yi,x1,yi)+ln(X0,yj,xi,yj)+ln(xj,yj,x1,yj);
+    } else {               // 宽板到底：长板端面接缝 = 内壁竖线贯穿上下壁厚
+      g+=ln(xi,Ybox,xi,yi)+ln(xi,yj,xi,y1)+ln(xj,Ybox,xj,yi)+ln(xj,yj,xj,y1);
+    }
+  }
+  return g;
+}
+
 /* ---------- 竖直视图（正/侧），统一比例保证“高”同像素 ---------- */
 // topOpen: 顶部开口则内高只减 1 个 t
 function vertView(hMm,vMm,t,topOpen,hName,scale,s,axis){
@@ -868,6 +972,7 @@ function vertView(hMm,vMm,t,topOpen,hName,scale,s,axis){
   if(ihpx>0) g+=vdim(X0-26*TF, iy0, iy0+ihpx, '内高 '+(topOpen?(vMm-t):(vMm-2*t)), INNER, 'left');
   // 板厚角标：置于盒内左下角，避开顶部磁铁与距边尺寸标注
   g+=`<text x="${X0+tpx+4}" y="${Y0+Hpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
+  g+=jointSeamsV(X0,Y0,Wpx,Hpx,tpx,s,axis,topOpen?0:tpx);   // 拼接缝（闭合盒壁顶让一个板厚）
   g+=drawMagsVert(X0, Y0, Wpx, tpx, scale, s, axis);
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -890,6 +995,8 @@ function tiandiVert(hMm,baseH,lidH,t,hName,scale,s,axis){
   g+=`<rect x="${baseX}" y="${baseY}" width="${Wbpx}" height="${Hbpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${baseX+tpx}" y="${baseY}" width="${Wbpx-2*tpx}" height="${Hbpx-tpx}" fill="none" stroke="${INNER}" stroke-width="1.1" stroke-dasharray="5 3"/>`;
   g+=`<text x="${baseX+5}" y="${baseY+15}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">底</text>`;
+  // 拼接缝画在底盒上（盖是独立壳体，其角部接缝在俯视图体现）
+  g+=jointSeamsV(baseX,baseY,Wbpx,Hbpx,tpx,s,axis,0);
   // 外尺寸
   g+=hdim(X0, lidY-26*TF, X0+Wlpx, '外'+hName+'(盖) '+(hMm+2*t), OUTER);
   g+=vdim(X0+Wlpx+28*TF, lidY, lidY+Hlpx, '盖高 '+lidH, OUTER, 'right');
@@ -934,6 +1041,7 @@ function openLidVert(hMm, baseH, lidT, t, hName, scale, s, axis){
   g+=vdim(X0-26*TF, YT, YT+ihpx, '内高 '+(baseH-t), INNER, 'left');
   // 盒体板厚角标：置于盒内左下角，避开顶部磁铁
   g+=`<text x="${X0+tpx+4}" y="${YT+Hpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
+  g+=jointSeamsV(X0,YT,Wpx,Hpx,tpx,s,axis,0);   // 拼接缝（板盖是整块平板，无接缝）
   // 磁铁：盒顶（朝下） + 板盖（朝上），平面位置对应
   g+=drawMagsVert(X0, YT, Wpx, tpx, scale, s, axis);
   g+=drawMagsLidVert(X0, LB, Wpx, lidTpx, scale, s, axis);
@@ -970,6 +1078,7 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
   g+=`<rect x="${X0}" y="${Ybox}" width="${Wpx}" height="${Dpx}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   g+=`<rect x="${X0+tpx}" y="${Ybox+tpx}" width="${Wpx-2*tpx}" height="${Dpx-2*tpx}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   g+=`<text x="${X0+Wpx/2}" y="${Ybox+Dpx/2+4}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">${s.type==='tiandi'?'底':'盒'}</text>`;
+  g+=jointSeamsTop(X0,Ybox,Wpx,Dpx,tpx,s);   // 拼接缝：45° 对角线 / 90° 直拼延长线
   // 外尺寸
   if(s.type==='openlid'){
     g+=hdim(X0, YtopDim, X0+Wpx, hName+' '+hMm, OUTER);
@@ -982,10 +1091,20 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
   } else {
     g+=hdim(X0, Ybox-40*TF, X0+Wpx, hName+' '+hMm, OUTER);
   }
-  g+=vdim(X0+Wpx+26*TF, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
+  // 6 颗（板盖盒）且磁铁在宽边：中间 2 颗距长边 = 宽/2，链式竖直尺寸标在盒右侧 +40TF 通道，
+  // 「宽」尺寸同步外移到 +54TF —— 两者文字/线完全错开（链式文字占 +50..+65，宽线在 +76）
+  const sixW=(s.type==='openlid' && s.useMag && s.magN===6 && s.magEdge==='W');
+  if(sixW){
+    const xC=X0+Wpx+40*TF, halfV=String(+(vMm/2).toFixed(1)), mc=s.magOk?THK:INNER;
+    g+=vdimRot(xC, Ybox, Ybox+Dpx/2, halfV, mc, xC+4*TF, Ybox+Dpx/4);
+    g+=vdimRot(xC, Ybox+Dpx/2, Ybox+Dpx, halfV, mc, xC+4*TF, Ybox+Dpx*3/4);
+  }
+  g+=vdim(X0+Wpx+(sixW?54:26)*TF, Ybox, Ybox+Dpx, vName+' '+vMm, OUTER, 'right');
   /* 内长尺寸线：天地盖的「盖」比底大一圈（虚线在盒体下方 tpx 处），
      内长标注必须让到虚线外侧，否则 12px 的文字会被虚线穿过 */
-  const dimDrop = tiandi ? tpx + 24*TF : 24*TF;
+  // 6 颗且磁铁在长边：盒体下方多一行居中链式尺寸，内长标注再往下让一行
+  const sixL=(s.type==='openlid' && s.useMag && s.magN===6 && s.magEdge==='L');
+  const dimDrop = tiandi ? tpx + 24*TF : (sixL ? 40*TF : 24*TF);
   if(Wpx-2*tpx>0) g+=hdim(X0+tpx, Ybox+Dpx+dimDrop, X0+tpx+Wpx-2*tpx, '内'+hName+' '+(hMm-2*t), INNER);
   if(Dpx-2*tpx>0) g+=vdim(X0-26*TF, Ybox+tpx, Ybox+tpx+Dpx-2*tpx, '内'+vName+' '+(vMm-2*t), INNER, 'left');
   g+=`<text x="${X0+tpx+4}" y="${Ybox+tpx+13}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
@@ -995,6 +1114,13 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
     if(s.magEdge==='L'){
       g+=hdim(X0, Ybox-18*TF, X0+dpx, String(s.magDist), col);
       g+=hdim(X0+Wpx, Ybox-18*TF, X0+Wpx-dpx, String(s.magDist), col);
+      if(s.type==='openlid' && s.magN===6){
+        // 中间 2 颗距宽边 = 长/2（永远居中）：链式尺寸标在盒体下方一行，
+        // 与上方两角磁铁的距边尺寸分居盒体两侧，中点刻度正对中间磁铁
+        const yC=Ybox+Dpx+18*TF, halfV=String(+(hMm/2).toFixed(1));
+        g+=hdim(X0, yC, X0+Wpx/2, halfV, col);
+        g+=hdim(X0+Wpx/2, yC, X0+Wpx, halfV, col);
+      }
     } else {
       // 宽边磁铁的 d 是竖向距离。盒子左右外侧只剩十几像素的窄缝（再往外就是
       // 「内宽」「宽」两条竖向尺寸），横排文字必然压线、左边还会被卡片边缘裁掉。
@@ -1020,6 +1146,20 @@ function topView(hMm,vMm,t,tiandi,hName,vName,scale,s){
       const cy=clampC(Ybox+p[1]*sc, Ybox+r, Ybox+Dpx-r);
       g+=magCircle(cx, cy, r, s.magOk);
     });
+    // 6 颗（板盖盒）：中间 2 颗在放置边中点，旁注「居中」，与四角的距边尺寸区分开
+    if(s.type==='openlid' && s.magN===6){
+      const mids = (s.magEdge==='L')
+        ? [[hMm/2, t/2, 'down'],[hMm/2, vMm-t/2, 'up']]      // 长边：上排朝内注、下排朝内注
+        : [[t/2, vMm/2, 'right'],[hMm-t/2, vMm/2, 'left']];  // 宽边：左右两颗朝内注
+      const tSize=Math.max(9, F_SUB*0.72);
+      mids.forEach(([px,py,dir])=>{
+        const cx=X0+px*sc, cy=Ybox+py*sc;
+        const tx = dir==='right' ? cx+r+4 : dir==='left' ? cx-r-4 : cx;
+        const ty = dir==='down' ? cy+r+tSize+2 : dir==='up' ? cy-r-3 : cy+tSize/2-1;
+        const anch = dir==='right' ? 'start' : dir==='left' ? 'end' : 'middle';
+        g+=`<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" font-size="${tSize}" fill="${THK}" text-anchor="${anch}" stroke="#ffffff" stroke-width="${2.5*TF}" paint-order="stroke" stroke-linejoin="round">居中</text>`;
+      });
+    }
   }
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1783,12 +1923,16 @@ function summaryItems(s){
     {k:'盒子壁厚', v:`${s.t} mm`}
   ];
   if(s.type==='openlid') items.push({k:'板盖厚', v:`${s.lidT} mm`});
+  if(s.jointWall) items.push({k:'拼接', v: s.jointWall==='45'?'四壁 45° 斜拼':`四壁 90° 直拼（${s.jointTo==='W'?'宽边':'长边'}到底）`,
+                              d: s.jointBottom==='45'?'底板 45° 斜拼':'底板 90° 直拼'});
   if(s.useMag){
     const onEdge = s.magEdge==='L' ? '长边' : '宽边';   // 磁铁放在哪条边
     const fromEdge = s.magEdge==='L' ? '宽边' : '长边'; // 距边的基准边
-    const cnt = (s.type==='openlid') ? '4+盖4' : '4';
+    const cnt = (s.type==='openlid') ? `${s.magN}+盖${s.magN}` : '4';
+    const mid = (s.type==='openlid' && s.magN===6)
+      ? `·${onEdge}中间2颗居中（距${fromEdge} ${(s.magEdge==='L' ? s.L/2 : s.W/2)}mm）` : '';
     items.push({k:'磁铁', v:`Ø${s.magD}×${s.magTh}`,
-                d:`${onEdge}·距${fromEdge} ${s.magDist}mm·${cnt}`});
+                d:`${onEdge}·距${fromEdge} ${s.magDist}mm·${cnt}${mid}`});
   }
   return items;
 }
@@ -2035,7 +2179,7 @@ async function exportPNG(){
   const joint=getJoint();
   if(!s.solid && !s.frame && !s.shape && !joint){ alert('请先选择拼接方式（90° 或 45°）后再导出图片。'); return; }
   const useBan = !s.solid && !s.frame && !s.shape && !!joint;   // 实心块 / 相夹 / 简单图形没有拼接工艺，不出拼接条
-  const jointText = joint==='45' ? '45° 拼接（斜角）' : '90° 拼接（直角）';
+  const jointText = jointDesc(joint, s.jointBottom, s.jointTo);
   const items=summaryItems(s), warns=warningList(s);
 
   const S=2;                                     // 输出倍率
@@ -2208,7 +2352,9 @@ function fileBase(s){
     const e=(s.edge==='round') ? 'R'+s.R : (s.edge==='cham') ? 'C'+s.C : '直角';
     return `亚克力相夹_${s.L}x${s.W}_板厚${s.pt}_${e}_磁${s.fMagD}x${s.fMagTh}`;
   }
-  return `产品_${s.L}x${s.W}x${s.H}_t${s.t}_${getJoint()==='45'?'45':'90'}`;
+  const jw=s.jointWall;
+  const jtag = jw ? ('j'+jw+(s.jointBottom||'')+((jw==='90'&&(s.jointTo||''))||'')) : 'x';
+  return `产品_${s.L}x${s.W}x${s.H}_t${s.t}_${jtag}`;
 }
 
 /* ============================================================
@@ -2216,12 +2362,14 @@ function fileBase(s){
    · 四视图：正视图 / 侧视图 / 俯视图（1:1 线框 + 尺寸）
              + 从上方斜侧视图（等轴测线框，与页面 3D 视图同视角）
    · 图层：VIEW 可见轮廓 / VIEWIN 虚线（内腔 + 不可见棱线）
+           / JOINT 拼接缝（红色实线：四壁竖直接缝 + 底板接缝）
            / MAGNET 磁铁圆 / DIM 尺寸线 / TEXT 文字 / FRAME 图框
    ============================================================ */
 const DXF_LAYERS = [
   ['0',      7,   'CONTINUOUS'],
   ['VIEW',   7,   'CONTINUOUS'],   // 可见轮廓
   ['VIEWIN', 8,   'DASHED'],       // 内腔 / 不可见棱线
+  ['JOINT',  1,   'CONTINUOUS'],   // 拼接缝（红）
   ['MAGNET', 1,   'CONTINUOUS'],   // 磁铁
   ['DIM',    8,   'CONTINUOUS'],   // 尺寸线
   ['TEXT',   3,   'CONTINUOUS'],   // 文字
@@ -2378,6 +2526,18 @@ function isoAllSegs(s){
     push(shellSegs3d({x:0,y:0,z:0,w:s.L,d:s.W,h:s.H,
                       omitTop:(s.type!=='closed'),omitBottom:false,t}));
   }
+  // 拼接缝（盒类）：画在盒口沿平面（z=壁顶）——与俯视图同一套几何，等轴测上也可见
+  if(s.jointWall && !s.solid && !s.frame && !s.shape){
+    const zr=(s.type==='closed')?s.H-t:s.H;   // 闭合盒壁顶让一个板厚（顶板坐在四壁上）
+    const rim=(a,b)=>out.push([[a[0],a[1],zr],[b[0],b[1],zr],'JOINT']);
+    const jW=s.jointWall, L=s.L, W=s.W;
+    if(jW==='45'){
+      rim([0,0],[t,t]); rim([L,0],[L-t,t]); rim([0,W],[t,W-t]); rim([L,W],[L-t,W-t]);
+    } else if(jW==='90'){
+      if(s.jointTo==='L'){ rim([0,t],[t,t]); rim([L-t,t],[L,t]); rim([0,W-t],[t,W-t]); rim([L-t,W-t],[L,W-t]); }
+      else { rim([t,0],[t,t]); rim([t,W-t],[t,W]); rim([L-t,0],[L-t,t]); rim([L-t,W-t],[L-t,W]); }
+    }
+  }
   return dropCoincidentDashes(out);
 }
 // 装配后壳体交界处的虚线会与实线完全重合，去掉虚线避免实虚叠画
@@ -2391,7 +2551,7 @@ function dropCoincidentDashes(segs){
 }
 
 function dxfBuild(){
-  const s=readInputs(), joint=getJoint(), j45=(joint==='45'), t=s.t;
+  const s=readInputs(), jW=s.jointWall, jB=s.jointBottom, jTo=s.jointTo, t=s.t;
   const TFX=DXF_TF;      // 文字与标注间距的放大倍数（与字高一致）
   const A=dxfNew();
   const TYPE_NAME=PRODUCTS[s.type].name;
@@ -2418,8 +2578,9 @@ function dxfBuild(){
     A.text('TEXT',[x+(side==='right'?3.6*TFX:-3.6*TFX),(ya+yb)/2],DIM_H,txt,90);
   }
   /* ---------- 单个正投影视图：x0,y0 = 左下角 ----------
-     b = {inner, lbl:[外宽,外高,内宽,内高], name, mags, axis, miter, centerName}
-     axis 不为 null 时在该视图内再画一遍磁铁（正视图横轴=长，侧视图横轴=宽） */
+     b = {inner, lbl:[外宽,外高,内宽,内高], name, mags, axis, seams, seamsExt, centerName}
+     axis 不为 null 时在该视图内再画一遍磁铁（正视图横轴=长，侧视图横轴=宽）
+     seams='top' 俯视图接缝 / 'v' 正·侧视图接缝（seamsExt=该视图横向对应的实际边 'L'|'W'） */
   function viewBox(x0,y0,w,h,b){
     const inner=b.inner;
     A.rect('VIEW',x0,y0,x0+w,y0+h);
@@ -2430,15 +2591,49 @@ function dxfBuild(){
       if(Math.abs(iy-y0)>0.01)        A.line('VIEWIN',[ix,iy],[ix+iw,iy]);
       A.line('VIEWIN',[ix,iy],[ix,iy+ih]);
       A.line('VIEWIN',[ix+iw,iy],[ix+iw,iy+ih]);
-      // 45° 斜角拼接：四角沿壁厚方向的对角接缝；90° 直角拼接没有这条线
-      if(b.miter){
-        A.line('VIEW',[ix,iy],[x0,y0]);
-        A.line('VIEW',[ix+iw,iy],[x0+w,y0]);
-        A.line('VIEW',[ix,iy+ih],[x0,y0+h]);
-        A.line('VIEW',[ix+iw,iy+ih],[x0+w,y0+h]);
+      /* ---------- 拼接缝（JOINT 红色实线） ---------- */
+      if(b.seams==='top' && jW){
+        if(jW==='45'){
+          // 四角对角接缝：内角 → 外角（45° 斜拼的两个壁板各削 45° 合成一个角）
+          A.line('JOINT',[ix,iy],[x0,y0]);
+          A.line('JOINT',[ix+iw,iy],[x0+w,y0]);
+          A.line('JOINT',[ix,iy+ih],[x0,y0+h]);
+          A.line('JOINT',[ix+iw,iy+ih],[x0+w,y0+h]);
+        } else if(jW==='90'){
+          if(jTo==='L'){
+            // 长板到底：短板端面接缝 = 内壁横线贯穿左右壁厚到外沿
+            A.line('JOINT',[x0,iy],[ix,iy]);
+            A.line('JOINT',[ix+iw,iy],[x0+w,iy]);
+            A.line('JOINT',[x0,iy+ih],[ix,iy+ih]);
+            A.line('JOINT',[ix+iw,iy+ih],[x0+w,iy+ih]);
+          } else {
+            // 宽板到底：长板端面接缝 = 内壁竖线贯穿上下壁厚到外沿
+            A.line('JOINT',[ix,y0],[ix,iy]);
+            A.line('JOINT',[ix+iw,y0],[ix+iw,iy]);
+            A.line('JOINT',[ix,y0+h],[ix,iy+ih]);
+            A.line('JOINT',[ix+iw,y0+h],[ix+iw,iy+ih]);
+          }
+        }
+      } else if(b.seams==='v' && jW){
+        // 正/侧视图：竖直接缝范围 = 内底(y0+inner.y) → 壁顶(y0+inner.y+inner.h)
+        const yBot=y0+inner.y, yTop2=y0+inner.y+inner.h;
+        if(jW==='90' && jTo!==b.seamsExt){
+          // 本视图看到「非到底」壁的端面 → 两条竖直接缝线（x=±一个板厚）
+          A.line('JOINT',[x0+t,yBot],[x0+t,yTop2]);
+          A.line('JOINT',[x0+w-t,yBot],[x0+w-t,yTop2]);
+        }
+        if(jB==='90'){
+          // 底板 90° 直拼：四壁坐在底板上 → 底板顶面处一条通长横线
+          A.line('JOINT',[x0,y0+t],[x0+w,y0+t]);
+        } else if(jB==='45'){
+          // 底板 45° 斜拼：壁板斜面落到底 → 底部两角各一条 45° 斜切线
+          A.line('JOINT',[x0,y0],[x0+t,y0+t]);
+          A.line('JOINT',[x0+w,y0],[x0+w-t,y0+t]);
+        }
       }
-      // 壁厚角标 t=3（与页面左下角一致）
-      if(h>=12*TFX && iw>=10*TFX) A.text('TEXT',[ix+1.6,y0+5.2],3.0,'t='+dxfNum(s.t),0,'l');
+      // 壁厚角标 t=3（与页面左下角一致）。TEXT 是垂直居中锚点，必须整体让到内腔线
+      // （y0+t）上方，否则虚线正好从文字中间穿过；空间不够（矮盒+厚壁）时整条省略
+      if(h > 2*s.t+6 && iw>=10*TFX) A.text('TEXT',[ix+1.6,y0+s.t+2.6],3.0,'t='+dxfNum(s.t),0,'l');
     }
     // 俯视图：磁铁圆心（展开坐标 y 向上，故取 W-y）
     if(b.mags) b.mags.forEach(p=>A.circle('MAGNET',[x0+p[0],y0+(h-p[1])],s.magD/2));
@@ -2460,13 +2655,17 @@ function dxfBuild(){
     // 距宽边（磁铁在长边上）→ 横向尺寸放视图上方两侧；距长边（磁铁在宽边上）→
     // 纵向尺寸放视图右侧（x=+22，与内宽标注 +11 错开，互不重叠）。
     if(b.magDims && s.useMag && b.mags){
-      const d=s.magDist, spec='磁铁 Ø'+dxfNum(s.magD)+'×'+dxfNum(s.magTh)+'　4 颗';
-      // 每颗磁铁旁直接标直径：俯视图里除了顶部汇总行，磁铁本身也要看出大小
-      // （文字放磁铁朝盒内一侧，避开朝板外的距边延伸线）
+      const d=s.magDist,
+            spec='磁铁 Ø'+dxfNum(s.magD)+'×'+dxfNum(s.magTh)+'　'+s.magN+' 颗'
+                +(s.magN===6?'（'+(s.magEdge==='L'?'长边':'宽边')+'中间 2 颗居中）':'');
+      // 每颗磁铁旁直接标直径：俯视图里除了顶部汇总行，磁铁本身也要看出大小。
+      // 文字放磁铁朝盒中心一侧、与圆心同高（TEXT 垂直居中锚点，正对圆心才不会
+      // 碰到内外沿虚线——磁铁圆心距两线各 t/2，字高一半 1.76 < 2.5 恰好放得下）
       if(b.mags.length && h>3*d){
         b.mags.forEach(p=>{
           const mx=x0+p[0], my=y0+(h-p[1]);
-          A.text('TEXT',[mx,my-6.2*TFX],2.6,'Ø'+dxfNum(s.magD));
+          if(p[0]>w/2) A.text('TEXT',[mx-2.6*TFX,my],2.6,'Ø'+dxfNum(s.magD),0,'r');
+          else         A.text('TEXT',[mx+2.6*TFX,my],2.6,'Ø'+dxfNum(s.magD),0,'l');
         });
       }
       if(s.magEdge==='L'){
@@ -2475,14 +2674,31 @@ function dxfBuild(){
         dimH(x0,x0+d,yd,dxfNum(d));                                  // 左磁铁 距宽边
         A.line('DIM',[x0+w,y0+h],[x0+w,yd+2.2*TFX]);   A.line('DIM',[x0+w-d,y0+h],[x0+w-d,yd+2.2*TFX]);
         dimH(x0+w-d,x0+w,yd,dxfNum(d));                              // 右磁铁 距宽边
+        if(s.magN===6){
+          // 中间 2 颗距宽边 = 长/2（永远居中）：第二行链式尺寸，规格行同步上移、topPad 加大
+          const yd2=y0+h+19*TFX, halfV=dxfNum(w/2);
+          A.line('DIM',[x0,y0+h],[x0,yd2+2.2*TFX]);
+          A.line('DIM',[x0+w/2,y0+h],[x0+w/2,yd2+2.2*TFX]);
+          A.line('DIM',[x0+w,y0+h],[x0+w,yd2+2.2*TFX]);
+          dimH(x0,x0+w/2,yd2,halfV);
+          dimH(x0+w/2,x0+w,yd2,halfV);
+        }
       } else {
         const xd=x0+w+22*TFX;
         A.line('DIM',[x0+w,y0],[xd+2.2*TFX,y0]);       A.line('DIM',[x0+w,y0+d],[xd+2.2*TFX,y0+d]);
         dimV(xd,y0,y0+d,dxfNum(d),'right');                          // 下磁铁 距长边
         A.line('DIM',[x0+w,y0+h],[xd+2.2*TFX,y0+h]);   A.line('DIM',[x0+w,y0+h-d],[xd+2.2*TFX,y0+h-d]);
         dimV(xd,y0+h-d,y0+h,dxfNum(d),'right');                      // 上磁铁 距长边
+        if(s.magN===6){
+          // 中间 2 颗距长边 = 宽/2：更外侧一条链式竖直尺寸；
+          // 不画延长线（中线延长会穿过内高/角磁铁标注），靠上下刻度与盒边对齐读图
+          const xd2=x0+w+34*TFX, halfV=dxfNum(h/2);
+          dimV(xd2,y0,y0+h/2,halfV,'right');
+          dimV(xd2,y0+h/2,y0+h,halfV,'right');
+        }
       }
-      A.text('TEXT',[x0+w/2,y0+h+15.5*TFX],3.4,spec);
+      // 6 颗时长边侧多一行链式尺寸（+19TFX 行），规格行上移让开
+      A.text('TEXT',[x0+w/2,y0+h+(s.magN===6?23:15.5)*TFX],3.4,spec);
     }
     // 视图内的物体名称（如俯视图的「盒」）
     if(b.centerName && w>=26*TFX && h>=26*TFX) A.text('TEXT',[x0+w/2,y0+h/2],5.2,b.centerName);
@@ -2518,7 +2734,7 @@ function dxfBuild(){
             // 板盖盒（openlid）：盒体磁铁贴盒口（顶面往下嵌），板盖磁铁贴盖底面（往上嵌），
             // 两处都要画 —— 此前只挂在盒体上，板盖磁铁在 DXF 里完全缺失
             viewBox(x+(cw-b.w)/2, by, b.w, b.h, {
-              inner:b.inner, lbl:b.lbl, mags:b.mags, miter:b.miter,
+              inner:b.inner, lbl:b.lbl, mags:b.mags, seams:b.seams, seamsExt:b.seamsExt,
               axis:axis||null,
               magFromBottom: bi>0
             });
@@ -2534,7 +2750,7 @@ function dxfBuild(){
           // 磁铁规格 / 距边尺寸才真正落在俯视图格子内，不会顶到上一行的标题区
           viewBox(bx,y,b.w,b.h,{
             inner:b.inner, lbl:b.lbl, name:b.name, mags:b.mags,
-            miter:b.miter, centerName:b.centerName,
+            seams:b.seams, seamsExt:b.seamsExt, centerName:b.centerName,
             magDims:b.magDims,
             axis:(axis && bi===0)?axis:null      // 磁铁只挂在主体那块（盖不重复画）
           });
@@ -2839,20 +3055,20 @@ function dxfBuild(){
   } else if(s.type==='tiandi'){
     const L2=s.L+2*t, W2=s.W+2*t, Hl=s.Hl, Hs2=Math.max(1,Hl-t);
     addProj('正视图（长×高）',[
-      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:s.H-t},name:'底',
+      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:s.H-t},name:'底',seams:'v',seamsExt:'L',
        lbl:['长 '+dxfNum(s.L),'高 '+dxfNum(s.H),'内长 '+dxfNum(iL),'内高 '+dxfNum(s.H-t)]},
       {w:L2,h:Hl,inner:{x:t,y:0,w:s.L,h:Hs2},name:'盖',
        lbl:['外长 '+dxfNum(L2),'盖高 '+dxfNum(Hl),'内长 '+dxfNum(s.L),'内高 '+dxfNum(Hs2)]}],'x');
     addProj('侧视图（宽×高）',[
-      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:s.H-t},name:'底',
+      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:s.H-t},name:'底',seams:'v',seamsExt:'W',
        lbl:['宽 '+dxfNum(s.W),'高 '+dxfNum(s.H),'内宽 '+dxfNum(iW),'内高 '+dxfNum(s.H-t)]},
       {w:W2,h:Hl,inner:{x:t,y:0,w:s.W,h:Hs2},name:'盖',
        lbl:['外宽 '+dxfNum(W2),'盖高 '+dxfNum(Hl),'内宽 '+dxfNum(s.W),'内高 '+dxfNum(Hs2)]}],'y');
     addProj('俯视图（长×宽）',[
-      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'底',miter:j45,
+      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'底',seams:'top',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
        mags:magPts, topPad:s.useMag?28:0, magDims:true},
-      {w:L2,h:W2,inner:{x:t,y:t,w:s.L,h:s.W},name:'盖',miter:j45,
+      {w:L2,h:W2,inner:{x:t,y:t,w:s.L,h:s.W},name:'盖',seams:'top',
        lbl:['外长 '+dxfNum(L2),'外宽 '+dxfNum(W2),'内长 '+dxfNum(s.L),'内宽 '+dxfNum(s.W)],
        // 盖的磁铁与底盒磁铁上下正对：盖原点在 -t,-t，故平面坐标整体平移 +t
        mags:magPts && magPts.map(p=>[p[0]+t,p[1]+t])}]);
@@ -2860,26 +3076,26 @@ function dxfBuild(){
     // 板盖盒：盒子 + 平盖板（板厚 lidT，与盒同长同宽）；正/侧视图上下叠放，板盖在上
     const lidLbl='盖厚 '+dxfNum(s.lidT);
     addProj('正视图（长×高）',[
-      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},
+      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},seams:'v',seamsExt:'L',
        lbl:['长 '+dxfNum(s.L),'高 '+dxfNum(s.H),'内长 '+dxfNum(iL),'内高 '+dxfNum(inH)]},
       {w:s.L,h:s.lidT,sideLabel:lidLbl}],'x','v');
     addProj('侧视图（宽×高）',[
-      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:inH},
+      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:inH},seams:'v',seamsExt:'W',
        lbl:['宽 '+dxfNum(s.W),'高 '+dxfNum(s.H),'内宽 '+dxfNum(iW),'内高 '+dxfNum(inH)]},
       {w:s.W,h:s.lidT,sideLabel:lidLbl}],'y','v');
     addProj('俯视图（长×宽）',[
-      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},miter:j45,centerName:'盒',
+      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},seams:'top',centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
-       mags:magPts, topPad:s.useMag?28:0, magDims:true}]);
+       mags:magPts, topPad:s.useMag?(s.magN===6?38:28):0, magDims:true}]);
   } else {
     addProj('正视图（长×高）',[
-      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},name:'',
+      {w:s.L,h:s.H,inner:{x:t,y:t,w:iL,h:inH},name:'',seams:'v',seamsExt:'L',
        lbl:['长 '+dxfNum(s.L),'高 '+dxfNum(s.H),'内长 '+dxfNum(iL),'内高 '+dxfNum(inH)]}],'x');
     addProj('侧视图（宽×高）',[
-      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:inH},name:'',
+      {w:s.W,h:s.H,inner:{x:t,y:t,w:iW,h:inH},name:'',seams:'v',seamsExt:'W',
        lbl:['宽 '+dxfNum(s.W),'高 '+dxfNum(s.H),'内宽 '+dxfNum(iW),'内高 '+dxfNum(inH)]}],'y');
     addProj('俯视图（长×宽）',[
-      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'',miter:j45,centerName:'盒',
+      {w:s.L,h:s.W,inner:{x:t,y:t,w:iL,h:iW},name:'',seams:'top',centerName:'盒',
        lbl:['长 '+dxfNum(s.L),'宽 '+dxfNum(s.W),'内长 '+dxfNum(iL),'内宽 '+dxfNum(iW)],
        mags:magPts, topPad:s.useMag?28:0, magDims:true}]);
   }
@@ -3023,14 +3239,14 @@ function dxfBuild(){
     const lidTxt = s.type==='tiandi' ? `　｜　盖高 ${dxfNum(s.Hl)} mm`
                  : s.type==='openlid' ? `　｜　板盖厚 ${dxfNum(s.lidT)} mm` : '';
     const magTxt = s.useMag
-      ? `φ${dxfNum(s.magD)}×${dxfNum(s.magTh)}，${s.magEdge==='L'?'长边':'宽边'}，距${s.magEdge==='L'?'宽边':'长边'} ${dxfNum(s.magDist)} mm，${s.type==='openlid'?'盒体 4 + 板盖 4':'4 个'}`
+      ? `φ${dxfNum(s.magD)}×${dxfNum(s.magTh)}，${s.magEdge==='L'?'长边':'宽边'}，距${s.magEdge==='L'?'宽边':'长边'} ${dxfNum(s.magDist)} mm，${s.type==='openlid'?`盒体 ${s.magN} + 板盖 ${s.magN}`:`${s.magN} 个`}${s.magN===6?`（${s.magEdge==='L'?'长边':'宽边'}中间 2 颗居中）`:''}`
       : '无';
     lines=[
-      `产品：${TYPE_NAME}　｜　拼接：${j45?'45° 斜角':'90° 直角'}　｜　板厚 ${dxfNum(t)} mm${lidTxt}`,
+      `产品：${TYPE_NAME}　｜　拼接：${jointDesc(jW,jB,jTo)}　｜　板厚 ${dxfNum(t)} mm${lidTxt}`,
       `外尺寸 ${dxfNum(s.L)} × ${dxfNum(s.W)} × ${dxfNum(s.H)} mm　｜　内尺寸 ${dxfNum(iL)} × ${dxfNum(iW)} × ${dxfNum(inH)} mm`,
       `磁铁：${magTxt}`,
       note ? `备注：${note}` : '',
-      `图例：实线=可见轮廓(VIEW)　虚线=内腔及不可见棱线(VIEWIN)　圆=磁铁(MAGNET)`,
+      `图例：实线=可见轮廓(VIEW)　虚线=内腔及不可见棱线(VIEWIN)　红实线=拼接缝(JOINT)　圆=磁铁(MAGNET)`,
       `导出：${today}　　粤丰展示产品设计`
     ].filter(Boolean);
   }
@@ -3199,7 +3415,17 @@ $('useMag').addEventListener('change',()=>{
 });
 $('magEdge').addEventListener('change',render);
 $('magSize').addEventListener('change',render);
-document.querySelectorAll('input[name="joint"]').forEach(r=>r.addEventListener('change',()=>{updateJoint();}));
+$('magN').addEventListener('change',render);
+/* 四壁拼接切换：底板拼接默认跟随（可再单独改），接缝视图随选择重绘 */
+document.querySelectorAll('input[name="joint"]').forEach(r=>r.addEventListener('change',()=>{
+  const j=getJoint();
+  if(j) document.querySelector(`input[name="jointBottom"][value="${j}"]`).checked=true;
+  updateJoint(); render();
+}));
+document.querySelectorAll('input[name="jointBottom"]').forEach(r=>r.addEventListener('change',()=>{
+  updateJoint(); render();
+}));
+$('jointTo').addEventListener('change',()=>{ updateJoint(); render(); });
 $('thickSel').addEventListener('change',()=>{
   const custom = $('thickSel').value==='custom';
   $('thick').style.display = custom ? '' : 'none';
