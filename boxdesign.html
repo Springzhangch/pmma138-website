@@ -167,7 +167,7 @@
 <header>
   <div class="hd-txt">
     <h1>粤丰展示产品设计</h1>
-    <p>选产品 · 填长宽高 → 自动出四视图（俯 / 正 / 侧 / 斜侧）；盒类可设壁厚与拼接，块类可设圆角</p>
+    <p>选产品 · 填长宽高 → 自动出四视图（俯 / 斜侧 / 正 / 侧）；盒类可设壁厚与拼接，块类可设圆角</p>
   </div>
   <div class="hd-actions">
     <button id="dlDxf" class="alt">导出 DXF</button>
@@ -468,10 +468,10 @@
     </div>
 
     <div class="views">
-      <div class="card"><h3 id="capFront">正视图（长×高）</h3><div class="view-box"><div id="viewFront"></div></div></div>
-      <div class="card"><h3 id="capSide">侧视图（宽×高）</h3><div class="view-box"><div id="viewSide"></div></div></div>
       <div class="card"><h3 id="capTop">俯视图（长×宽）</h3><div class="view-box"><div id="viewTop"></div></div></div>
       <div class="card"><h3>从上方斜侧视图<span class="note" id="isoNote">（虚线为内壁，内外间距即壁厚）</span></h3><div class="view-box"><div id="view3d"></div></div></div>
+      <div class="card"><h3 id="capFront">正视图（长×高）</h3><div class="view-box"><div id="viewFront"></div></div></div>
+      <div class="card"><h3 id="capSide">侧视图（宽×高）</h3><div class="view-box"><div id="viewSide"></div></div></div>
     </div>
   </div>
 </div>
@@ -2287,12 +2287,12 @@ async function exportPNG(){
   const gTop=infoY+INFO_H+GAP2;
   const cardW=(W-CARD_GAP)/2;
   const cells=[
-    {id:'viewFront',cap: s.frame?'正视图（长×宽）':'正视图（长×高）'},
-    {id:'viewSide', cap: s.frame?'侧视图（宽×厚）':'侧视图（宽×高）'},
     {id:'viewTop',  cap: s.frame?'俯视图（长×厚）':'俯视图（长×宽）'},
     {id:'view3d',   cap:'从上方斜侧视图',
      note: s.frame ? '（两块板分开示意 · 四角圆磁对吸）'
-         : s.solid ? '（R 为圆角半径，12 条棱同 R）' : '（虚线为内壁，内外间距即壁厚）'}
+         : s.solid ? '（R 为圆角半径，12 条棱同 R）' : '（虚线为内壁，内外间距即壁厚）'},
+    {id:'viewFront',cap: s.frame?'正视图（长×宽）':'正视图（长×高）'},
+    {id:'viewSide', cap: s.frame?'侧视图（宽×厚）':'侧视图（宽×高）'}
   ];
   const geo=cells.map((o,i)=>{
     const col=i%2, row=(i/2)|0;
@@ -2358,8 +2358,8 @@ function fileBase(s){
 
 /* ============================================================
    DXF 导出（AutoCAD R12 / AC1009 文本格式，1:1，单位 mm）
-   · 四视图：正视图 / 侧视图 / 俯视图（1:1 线框 + 尺寸）
-             + 从上方斜侧视图（等轴测线框，与页面 3D 视图同视角）
+   · 四视图（左上俯视图 / 右上从上方斜侧视图 / 左下正视图 / 右下侧视图，
+     全部 1:1 线框 + 尺寸；斜侧为等轴测线框，与页面 3D 视图同视角）
    · 图层：VIEW 可见轮廓 / VIEWIN 虚线（内腔 + 不可见棱线）
            / JOINT 拼接缝（红色实线：四壁竖直接缝 + 底板接缝）
            / MAGNET 磁铁圆 / DIM 尺寸线 / TEXT 文字 / FRAME 图框
@@ -3154,7 +3154,9 @@ function dxfBuild(){
     });
   }
 
-  /* ---------- 2×2 网格排布（左上正视图 / 右上侧视图 / 左下俯视图 / 右下斜侧视图） ---------- */
+  /* ---------- 2×2 网格排布（左上俯视图 / 右上从上方斜侧视图 / 左下正视图 / 右下侧视图） ----------
+     各产品分支按「正 / 侧 / 俯 / 斜侧」顺序压入 cells，这里统一重排为图纸排布顺序 */
+  cells.splice(0,4,cells[2],cells[3],cells[0],cells[1]);
   const PAD_L=(s.frame?38*TFX:26*TFX), PAD_R=(s.frame?30*TFX:26*TFX), PAD_B=((s.solid||s.shape)?18*TFX:36*TFX), PAD_T=14*TFX;
   const colW=[Math.max(cells[0].w,cells[2].w)+PAD_L+PAD_R,
               Math.max(cells[1].w,cells[3].w)+PAD_L+PAD_R];
@@ -3177,7 +3179,7 @@ function dxfBuild(){
 
   const vb=dxfBBox(A.E);
   // 图纸总标题
-  A.text('TEXT',[vb.minX, vb.maxY+10*TFX],7,'粤丰展示产品　四视图（正 / 侧 / 俯 / 上方斜侧）　1:1　单位 mm',0,'l');
+  A.text('TEXT',[vb.minX, vb.maxY+10*TFX],7,'粤丰展示产品　四视图（俯 / 上方斜侧 / 正 / 侧）　1:1　单位 mm',0,'l');
 
   /* ---------- 信息块 ---------- */
   const note=noteText().replace(/\s+/g,' ');
