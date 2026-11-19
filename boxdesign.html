@@ -398,13 +398,13 @@
       <div class="hint">四个角各 1 颗，填圆心到两条边的距离</div>
     </div>
     <div class="field" id="jointField">
-      <label>四壁拼接（必选）</label>
+      <label id="jointWallLabel">四壁拼接（必选）</label>
       <div class="row">
         <label class="radio"><input type="radio" name="joint" value="90" checked> 90° 直角</label>
         <label class="radio"><input type="radio" name="joint" value="45"> 45° 斜角</label>
       </div>
       <div class="field" id="jointToField" style="display:none;margin-top:6px;margin-bottom:0;">
-        <label>90° 直拼 · 哪条边到底？</label>
+        <label id="jointToLabel">90° 直拼 · 哪条边到底？</label>
         <select id="jointTo">
           <option value="L">长边到底（长板整条，短板嵌中间）</option>
           <option value="W" selected>宽边到底（短板整条，长板嵌中间）</option>
@@ -674,8 +674,8 @@ function readInputs(){
      jointWall = '45'|'90'|null（未选）；jointTo 仅在 90° 直拼时有意义：到底的那条边 */
   const jointWall   = notBox ? null : getJoint();
   const jointBottom = notBox ? null : ((document.querySelector('input[name="jointBottom"]:checked')||{value:'45'}).value);
-  /* 抽拉盒四壁固定「长边到底」：左右槽壁通长、矮前板/后板嵌中间（宽边到底只用于底板） */
-  const jointTo     = notBox ? null : (slide ? 'L' : $('jointTo').value);
+  /* 抽拉盒：前板固定 90° 宽边到底；拼接方式只作用于「后板 + 左右板」 */
+  const jointTo     = notBox ? null : $('jointTo').value;
   $('magOpts').style.display = useMag ? 'block' : 'none';
   $('magNField').style.display = (type==='openlid') ? 'block' : 'none';  // 6 颗选项仅板盖盒提供
   const magEdge = $('magEdge').value;          // 'L' 长边 / 'W' 宽边
@@ -714,7 +714,14 @@ function getJoint(){
   return el ? el.value : null;
 }
 /* 拼接说明文字：页面横幅 / 汇总 / PNG·打印拼接条 / DXF 信息块共用，保证四处一致 */
-function jointDesc(jW,jB,jTo){
+function jointDesc(jW,jB,jTo,type){
+  if(type==='slide'){
+    // 抽拉盒：前板端固定「宽边包长边」（左右侧板通长、前板嵌中间，90°），拼接方式只作用于后板
+    const back = jW==='45' ? '后板 45° 斜拼'
+               : (jW==='90' ? `后板 90° 直拼（${jTo==='W'?'宽边':'长边'}到底）` : '后板拼法未选');
+    const bot  = jB==='45' ? '底板 45° 斜拼' : '底板 90° 直拼';
+    return '前板端 90° 宽边包长边（左右侧板通长）· '+back+' · '+bot;
+  }
   const wall = jW==='45' ? '四壁 45° 斜拼'
              : `四壁 90° 直拼（${jTo==='W'?'宽边':'长边'}到底）`;
   const bot  = jB==='45' ? '底板 45° 斜拼' : '底板 90° 直拼';
@@ -730,9 +737,12 @@ function updateJoint(){
     $('jointToField').style.display='none';
     return;
   }
-  // 90° 直拼才需要选「哪条边到底」；45° 斜拼四角对称；抽拉盒固定长边到底（前后板嵌中间）
+  // 90° 直拼才需要选「哪条边到底」；45° 斜拼四角对称。
+  // 抽拉盒：前板端固定「宽边包长边」90°，这里选的是后板与左右侧板的拼法
   const isSlide=$('boxType').value==='slide';
-  $('jointToField').style.display = (j==='90' && !isSlide) ? 'block' : 'none';
+  $('jointWallLabel').textContent = isSlide ? '后板与左右侧板拼接' : '四壁拼接（必选）';
+  $('jointToLabel').textContent   = isSlide ? '90° 直拼 · 后板哪条边到底？' : '90° 直拼 · 哪条边到底？';
+  $('jointToField').style.display = (j==='90') ? 'block' : 'none';
   if(!j){
     // 未选拼接方式：不再显示提示条（打印/导出时会弹窗提醒）
     b.textContent='';
@@ -740,7 +750,7 @@ function updateJoint(){
     b.classList.add('warnj');
   } else {
     const jB=(document.querySelector('input[name="jointBottom"]:checked')||{value:'45'}).value;
-    b.textContent='拼接方式：'+jointDesc(j,jB,$('jointTo').value);
+    b.textContent='拼接方式：'+jointDesc(j,jB,$('jointTo').value,$('boxType').value);
     b.classList.remove('warnj');
     b.style.display='';
   }
@@ -989,7 +999,7 @@ function jointSeamsV(X0,Ytop,Wpx,Hpx,txpx,tbpx,s,axis,topInset){
   let g='';
   const ln=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INNER}" stroke-width="1.2"/>`;
   const wallBot=Ytop+Hpx-tbpx, wallTop=Ytop+topInset;   // 竖直接缝的范围：内底 → 壁顶
-  // 抽拉盒：正视图看通长槽壁外侧面（前板被挡住，无竖缝）；侧视图看矮前板端面（两侧有缝，到前板顶）
+  // 抽拉盒：正视图看通长侧板外侧面（前板被挡住，无竖缝）；侧视图看矮前板端面（两侧有缝，到前板顶）
   // 其它盒型沿用原规则：正视图看长板（宽边到底才有缝）、侧视图看短板（长边到底才有缝）
   const seamHit = (s.type==='slide') ? (axis==='y')
                                      : (jTo===(axis==='x'?'W':'L'));
@@ -1011,6 +1021,21 @@ function jointSeamsTop(X0,Ybox,Wpx,Dpx,txpx,typx,s){
   let g='';
   const ln=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INNER}" stroke-width="1.2"/>`;
   const x1=X0+Wpx, y1=Ybox+Dpx, xi=X0+txpx, xj=x1-txpx, yi=Ybox+typx, yj=y1-typx;
+  if(s.type==='slide'){
+    /* 抽拉盒：前板（长板）嵌在两块侧板（宽板）之间 → 接缝 = y=t / y=W-t 横线（前段 x 0..t） */
+    g+=ln(X0,yi,xi,yi)+ln(X0,yj,xi,yj);
+    /* 后板按所选拼法 */
+    if(jW==='45'){          // 后侧两角 45° 斜接
+      g+=ln(x1,Ybox,xj,yi)+ln(x1,y1,xj,yj);
+    } else if(jW==='90'){
+      if(s.jointTo==='W'){  // 宽边到底：侧板通到后端、后板嵌中间 → 横线（后段）
+        g+=ln(xj,yi,x1,yi)+ln(xj,yj,x1,yj);
+      } else {              // 长边到底：后板通宽 → 侧板后端面短竖线
+        g+=ln(xj,Ybox,xj,yi)+ln(xj,yj,xj,y1);
+      }
+    }
+    return g;
+  }
   if(jW==='45'){
     g+=ln(X0,Ybox,xi,yi)+ln(x1,Ybox,xj,yi)+ln(X0,y1,xi,yj)+ln(x1,y1,xj,yj);
   } else if(jW==='90'){
@@ -1124,25 +1149,32 @@ function drawMagsLidVert(X0, lidBot, Wpx, lidTpx, scale, s, axis){
 function slideGeom(s){
   const t=s.t, lidT=s.lidT;
   const iL=s.L-2*t, iW=s.W-2*t;
-  /* 四壁拼法固定「长边到底」：左右两块槽壁（长边板）通长到抽出口，
-     矮前板 / 后板嵌在两块槽壁之间（宽 = 内宽）。前板不包侧板、不凸出。
-     「宽边到底」只用于底板（底板通铺到底），不影响四壁关系 */
-  const gx0=0;                                            // 槽前端起点 = 盒口（侧板前端面）
-  const slotTop=s.slotTop||3;                             // 槽顶比盒口低的量
-  const gzT=s.H-slotTop;                                  // 槽顶 z
-  const gw=lidT+0.2;                                      // 槽高（z 向）
-  const gzB=gzT-gw;                                       // 槽底 z
+  /* 四壁拼法（宽板 = 左右侧板，法向朝宽；长板 = 前板/后板，法向朝长）：
+     · 前板端（抽出口）固定「宽边包长边」90° 直拼 → 左右侧板通长到盒口，矮前板嵌在两块侧板之间（宽=内宽）
+     · 后端（后板与左右侧板）：按界面所选（45° 斜拼 / 90° 直拼 + 谁到底）
+     · 底板：宽边到底（通铺），与四壁关系无关 */
+  const miter=(s.jointWall==='45');                        // 后板与侧板 45° 斜拼
+  const sideFull=(!miter && s.jointTo==='W');              // 90° 宽边到底：侧板通到后端，后板嵌中间
+  const sideX1=sideFull ? s.L : s.L-t;                     // 侧板后端位置
+  const gx0=0;                                             // 槽前端 = 盒口（侧板前端面）
+  const slotTop=s.slotTop||3;                              // 槽顶比盒口低的量
+  const gzT=s.H-slotTop;                                   // 槽顶 z
+  const gw=lidT+0.2;                                       // 槽高（z 向）
+  const gzB=gzT-gw;                                        // 槽底 z
   const lz0=gzB, lz1=gzB+lidT;                             // 顶板坐在槽底，上方留 0.2 间隙
+  const gd=1.5;                                            // 槽深（进墙，y 向）
+  const gclr=0.1;                                          // 顶板两侧与槽根（槽最深面）留的间隙
+  const glid=gd-gclr;                                      // 顶板每侧实际嵌进槽内的深度
   return { t,lidT,iL,iW, Hf:s.H-s.drop, slotTop, gzT, gzB, gw, lz0, lz1,
-    gx0, lidX0:gx0,
+    miter, sideFull, sideX1, gx0, lidX0:gx0,
     lidL:(s.L-t-gx0)-0.4,                                 // 槽内长两端各减 0.2
-    lidW:iW+3,                                            // 两侧嵌槽各 1.5
-    gd:1.5,                                               // 槽深（进墙，y 向）
+    lidW:iW+2*glid,                                       // 两侧嵌槽各 1.4（槽深 1.5，每侧留 0.1 间隙）
+    gd, gclr, glid,
+    lidY0:t-glid,                                         // 顶板左翼外沿（右翼对称）
     pull:Math.max(1,(s.L-t-gx0)-0.4)*0.38 };              // 3D 拉出示意：抽出约四成
 }
-/* 正视图（长×高，沿宽方向看）：看到的是槽壁（长边板）外侧面；
-   槽壁通长到抽出口，外轮廓一律画完整矩形；矮前板嵌在两槽壁之间、
-   被槽壁挡住 → 只画前板顶虚线（x 0..t 段） */
+/* 正视图（长×高，沿宽方向看）：看到的是左右侧板（宽板）外侧面——侧板通长到抽出口、全高，
+   外轮廓恒为完整矩形；矮前板（长板）嵌在两块侧板之间，被侧板挡住 → 只画前板顶棱虚线（x 0..t） */
 function slideFront(s,scale){
   const G=slideGeom(s), t=s.t, lidT=s.lidT;
   const Wpx=s.L*scale, Hpx=s.H*scale, tpx=t*scale;
@@ -1151,7 +1183,7 @@ function slideFront(s,scale){
   const dash=(x,y,w,h)=>`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   let g='';
   g+=`<rect x="${X0}" y="${Y0}" width="${Wpx.toFixed(1)}" height="${Hpx.toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
-  // 前板顶边：矮前板嵌在两块通长槽壁之间 → 被槽壁挡住，画虚线（x 0..t 段）
+  // 前板顶棱（x 0..t）：矮前板嵌在两块通长侧板之间，被侧板挡住 → 虚线
   g+=`<line x1="${X(0).toFixed(1)}" y1="${Y(G.Hf).toFixed(1)}" x2="${X(t).toFixed(1)}" y2="${Y(G.Hf).toFixed(1)}" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   // 顶板剖面（合拢沉在槽内，被槽壁挡住 → 虚线；顶面比盒口低 slotTop）
   g+=dash(X(G.lidX0),Y(G.lz1),G.lidL*scale,lidT*scale);
@@ -1180,10 +1212,9 @@ function slideSide(s,scale){
   const dash=(x,y,w,h)=>`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   let g='';
   g+=`<rect x="${X0}" y="${Y0}" width="${Wpx.toFixed(1)}" height="${Hpx.toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
-  // 前板顶边：矮前板嵌在两块槽壁之间 → 只画中间段（y t..W-t），两侧是槽壁端面
-  const fy0=t, fy1=s.W-t;
-  g+=`<line x1="${X(fy0).toFixed(1)}" y1="${Y(G.Hf).toFixed(1)}" x2="${X(fy1).toFixed(1)}" y2="${Y(G.Hf).toFixed(1)}" stroke="${OUTER}" stroke-width="1.2"/>`;
-  /* 两块长边板端面（抽出端看到的就是它们，全高、通到最前端）——内侧面开槽 → 端面呈「C」形缺口轮廓 */
+  // 前板顶边：矮前板嵌在两块侧板之间 → 只画中间段（y t..W-t），两侧是侧板端面
+  g+=`<line x1="${X(t).toFixed(1)}" y1="${Y(G.Hf).toFixed(1)}" x2="${X(s.W-t).toFixed(1)}" y2="${Y(G.Hf).toFixed(1)}" stroke="${OUTER}" stroke-width="1.2"/>`;
+  /* 两块侧板（宽板）端面：通长到抽出口、全高（抽出口看到的就是它们）——内侧面开槽 → C 形槽口 */
   const zLo=0;
   const notchPoly=(yi,yout)=>[[yout,zLo],[yout,s.H],[yi,s.H],
                               [yi,G.gzT],[yi+(yi<yout?G.gd:-G.gd),G.gzT],
@@ -1191,8 +1222,8 @@ function slideSide(s,scale){
     .map(p=>`${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(' ');
   g+=`<polygon points="${notchPoly(t,0)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.4" stroke-linejoin="round"/>`;
   g+=`<polygon points="${notchPoly(s.W-t,s.W)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.4" stroke-linejoin="round"/>`;
-  // 顶板端面条：两侧翼嵌在槽内（坐在槽底，上方留 0.2 间隙）
-  g+=`<rect x="${X(t-G.gd).toFixed(1)}" y="${Y(G.lz1).toFixed(1)}" width="${(G.lidW*scale).toFixed(1)}" height="${(lidT*scale).toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
+  // 顶板端面条：两侧翼嵌在槽内（坐在槽底，上方留 0.2 间隙；两侧与槽根各留 0.1）
+  g+=`<rect x="${X(G.lidY0).toFixed(1)}" y="${Y(G.lz1).toFixed(1)}" width="${(G.lidW*scale).toFixed(1)}" height="${(lidT*scale).toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   if(lidT*scale>13) g+=`<text x="${(X0+Wpx/2).toFixed(1)}" y="${(Y(G.lz1)+lidT*scale/2+4).toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">顶板</text>`;
   // 内腔虚线（上端到槽底）
   g+=dash(X(t),Y(G.gzB),(s.W-2*t)*scale,(G.gzB-t)*scale);
@@ -1204,7 +1235,7 @@ function slideSide(s,scale){
   g+=vdimRot(X0-48*TF,Y0,Y(G.Hf),'前板高 '+G.Hf,OUTER,X0-48*TF-4*TF);
   if(s.W-2*t>0) g+=hdim(X(t),Y0+Hpx+24*TF,X(s.W-t),'内宽 '+(s.W-2*t),INNER);
   // 顶板厚 + 槽规格注（放内宽标注下方一行，避开其文字）
-  g+=`<text x="${X0+Wpx/2}" y="${Y0+Hpx+42*TF}" font-size="${F_SUB}" fill="${THK}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">顶板厚 ${lidT} · 槽深 ${G.gd} × 槽宽 ${G.gw} · 槽顶距盒口 ${G.slotTop}</text>`;
+  g+=`<text x="${X0+Wpx/2}" y="${Y0+Hpx+42*TF}" font-size="${F_SUB}" fill="${THK}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">顶板厚 ${lidT} · 槽深 ${G.gd} × 槽宽 ${G.gw} · 槽顶距盒口 ${G.slotTop} · 顶板两侧离槽根各 ${G.gclr}</text>`;
   // 板厚角标
   g+=`<text x="${X(t)+4}" y="${Y0+Hpx-6}" font-size="${F_SUB}" fill="${THK}" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">t=${t}</text>`;
   // 拼接缝：本视图看到宽边板（前板）端面——长边到底时缝可见，范围到前板顶
@@ -1221,10 +1252,10 @@ function slideTop(s,scale){
   g+=`<rect x="${X0}" y="${Ybox}" width="${Wpx.toFixed(1)}" height="${Dpx.toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
   // 内腔虚线（被顶板盖住的隐藏轮廓）
   g+=`<rect x="${X(t).toFixed(1)}" y="${Y(t).toFixed(1)}" width="${((s.L-2*t)*scale).toFixed(1)}" height="${((s.W-2*t)*scale).toFixed(1)}" fill="none" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-  // 顶板（合拢：嵌在两侧槽内 → 平面上只有中间 84 宽是可见段（实线），
-  //   两端各嵌槽 1.5 被壁顶实料遮住 → 虚线；前端与盒口平齐、后端留 0.4 缝）
+  // 顶板（合拢：两侧翼嵌在槽内 → 平面上只有中间 84 宽是可见段（实线），
+  //   两端各嵌槽 1.4 被壁顶实料遮住 → 虚线；前端与盒口平齐、后端留 0.4 缝）
   g+=`<rect x="${X(G.lidX0).toFixed(1)}" y="${Y(t).toFixed(1)}" width="${(G.lidL*scale).toFixed(1)}" height="${((s.W-2*t)*scale).toFixed(1)}" fill="${FILL}" stroke="${OUTER}" stroke-width="1.5"/>`;
-  [t-G.gd,s.W-t+G.gd].forEach(ym=>{
+  [G.lidY0,s.W-G.lidY0].forEach(ym=>{
     g+=`<line x1="${X(G.lidX0).toFixed(1)}" y1="${Y(ym).toFixed(1)}" x2="${X(G.lidX0+G.lidL).toFixed(1)}" y2="${Y(ym).toFixed(1)}" stroke="${INNER}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
   });
   g+=`<text x="${(X(G.lidX0)+G.lidL*scale/2).toFixed(1)}" y="${(Ybox+Dpx/2+4).toFixed(1)}" font-size="${F_MAIN}" font-weight="700" fill="${OUTER}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">顶板</text>`;
@@ -1235,9 +1266,9 @@ function slideTop(s,scale){
   if(G.lidL>0) g+=hdim(X(G.lidX0),Ybox+Dpx+44*TF,X(G.lidX0+G.lidL),'顶板长 '+G.lidL,OUTER);
   if(s.W-2*t>0) g+=vdim(X0-26*TF,Y(t),Y(s.W-t),'内宽 '+(s.W-2*t),INNER,'left');
   // 顶板宽：竖排文字（横排会与「宽」的文字压线）
-  g+=vdimRot(X0+Wpx+26*TF,Y(t-G.gd),Y(s.W-t+G.gd),'顶板宽 '+G.lidW,OUTER,X0+Wpx+30*TF);
+  g+=vdimRot(X0+Wpx+26*TF,Y(G.lidY0),Y(s.W-G.lidY0),'顶板宽 '+G.lidW,OUTER,X0+Wpx+30*TF);
   // 槽规格 + 板厚说明
-  g+=`<text x="${X0+Wpx/2}" y="${Ybox+Dpx+62*TF}" font-size="${F_SUB}" fill="${THK}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">两侧槽：深 ${G.gd} × 宽 ${G.gw}（槽宽=顶板厚+0.2，顶板坐槽底）· 槽顶距盒口 ${G.slotTop} · 板厚 t=${t}</text>`;
+  g+=`<text x="${X0+Wpx/2}" y="${Ybox+Dpx+62*TF}" font-size="${F_SUB}" fill="${THK}" text-anchor="middle" stroke="#ffffff" stroke-width="${3*TF}" paint-order="stroke" stroke-linejoin="round">两侧槽：深 ${G.gd} × 宽 ${G.gw}（槽宽=顶板厚+0.2，顶板两侧离槽根各留 ${G.gclr}）· 槽顶距盒口 ${G.slotTop} · 板厚 t=${t}</text>`;
   g+=jointSeamsTop(X0,Ybox,Wpx,Dpx,tpx,tpx,s);
   return `<svg class="view-svg" width="380" height="380" viewBox="0 0 380 380" xmlns="${NS}">${g}</svg>`;
 }
@@ -1248,7 +1279,7 @@ function slide3D(s){
   const mk=pts=>({pts,depth:pts.reduce((a,p)=>a+p[0]+p[1]+p[2],0)/4});
   /* 视角：绕竖轴转 180°（x→L−x, y→W−y）——矮前板（抽出口）转到近侧正对观察者 */
   const V=p=>[L-p[0],W-p[1],p[2]];
-  /* 长边板抽出口端面（x 平面）的 C 形槽口轮廓：缺口在内侧面，深 gd、z 向 gzB..gzT
+  /* 长边板前端面（x=t 平面）的 C 形槽口轮廓：缺口在内侧面，深 gd、z 向 gzB..gzT
      点序必须沿「材料边界」绕行：先走外侧面 → 顶面 → 内侧面到槽顶 → 进槽口 → 回到内侧面 → 槽底
      （点序写反时最后一段会从内侧面一刀切下来，横穿槽口，看着像多出一段阶梯） */
   const notchL=(x,zLo)=>[[x,0,zLo],[x,t,zLo],[x,t,G.gzB],[x,t-gd,G.gzB],
@@ -1258,21 +1289,25 @@ function slide3D(s){
   let faces=[
     mk([[0,0,0],[L,0,0],[L,W,0],[0,W,0]])                        // 底面
   ];
-  /* 外壳：左右两块槽壁（长边板）通长到抽出口、全高；矮前板 / 后板嵌在两块槽壁之间
-     （宽 = 内宽）——前板不包侧板、不凸出侧板外表面，抽出口只看到两个 C 形槽口 + 中间的矮前板 */
+  /* 外壳：左右侧板（宽板）通长到抽出口、全高，端面画 C 形槽口；
+     矮前板（长板）与后板夹在两块侧板之间（宽 = 内宽）——
+     后板按所选拼法：90° 宽边到底 → 侧板通到后端、后板嵌中间；否则后板通宽包住侧板后端 */
+  const sx1=G.sideX1;
   faces.push(
-    mk([[0,0,0],[L,0,0],[L,0,H],[0,0,H]]),                       // y=0 槽壁外面（通长）
-    mk([[0,W,0],[L,W,0],[L,W,H],[0,W,H]]),                       // y=W 槽壁外面
-    mk([[L,0,0],[L,W,0],[L,W,H],[L,0,H]]),                       // 后端面（两块槽壁端面 + 后板外面，同一平面）
-    mk(notchL(0,0)),                                             // 抽出口端面-左槽壁（C 形槽口，全高）
-    mk(notchR(0,0)),                                             // 抽出口端面-右槽壁（C 形槽口，全高）
-    mk([[0,t,0],[0,W-t,0],[0,W-t,Hf],[0,t,Hf]]),                 // 抽出口端面-矮前板（嵌中间，与槽壁端面齐平）
-    mk([[0,0,H],[L,0,H],[L,t,H],[0,t,H]]),                       // 顶-左槽壁
-    mk([[0,W-t,H],[L,W-t,H],[L,W,H],[0,W-t,H]]),                 // 顶-右槽壁
-    mk([[L-t,t,H],[L,t,H],[L,W-t,H],[L-t,W-t,H]]),               // 顶-后板（嵌中间）
+    mk([[0,0,0],[L,0,0],[L,0,H],[0,0,H]]),                       // y=0 侧板外侧面（通长到盒口）
+    mk([[0,W,0],[L,W,0],[L,W,H],[0,W,H]]),                       // y=W 侧板外侧面
+    mk([[L,0,0],[L,W,0],[L,W,H],[L,0,H]]),                       // 后端面（侧板端面 + 后板外面，同一平面）
+    mk(notchL(0,0)),                                             // 抽出口端面-左侧板（全高 C 形槽口）
+    mk(notchR(0,0)),                                             // 抽出口端面-右侧板
+    mk([[0,t,0],[0,W-t,0],[0,W-t,Hf],[0,t,Hf]]),                 // 抽出口端面-矮前板（嵌中间）
+    mk([[0,0,H],[sx1,0,H],[sx1,t,H],[0,t,H]]),                   // 顶-左侧板
+    mk([[0,W-t,H],[sx1,W-t,H],[sx1,W,H],[0,W,H]]),               // 顶-右侧板
+    G.sideFull
+      ? mk([[L-t,t,H],[L,t,H],[L,W-t,H],[L-t,W-t,H]])            // 顶-后板（宽边到底：嵌中间）
+      : mk([[L-t,0,H],[L,0,H],[L,W,H],[L-t,W,H]]),               // 顶-后板（长边到底：通宽）
     mk([[0,t,Hf],[t,t,Hf],[t,W-t,Hf],[0,t,Hf]])                  // 顶-矮前板
   );
-  faces=faces.concat(boxFaces(G.lidX0-G.pull, t-gd, G.lz0, G.lidL, G.lidW, lidT, false, false)); // 顶板（抽出示意，坐槽底）
+  faces=faces.concat(boxFaces(G.lidX0-G.pull, G.lidY0, G.lz0, G.lidL, G.lidW, lidT, false, false)); // 顶板（抽出示意，坐槽底）
   faces=faces.map(f=>mk(f.pts.map(V)));                          // 统一转到视图坐标（抽出口朝前）
   // 投影与缩放（同 render3D）
   let ptsAll=[];
@@ -2161,11 +2196,18 @@ function summaryItems(s){
   if(s.type==='slide'){
     const G=slideGeom(s);
     items.push({k:'抽拉顶板', v:`${G.lidL} × ${G.lidW} × ${s.lidT} mm`,
-                d:`两侧槽深 ${G.gd} × 槽宽 ${G.gw} · 槽顶距盒口 ${G.slotTop}`});
+                d:`两侧槽 ${G.gd}×${G.gw} · 槽顶距盒口 ${G.slotTop}`});
     items.push({k:'前板高', v:`${G.Hf} mm`, d:`比其余三面矮 ${s.drop} mm`});
   }
-  if(s.jointWall) items.push({k:'拼接', v: s.jointWall==='45'?'四壁 45° 斜拼':`四壁 90° 直拼（${s.jointTo==='W'?'宽边':'长边'}到底）`,
-                              d: s.jointBottom==='45'?'底板 45° 斜拼':'底板 90° 直拼'});
+  if(s.jointWall){
+    const isSlide=(s.type==='slide');
+    const wv = isSlide
+      ? (s.jointWall==='45' ? '前板端90°包长边 · 后板45°斜拼'
+                            : `前板端90°包长边 · 后板90°直拼（${s.jointTo==='W'?'宽边':'长边'}到底）`)
+      : (s.jointWall==='45' ? '四壁 45° 斜拼' : `四壁 90° 直拼（${s.jointTo==='W'?'宽边':'长边'}到底）`);
+    items.push({k:'拼接', v:wv,
+                d: s.jointBottom==='45'?'底板 45° 斜拼':'底板 90° 直拼'});
+  }
   if(s.useMag){
     const onEdge = s.magEdge==='L' ? '长边' : '宽边';   // 磁铁放在哪条边
     const fromEdge = s.magEdge==='L' ? '宽边' : '长边'; // 距边的基准边
@@ -2324,7 +2366,7 @@ function render(){
   $('isoNote').textContent = s.frame ? '（两块板分开示意 · 四角圆磁对吸）'
                            : s.solid ? '（R 为圆角半径，12 条棱同 R）'
                            : s.shape ? '（单板挤出示意 · 圆孔为虚线）'
-                           : s.type==='slide' ? `（顶板抽出示意 · 长边板开槽 · 槽顶距盒口 ${s.slotTop}）`
+                           : s.type==='slide' ? `（顶板抽出示意 · 侧板内侧开槽 · 槽顶距盒口 ${s.slotTop}）`
                                      : '（虚线为内壁，内外间距即壁厚）';
   tightenViewBoxes();
   renderSummary(s);
@@ -2435,7 +2477,7 @@ async function exportPNG(){
   const joint=getJoint();
   if(!s.solid && !s.frame && !s.shape && !joint){ alert('请先选择拼接方式（90° 或 45°）后再导出图片。'); return; }
   const useBan = !s.solid && !s.frame && !s.shape && !!joint;   // 实心块 / 相夹 / 简单图形没有拼接工艺，不出拼接条
-  const jointText = jointDesc(joint, s.jointBottom, s.jointTo);
+  const jointText = jointDesc(joint, s.jointBottom, s.jointTo, s.type);
   const items=summaryItems(s), warns=warningList(s);
 
   const S=2;                                     // 输出倍率
@@ -2521,7 +2563,7 @@ async function exportPNG(){
 
   const avail=sumW-SUM_PAD*2;
   const w1=segsWidth(1);
-  const kf=w1>avail ? Math.max(0.78, avail/w1) : 1;
+  const kf=w1>avail ? Math.max(0.70, avail/w1) : 1;
   const gap=Math.max(6, Math.min(GAP_ITEM, (avail-(w1-GAP_ITEM*(segs.length-1))*kf)/Math.max(1,segs.length-1)));
   let ix=sumX+SUM_PAD;
   segs.forEach((arr,i)=>{
@@ -2782,13 +2824,15 @@ function isoAllSegs(s){
   if(s.type==='slide'){
     const G=slideGeom(s), lidT=s.lidT, Hf=G.Hf, iL=G.iL, iW=G.iW;
     const sh=o=>push(shellSegs3d(o));
-    sh({x:0,y:0,z:0,w:s.L,d:t,h:s.H,t,tx:t,ty:t});                         // 左槽壁（长边板，通长到抽出口）
-    sh({x:0,y:s.W-t,z:0,w:s.L,d:t,h:s.H,t,tx:t,ty:t});                     // 右槽壁（通长）
-    sh({x:0,y:t,z:0,w:t,d:iW,h:Hf,t,tx:t,ty:iW});                          // 矮前板（嵌在两槽壁之间）
-    sh({x:s.L-t,y:t,z:0,w:t,d:iW,h:s.H,t,tx:t,ty:iW});                     // 后板（嵌在两槽壁之间）
+    const sx1=G.sideX1;
+    sh({x:0,y:0,z:0,w:s.L,d:t,h:s.H,t,tx:t,ty:t});                         // 左侧板（宽板，通长到盒口）
+    sh({x:0,y:s.W-t,z:0,w:s.L,d:t,h:s.H,t,tx:t,ty:t});                     // 右侧板
+    sh({x:0,y:t,z:0,w:t,d:iW,h:Hf,t,tx:t,ty:iW});                          // 矮前板（长板，嵌在两块侧板之间）
+    if(G.sideFull) sh({x:s.L-t,y:t,z:0,w:t,d:iW,h:s.H,t,tx:t,ty:iW});      // 后板（宽边到底：嵌中间）
+    else           sh({x:s.L-t,y:0,z:0,w:t,d:s.W,h:s.H,t,tx:t,ty:s.W});    // 后板（长边到底：通宽包侧板）
     sh({x:t,y:t,z:0,w:iL,d:iW,h:t,t,tx:iL,ty:iW});                         // 底板
     const lidBase=out.length;                                              // 记录顶板段起点
-    sh({x:G.lidX0-G.pull,y:t-G.gd,z:G.lz0,w:G.lidL,d:G.lidW,h:lidT,
+    sh({x:G.lidX0-G.pull,y:G.lidY0,z:G.lz0,w:G.lidL,d:G.lidW,h:lidT,
         t:lidT,tx:G.lidL,ty:G.lidW});                                      // 顶板（抽出示意，顶面比盒口低 slotTop）
     for(let li=lidBase;li<out.length;li++) out[li][2]='LID';               // 顶板线条 → LID 蓝层
     // 内腔虚线（完整内腔示意；顶板合拢时盖住上部，虚线表达）
@@ -2796,16 +2840,16 @@ function isoAllSegs(s){
     // 槽虚线：左右槽底 / 槽顶横线 + 前后端开口竖线（只画槽区间：槽底 gzB → 槽顶 gzT）
     const gl=(a,b)=>out.push([a,b,'VIEWIN']);
     const zB=G.gzB, zT=G.gzT;
-    gl([G.gx0,t-G.gd,zB],[s.L-t,t-G.gd,zB]);
-    gl([G.gx0,s.W-t+G.gd,zB],[s.L-t,s.W-t+G.gd,zB]);
-    gl([G.gx0,t-G.gd,zT],[s.L-t,t-G.gd,zT]);
-    gl([G.gx0,s.W-t+G.gd,zT],[s.L-t,s.W-t+G.gd,zT]);
+    gl([G.gx0,t-G.gd,zB],[sx1,t-G.gd,zB]);
+    gl([G.gx0,s.W-t+G.gd,zB],[sx1,s.W-t+G.gd,zB]);
+    gl([G.gx0,t-G.gd,zT],[sx1,t-G.gd,zT]);
+    gl([G.gx0,s.W-t+G.gd,zT],[sx1,s.W-t+G.gd,zT]);
     gl([G.gx0,t-G.gd,zB],[G.gx0,t-G.gd,zT]);
     gl([G.gx0,s.W-t+G.gd,zB],[G.gx0,s.W-t+G.gd,zT]);
-    gl([s.L-t,t-G.gd,zB],[s.L-t,t-G.gd,zT]);
-    gl([s.L-t,s.W-t+G.gd,zB],[s.L-t,s.W-t+G.gd,zT]);
-    gl([t,t,Hf],[t,s.W-t,Hf]);                                             // 前板内面顶棱
-    /* 长边板抽出口端面：C 形槽口轮廓（顶板从槽口里穿出）——端面在 x=gx0 平面
+    gl([sx1,t-G.gd,zB],[sx1,t-G.gd,zT]);
+    gl([sx1,s.W-t+G.gd,zB],[sx1,s.W-t+G.gd,zT]);
+    gl([t,t,Hf],[t,s.W-t,Hf]);                                             // 前板内面顶棱（嵌中间段）
+    /* 长边板前端面：C 形槽口轮廓（顶板从槽口里穿出）——端面在 x=gx0 平面
        先删掉被槽口切断的内侧面竖棱，否则竖线会横穿 C 形槽口，看着像多出一条阶梯 */
     for(let i=out.length-1;i>=0;i--){
       const a=out[i][0], b=out[i][1];
@@ -3391,8 +3435,8 @@ function dxfBuild(){
     const G=slideGeom(s), lidT=s.lidT, Hf=G.Hf, gw=G.gw, gzT=G.gzT, gzB=G.gzB, lz0=G.lz0, lz1=G.lz1, fm=dxfNum;
     /* 正视图（长×高）：外轮廓恒为完整矩形（不画阶梯）；顶板剖面蓝色 LID 层 */
     cells.push({title:'正视图（长×高）', w:s.L, h:s.H, draw(x,y){
-      A.rect('VIEW',x,y,x+s.L,y+s.H);                                        // 外轮廓（完整矩形，无缺口）
-      A.line('VIEWIN',[x,y+Hf],[x+t,y+Hf]);                                  // 前板顶（嵌在通长槽壁后面 → 虚线）
+      A.rect('VIEW',x,y,x+s.L,y+s.H);                                        // 外轮廓（完整矩形，侧板通长）
+      A.line('VIEWIN',[x,y+Hf],[x+t,y+Hf]);                                  // 前板顶棱（被侧板挡住 → 虚线）
       A.rect('LID',x+G.lidX0,y+lz0,x+G.lidX0+G.lidL,y+lz1);                  // 顶板剖面（蓝；坐在槽底，上方留 0.2）
       A.rect('VIEWIN',x+t,y+t,x+s.L-t,y+gzB);                                 // 内腔（到槽底）
       A.line('VIEWIN',[x+G.gx0,y+gzB],[x+s.L-t,y+gzB]);                       // 槽底横线
@@ -3405,29 +3449,28 @@ function dxfBuild(){
       if(jB==='90') A.line('JOINT',[x,y+t],[x+s.L,y+t]);
       else if(jB==='45'){ A.line('JOINT',[x,y],[x+t,y+t]); A.line('JOINT',[x+s.L,y],[x+s.L-t,y+t]); }
     }});
-    /* 侧视图（宽×高）：从抽出端看——矮前板端面 + 槽壁竖条 + 顶板端面条（实线） */
+    /* 侧视图（宽×高）：从抽出端看——矮前板端面（中间段）+ 两侧板端面（全高 C 形槽口）+ 顶板端面条 */
     cells.push({title:'侧视图（宽×高）', w:s.W, h:s.H, draw(x,y){
       A.rect('VIEW',x,y,x+s.W,y+s.H);
-      const fy0=t, fy1=s.W-t;                                                 // 矮前板嵌在两槽壁之间
-      A.line('VIEW',[x+fy0,y+Hf],[x+fy1,y+Hf]);                               // 前板顶边
-      /* 两块长边板端面：内侧面开槽 → 端面呈「C」形缺口；顶板端面嵌在槽内（坐槽底） */
+      A.line('VIEW',[x+t,y+Hf],[x+s.W-t,y+Hf]);                               // 前板顶边（嵌在两块侧板之间）
+      /* 两块侧板（宽板）端面：通长到抽出口、全高——内侧面开槽 → C 形槽口 */
       const zLo=0;
       const notchPoly=(yi,yout)=>[[yout,zLo],[yout,s.H],[yi,s.H],
                                   [yi,gzT],[yi+(yi<yout?G.gd:-G.gd),gzT],
                                   [yi+(yi<yout?G.gd:-G.gd),gzB],[yi,gzB],[yi,zLo]];
       A.poly('VIEW',notchPoly(t,0).map(p=>[x+p[0],y+p[1]]),true);
       A.poly('VIEW',notchPoly(s.W-t,s.W).map(p=>[x+p[0],y+p[1]]),true);
-      A.rect('LID',x+t-G.gd,y+lz0,x+s.W-t+G.gd,y+lz1);                        // 顶板端面条（蓝）
-      A.text('TEXT',[x+(t-G.gd)+(G.lidW)/2,y+lz0+lidT/2],3.6,'顶板');
+      A.rect('LID',x+G.lidY0,y+lz0,x+s.W-G.lidY0,y+lz1);                      // 顶板端面条（蓝）
+      A.text('TEXT',[x+G.lidY0+G.lidW/2,y+lz0+lidT/2],3.6,'顶板');
       A.rect('VIEWIN',x+t,y+t,x+s.W-t,y+gzB);                                 // 内腔
       dimH(x,x+s.W,y+s.H+11*TFX,'宽 '+fm(s.W));
       dimV(x+s.W+11*TFX,y,y+s.H,'高 '+fm(s.H),'right');
       dimV(x-11*TFX,y,y+Hf,'前板高 '+fm(Hf),'left');
       dimH(x+t,x+s.W-t,y-11*TFX,'内宽 '+fm(G.iW));
       dimV(x-24*TFX,y+t,y+s.H,'内高 '+fm(s.H-t),'left');
-      A.text('TEXT',[x+s.W,y-22*TFX],2.8,'顶板厚 '+fm(lidT)+' · 槽深 '+fm(G.gd)+' × 槽宽 '+fm(gw)+' · 槽顶距盒口 '+fm(G.slotTop)+'（顶板坐槽底，上方留 0.2）',0,'r');
+      A.text('TEXT',[x+s.W,y-22*TFX],2.8,'顶板厚 '+fm(lidT)+' · 槽深 '+fm(G.gd)+' × 槽宽 '+fm(gw)+' · 槽顶距盒口 '+fm(G.slotTop)+'（顶板坐槽底上方留 0.2，两侧离槽根各 '+fm(G.gclr)+'）',0,'r');
       A.text('TEXT',[x+t+1.6,y+t+2.6],3.0,'t='+fm(t),0,'l');
-      if(jW==='90'){                                                          // 矮前板与两侧槽壁的拼缝
+      if(jW==='90'){                                                          // 前板与两侧板的拼缝（到前板顶）
         A.line('JOINT',[x+t,y+t],[x+t,y+Hf]); A.line('JOINT',[x+s.W-t,y+t],[x+s.W-t,y+Hf]);
       }
       if(jB==='90') A.line('JOINT',[x,y+t],[x+s.W,y+t]);
@@ -3438,27 +3481,27 @@ function dxfBuild(){
       A.rect('VIEW',x,y,x+s.L,y+s.W);
       A.rect('VIEWIN',x+t,y+t,x+s.L-t,y+s.W-t);                               // 内腔（被顶板盖住）
       A.rect('LID',x+G.lidX0,y+t,x+G.lidX0+G.lidL,y+s.W-t);                  // 顶板可见段（中间，蓝）
-      A.line('VIEWIN',[x+G.lidX0,y+t-G.gd],[x+G.lidX0+G.lidL,y+t-G.gd]);      // 嵌槽侧边（被壁顶遮住）
-      A.line('VIEWIN',[x+G.lidX0,y+s.W-t+G.gd],[x+G.lidX0+G.lidL,y+s.W-t+G.gd]);
+      A.line('VIEWIN',[x+G.lidX0,y+G.lidY0],[x+G.lidX0+G.lidL,y+G.lidY0]);   // 嵌槽侧边（被壁顶遮住）
+      A.line('VIEWIN',[x+G.lidX0,y+s.W-G.lidY0],[x+G.lidX0+G.lidL,y+s.W-G.lidY0]);
       A.text('TEXT',[x+G.lidX0+G.lidL/2,y+s.W/2],5.2,'顶板');
       dimH(x,x+s.L,y+s.W+11*TFX,'长 '+fm(s.L));
       dimV(x+s.L+11*TFX,y,y+s.W,'宽 '+fm(s.W),'right');
       dimH(x+t,x+s.L-t,y-11*TFX,'内长 '+fm(G.iL));
       dimH(x+G.lidX0,x+G.lidX0+G.lidL,y-24*TFX,'顶板长 '+fm(G.lidL));
       dimV(x-11*TFX,y+t,y+s.W-t,'内宽 '+fm(G.iW),'left');
-      dimV(x+s.L+24*TFX,y+t-G.gd,y+s.W-t+G.gd,'顶板宽 '+fm(G.lidW),'right');
-      A.text('TEXT',[x+s.L/2,y-36*TFX],2.8,'两侧槽：深 '+fm(G.gd)+' × 宽 '+fm(gw)+'（槽宽=顶板厚+0.2，顶板坐槽底）· 槽顶距盒口 '+fm(G.slotTop)+' · 板厚 t='+fm(t));
+      dimV(x+s.L+24*TFX,y+G.lidY0,y+s.W-G.lidY0,'顶板宽 '+fm(G.lidW),'right');
+      A.text('TEXT',[x+s.L/2,y-36*TFX],2.8,'两侧槽：深 '+fm(G.gd)+' × 宽 '+fm(gw)+'（槽宽=顶板厚+0.2，顶板两侧离槽根各 '+fm(G.gclr)+'）· 槽顶距盒口 '+fm(G.slotTop)+' · 板厚 t='+fm(t));
       const ix=x+t, iy=y+t, iw2=G.iL, ih2=G.iW;
+      /* 前板（长板）嵌在两块侧板（宽板）之间：接缝 = y=t / y=W-t 横线（前段 x 0..t） */
+      A.line('JOINT',[x,iy],[ix,iy]); A.line('JOINT',[x,iy+ih2],[ix,iy+ih2]);
+      /* 后板按所选拼法 */
       if(jW==='45'){
-        A.line('JOINT',[ix,iy],[x,y]); A.line('JOINT',[ix+iw2,iy],[x+s.L,y]);
-        A.line('JOINT',[ix,iy+ih2],[x,y+s.W]); A.line('JOINT',[ix+iw2,iy+ih2],[x+s.L,y+s.W]);
+        A.line('JOINT',[x+s.L-t,y],[x+s.L,y+t]); A.line('JOINT',[x+s.L-t,y+s.W],[x+s.L,y+s.W-t]);
       } else if(jW==='90'){
-        if(jTo==='L'){
-          A.line('JOINT',[x,iy],[ix,iy]); A.line('JOINT',[ix+iw2,iy],[x+s.L,iy]);
-          A.line('JOINT',[x,iy+ih2],[ix,iy+ih2]); A.line('JOINT',[ix+iw2,iy+ih2],[x+s.L,iy+ih2]);
-        } else {
-          A.line('JOINT',[ix,y],[ix,iy]); A.line('JOINT',[ix+iw2,y],[ix+iw2,iy]);
-          A.line('JOINT',[ix,y+s.W],[ix,iy+ih2]); A.line('JOINT',[ix+iw2,y+s.W],[ix+iw2,iy+ih2]);
+        if(jTo==='W'){                // 宽边到底：侧板通到后端、后板嵌中间 → 横线（后段）
+          A.line('JOINT',[x+s.L-t,iy],[x+s.L,iy]); A.line('JOINT',[x+s.L-t,iy+ih2],[x+s.L,iy+ih2]);
+        } else {                      // 长边到底：后板通宽 → 侧板后端面短竖线
+          A.line('JOINT',[x+s.L-t,y],[x+s.L-t,iy]); A.line('JOINT',[x+s.L-t,y+s.W],[x+s.L-t,iy+ih2]);
         }
       }
     }});
@@ -3642,13 +3685,13 @@ function dxfBuild(){
       : `板厚 ${dxfNum(t)} mm${s.type==='slide'?'（四壁+底板同厚）':''}`;
     const GS = s.type==='slide' ? slideGeom(s) : null;
     const slideTxt = GS
-      ? `抽拉顶板 ${dxfNum(GS.lidL)} × ${dxfNum(GS.lidW)} × ${dxfNum(s.lidT)} mm　｜　两侧槽深 ${dxfNum(GS.gd)} × 槽宽 ${dxfNum(GS.gw)} · 槽顶距盒口 ${dxfNum(GS.slotTop)}　｜　前板高 ${dxfNum(GS.Hf)} mm`
+      ? `抽拉顶板 ${dxfNum(GS.lidL)} × ${dxfNum(GS.lidW)} × ${dxfNum(s.lidT)} mm　｜　两侧槽深 ${dxfNum(GS.gd)} × 槽宽 ${dxfNum(GS.gw)}，顶板每侧嵌 ${dxfNum(GS.glid)}（离槽根留 ${dxfNum(GS.gclr)}）· 槽顶距盒口 ${dxfNum(GS.slotTop)}　｜　前板高 ${dxfNum(GS.Hf)} mm`
       : '';
     const magTxt = s.useMag
       ? `φ${dxfNum(s.magD)}×${dxfNum(s.magTh)}，${s.magEdge==='L'?'长边':'宽边'}，距${s.magEdge==='L'?'宽边':'长边'} ${dxfNum(s.magDist)} mm，${s.type==='openlid'?`盒体 ${s.magN} + 板盖 ${s.magN}`:`${s.magN} 个`}${s.magN===6?`（${s.magEdge==='L'?'长边':'宽边'}中间 2 颗居中）`:''}`
       : '无';
     lines=[
-      `产品：${TYPE_NAME}　｜　拼接：${jointDesc(jW,jB,jTo)}　｜　${thkTxt}${lidTxt}`,
+      `产品：${TYPE_NAME}　｜　拼接：${jointDesc(jW,jB,jTo,s.type)}　｜　${thkTxt}${lidTxt}`,
       `外尺寸 ${dxfNum(s.L)} × ${dxfNum(s.W)} × ${dxfNum(s.H)} mm　｜　内尺寸 ${dxfNum(iL)} × ${dxfNum(iW)} × ${dxfNum(inH)} mm`,
       slideTxt,
       `磁铁：${magTxt}`,
